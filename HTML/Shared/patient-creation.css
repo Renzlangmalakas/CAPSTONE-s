@@ -1,0 +1,15 @@
+﻿.gm-patient-create { width:min(820px,calc(100vw - 24px));max-height:calc(100dvh - 24px);padding:0;border:1px solid #d8e1ee;border-radius:20px;background:#fff;color:#20334f; }
+.gm-patient-create::backdrop {background:#020817aa;}
+.gm-patient-create form {display:flex;flex-direction:column;max-height:calc(100dvh - 26px);}
+.gm-patient-create header,.gm-patient-create footer {display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 22px;flex-shrink:0;}
+.gm-patient-create h2 {font-size:22px;margin:0;}.gm-patient-create p {font-size:14px;margin:8px 0;line-height:1.6;}
+.gm-patient-create .pc-body {overflow:auto;min-height:0;padding:0 22px 18px;overscroll-behavior:contain;}
+.gm-patient-create .pc-fields {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;}
+.gm-patient-create label {display:grid;gap:7px;font-size:14px;min-width:0;}.gm-patient-create .pc-wide {grid-column:1/-1;}
+.gm-patient-create :is(input,select,textarea,button) {font:inherit;box-sizing:border-box;min-width:0;border:1px solid #c5d1e3;border-radius:10px;padding:10px 12px;min-height:44px;background:transparent;color:inherit;}
+.gm-patient-create label :is(input,select,textarea) {width:100%;font-size:16px;}
+.gm-patient-create .pc-services {border:1px solid #c5d1e3;border-radius:12px;padding:16px;margin:20px 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+.gm-patient-create .pc-services label {display:flex;align-items:center;gap:10px;}.gm-patient-create .pc-services input {width:20px;min-height:20px;flex-shrink:0;accent-color:#4f46e5;}.gm-patient-create small {display:block;opacity:.75;}
+.gm-patient-create .pc-save {background:#365df5;color:white;border-color:#365df5;}.gm-patient-create .pc-error {color:#dc3545;}.gm-patient-create button {cursor:pointer;}.gm-patient-create button:disabled {opacity:.6;cursor:wait;}
+body:is(.dark,.dark-mode) .gm-patient-create {background:#101d30;color:#e3eaf6;border-color:#30435e;}body:is(.dark,.dark-mode) .gm-patient-create :is(input,select,textarea) {background:#0b1628;border-color:#30435e;}
+@media(max-width:600px){.gm-patient-create .pc-fields,.gm-patient-create .pc-services {grid-template-columns:1fr;}.gm-patient-create header,.gm-patient-create footer {padding:14px;}.gm-patient-create .pc-body {padding:0 14px 14px;}.gm-patient-create h2 {font-size:18px;}}

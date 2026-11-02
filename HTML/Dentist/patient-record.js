@@ -6,6 +6,7 @@ function openDentalRecord(encodedKey, encodedName) {
   const key = decodeURIComponent(encodedKey);
   const appointments = getMyAppointments().filter(apt => getPatientClinicalKey(apt) === key);
   if (!appointments.length) { showToast('This patient is not in your appointment records.'); return; }
+  window.recordAuditInteraction?.('treatments', key).catch(error => showToast(error.message));
   dentalRecordOpener = document.activeElement;
   const db = ensureClinicDbShape(getClinicDb());
   const profile = db.patients.find(p => String(p.id || '').toLowerCase() === key || getPatientClinicalKey(p) === key) || {};
@@ -37,7 +38,7 @@ function openDentalRecord(encodedKey, encodedName) {
         <label>Appointment<select id="recordAppointment"><option value="">Not linked</option>${appointments.map((a, i) => `<option value="${i}">${escapeHtml(a.date || a.schedule || '')} · ${escapeHtml(a.service || 'Appointment')}</option>`).join('')}</select></label>
         <label>Before treatment<textarea id="recordBefore" maxlength="4000" rows="3"></textarea></label>
         <label>After treatment<textarea id="recordAfter" maxlength="4000" rows="3"></textarea></label>
-        </div><div class="dental-form-actions"><button type="button" class="btn-glass" id="cancelDentalEntry">Cancel</button><button class="btn-gradient" type="submit">Save record</button></div>
+        </div><p id="dentalRecordSaveStatus" role="status" aria-live="polite"></p><div class="dental-form-actions"><button type="button" class="btn-glass" id="cancelDentalEntry">Cancel</button><button class="btn-gradient" type="submit">Save record</button></div>
       </form><div id="dentalRecordHistory"></div>
       <details class="dental-appointments"><summary>Appointment history (${appointments.length})</summary>${appointments.map(a => `<article><strong>${escapeHtml(a.service || 'Appointment')}</strong><p>${escapeHtml(a.schedule || a.date || '')} · ${escapeHtml(a.status || '')}</p></article>`).join('')}</details>
     </main></div></div>`;
@@ -51,7 +52,9 @@ function openDentalRecord(encodedKey, encodedName) {
   document.getElementById('recordDentition').onchange = event => { dentalRecordState.dentition = event.target.value; dentalRecordState.tooth = ''; renderDentalRecord(); };
   document.getElementById('allDentalRecords').onclick = () => { dentalRecordState.tooth = ''; renderDentalRecord(); };
   document.getElementById('newDentalEntry').onclick = () => {
+    pendingDentalRecordId = null;
     const form = document.getElementById('dentalRecordForm'); form.reset(); form.hidden = false;
+    document.getElementById('dentalRecordSaveStatus').textContent='';
     document.getElementById('recordConditionOther').hidden = true;
     document.getElementById('recordConditionOther').required = false;
     document.getElementById('recordTooth').value = dentalRecordState.tooth || '';
@@ -112,14 +115,20 @@ function renderDentalRecord() {
   document.getElementById('dentalRecordHistory').innerHTML = visible.length ? visible.map(n => `<article class="dental-entry"><div class="dental-record-toolbar"><strong>${escapeHtml(n.treatment || 'Clinical finding')}</strong><span class="dental-status ${n.treatmentStatus === 'Completed' ? 'done' : ''}">${escapeHtml(n.treatmentStatus || 'Note')}</span></div><small>${escapeHtml(n.recordDate || formatClinicalNoteDate(n.createdAt))} · ${escapeHtml(n.createdBy)}${n.tooth ? ' · Tooth '+escapeHtml(String(n.tooth)) : ''}</small>${n.condition ? `<p><b>Condition:</b> ${escapeHtml(n.condition)}</p>` : ''}${n.before ? `<p><b>Before treatment:</b> ${escapeHtml(n.before)}</p>` : ''}${n.after ? `<p><b>After treatment:</b> ${escapeHtml(n.after)}</p>` : ''}${!n.treatment ? `<p>${escapeHtml(n.text)}</p>` : ''}</article>`).join('') : '<div class="dental-empty">No records yet. Add a treatment record or select another tooth.</div>';
 }
 
+let pendingDentalRecordId = null;
+function formRecordId() { return pendingDentalRecordId ||= createDentistEntityId('note'); }
 async function saveDentalRecord(event) {
   event.preventDefault();
   if (!dentalRecordState) return;
+  const savingState=dentalRecordState;
+  const status=document.getElementById('dentalRecordSaveStatus');
+  const fail=message=>{status.textContent=message;status.style.color='var(--danger, #ef4444)';showToast(message,'error');};
   const read = id => document.getElementById(id).value.trim();
   const condition = read('recordCondition') === 'Other' ? read('recordConditionOther') : read('recordCondition'), treatment = read('recordTreatment');
-  if (!condition || !treatment) { showToast('Enter a condition and treatment.'); return; }
+  if (!condition || !treatment) { fail('Enter a condition and treatment.'); return; }
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(read('recordDate'))){fail('Choose the treatment date.');return;}
   const appointmentIndex = read('recordAppointment');
-  const note = { id: createDentistEntityId('note'), patientKey: dentalRecordState.key, patientName: dentalRecordState.name,
+  const note = { id: formRecordId(), patientKey: dentalRecordState.key, patientName: dentalRecordState.name,
     tooth: read('recordTooth'), condition, treatment, treatmentStatus: read('recordStatus'), recordDate: read('recordDate'),
     before: read('recordBefore'), after: read('recordAfter'),
     appointmentId: appointmentIndex === '' ? '' : dentalRecordState.appointments[Number(appointmentIndex)]?.id || '',
@@ -131,18 +140,29 @@ async function saveDentalRecord(event) {
   if (button.disabled) return;
   button.disabled = true;
   button.textContent = 'Saving...';
+  status.textContent='Saving your record...';status.style.color='inherit';
   try {
-    savePatientClinicalNotes([note, ...getPatientClinicalNotes()]);
-    const synced = await window.GmDentalSupabaseSync?.flushNow?.();
-    if (!synced) {
-      showToast('Record saved on this device, but server sync failed. Reconnect before refreshing.');
-      return;
-    }
+    const response = await GmDentalApiFetch(`${window.GmDentalSupabaseSync?.apiBaseUrl || ''}/api/clinical-notes`, {
+      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({note,authorizationAppointmentId:note.appointmentId || savingState.appointments[0]?.id})
+    });
+    const result = response.status === 304 ? {note} : await response.json().catch(()=>({message:
+      response.status === 404 ? 'The save endpoint is unavailable. Restart the local preview or update the deployment. Your entries are preserved.'
+      : response.status === 401 || response.status === 403 ? 'Your session could not be verified. Please sign in again. Your entries are preserved.'
+      : `The server did not confirm the save (HTTP ${response.status}). Your entries are preserved; please retry.`}));
+    if (!response.ok && response.status !== 304) throw new Error(result.message || 'Could not save record.');
+    if(result.note?.id !== note.id)throw new Error(result.message || 'The server did not confirm this record. Your entries are preserved; please retry.');
+    window.GmDentalSupabaseSync.acceptRecord('patientClinicalNotes', result.note);
+    if(dentalRecordState===savingState)pendingDentalRecordId = null;
     form.hidden = true;
-  dentalRecordState.tooth = note.tooth;
-  renderDentalRecord(); renderPatients();
+  if(dentalRecordState===savingState){dentalRecordState.tooth = note.tooth;renderDentalRecord();}
+  renderPatients();
   showToast('Patient record saved.');
-  } catch (error) { showToast(error.message || 'Could not save the treatment record.'); }
+  } catch (error) {
+    const connectionFailed = error instanceof TypeError && /fetch|network|load failed/i.test(error.message || '');
+    fail(connectionFailed
+      ? 'Connection interrupted. The save could not be confirmed. Your entries are preserved; reconnect and retry Save record.'
+      : error.message || 'Could not save the treatment record. Your entries are still here; please retry.');
+  }
   finally { button.disabled = false; button.textContent = 'Save record'; }
 }
 

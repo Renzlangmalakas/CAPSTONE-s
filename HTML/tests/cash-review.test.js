@@ -26,7 +26,7 @@ function fixture({ role = 'staff', fail = false, conflict = false } = {}) {
   const req = { user: { role, email: 'reviewer@example.com' }, body: {
     collection: 'appointments', recordId: 'bill', proofId: 'cash', action: 'approve', confirmed: true
   } };
-  const response = () => ({ code: 200, status(code) { this.code = code; return this; }, json(body) { this.body = body; return this; } });
+  const response = () => ({ code: 200, status(code) { this.code = code; return this; }, end(){return this;}, json(body) { this.body = body; return this; } });
   return { state, handler, req, response };
 }
 

@@ -1301,6 +1301,7 @@ function markAllDentistNotificationsRead() {
 // NAVIGATION
 // ---------------------------
 function showSection(id) {
+  if (id === 'profile') refreshDentistProfileSchedule();
   document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
   document.querySelectorAll(".nav-link").forEach(l => l.classList.remove("active"));
 
@@ -1780,6 +1781,18 @@ function goToPatientRecords(encodedKey) {
   card.scrollIntoView({ block: 'center', behavior: 'auto' });
 }
 
+function getDirectoryPatientContact(appointment, profiles) {
+  const normalize = value => String(value || '').trim().toLowerCase();
+  const id = normalize(appointment.patientId);
+  const email = normalize(appointment.patientEmail || appointment.email);
+  // Match saved profiles by identity, never by a potentially shared name.
+  const profile = profiles.find(p => id && normalize(p.id) === id)
+    || profiles.find(p => email && normalize(p.email || p.patientEmail) === email);
+  const values = [profile?.contact, profile?.phone, profile?.mobile, profile?.contactNumber,
+    appointment.patientPhone, appointment.contact, appointment.phone, appointment.mobile, appointment.contactNumber];
+  return values.map(value => String(value || '').trim()).find(value => /\d/.test(value)) || '';
+}
+
 function renderPatients() {
   const activeContainer = document.getElementById("patientCards");
   const disabledContainer = document.getElementById("disabledPatientCards");
@@ -1788,6 +1801,7 @@ function renderPatients() {
   if (disabledContainer) disabledContainer.innerHTML = "";
 
   const appointments = getMyAppointments();
+  const directoryProfiles = window.GMDentistAccess.scope(ensureClinicDbShape(getClinicDb()), currentDentistUser).patients;
   const patientMap = new Map();
   const notesByPatient = new Map();
 
@@ -1804,6 +1818,7 @@ function renderPatients() {
     const safeStatus = String(apt.status || "").trim();
     const isDisabled = apt.archivedForDentist === true || apt.archivedForDentist === "true";
     const patientKey = getPatientClinicalKey(apt) || safeName.toLowerCase();
+    const savedContact = getDirectoryPatientContact(apt, directoryProfiles);
 
     const isBrokenRecord =
       safeStatus === "Profile Only" ||
@@ -1816,7 +1831,7 @@ function renderPatients() {
         key: patientKey,
         name: safeName,
         rawName,
-        contact: apt.patientPhone || apt.contact || "—",
+        contact: savedContact || "Not recorded",
         address: apt.patientAddress || apt.address || "—",
         gender: apt.gender || "—",
         age: apt.age || "—",
@@ -1836,8 +1851,8 @@ function renderPatients() {
       current.lastVisit = apt.schedule || "—";
     }
 
-    if (current.contact === "—" && (apt.patientPhone || apt.contact)) {
-      current.contact = apt.patientPhone || apt.contact;
+    if (current.contact === "Not recorded" && savedContact) {
+      current.contact = savedContact;
     }
 
     if (current.condition === "—" && (apt.patientCondition || apt.condition)) {
@@ -1872,7 +1887,7 @@ function renderPatients() {
       <td><div class="records-row-actions"><button type="button" class="action-chip secondary" onclick="openDentalRecord('${safeEncodedKey}', '${safeEncodedName}')">Patient Record</button><button type="button" class="action-chip secondary" onclick="openPatientNotesModal('${safeEncodedKey}', '${safeEncodedName}')">Findings</button></div></td>
     </tr>`;
 
-    return `<tr><td><strong>${escapeHtml(patient.name)}</strong><small>${patient.totalAppointments} appointments</small></td><td>${escapeHtml(patient.contact)}</td><td>${escapeHtml(patient.condition)}</td><td class="records-nowrap">${escapeHtml(datePart || '-')}</td><td><span class="badge ${isDisabledSection ? 'cancelled' : 'upcoming'}">${isDisabledSection ? 'Disabled' : patient.isBroken ? 'Broken Record' : 'Active'}</span></td><td><div class="records-row-actions"><button type="button" class="action-chip secondary" onclick="goToPatientRecords('${safeEncodedKey}')">Records &amp; Findings</button>${patient.isBroken ? `<button type="button" class="action-chip danger" onclick="deleteBrokenPatient('${safeEncodedName}')">Delete Broken Patient</button>` : isDisabledSection ? `<button type="button" class="action-chip success" onclick="restoreDisabledPatient('${safeEncodedName}')">Restore</button>` : `<button type="button" class="action-chip warn" onclick="disablePatientRecord('${safeEncodedName}')">Disable</button>`}</div></td></tr>`;
+    return `<tr><td><strong>${escapeHtml(patient.name)}</strong><small>${patient.totalAppointments} appointments</small></td><td>${escapeHtml(patient.contact)}</td><td class="records-nowrap">${escapeHtml(datePart || '-')}</td><td><span class="badge ${isDisabledSection ? 'cancelled' : 'upcoming'}">${isDisabledSection ? 'Disabled' : patient.isBroken ? 'Broken Record' : 'Active'}</span></td><td><div class="records-row-actions"><button type="button" class="action-chip secondary" onclick="goToPatientRecords('${safeEncodedKey}')">Records &amp; Findings</button>${patient.isBroken ? `<button type="button" class="action-chip danger" onclick="deleteBrokenPatient('${safeEncodedName}')">Delete Broken Patient</button>` : isDisabledSection ? `<button type="button" class="action-chip success" onclick="restoreDisabledPatient('${safeEncodedName}')">Restore</button>` : `<button type="button" class="action-chip warn" onclick="disablePatientRecord('${safeEncodedName}')">Disable</button>`}</div></td></tr>`;
   };
 
   const clinicalContainer = document.getElementById("clinicalPatientCards");
@@ -1916,7 +1931,7 @@ function renderPatients() {
       const visit = p => Date.parse(parseScheduleParts(p.lastVisit).datePart || '') || 0;
       return (sort === 'visit' ? visit(b) - visit(a) : sort === 'appointments' ? b.totalAppointments - a.totalAppointments : sort === 'name-desc' ? -name : name) || name;
     });
-    container.innerHTML = dentistListSlice(filtered, key, renderPatients).map(p => buildPatientCard(p, disabled)).join('') || '<tr><td colspan="6">No matching patients.</td></tr>';
+    container.innerHTML = dentistListSlice(filtered, key, renderPatients).map(p => buildPatientCard(p, disabled)).join('') || '<tr><td colspan="5">No matching patients.</td></tr>';
   };
   renderDirectory(activePatients, 'directory', activeContainer, false);
   renderDirectory(disabledPatients, 'disabled', disabledContainer, true);
@@ -3393,6 +3408,7 @@ async function completeAppointment(id) {
   completingAppointments.add(String(id));
   try {
     const response = await window.GmDentalApiFetch(window.GmDentalSupabaseSync.apiBaseUrl + '/api/appointments/' + encodeURIComponent(id) + '/complete', { method: 'POST' });
+    if(response.status===304){await window.GmDentalSupabaseSync.pull();refreshDentistUI();showToast('This appointment is already completed.');return;}
     const result = await response.json();
     if (!response.ok) throw new Error(result.message || 'Could not complete the appointment.');
     if (result.appointment?.status !== 'Completed') throw new Error('The server did not confirm completion.');
@@ -4438,7 +4454,7 @@ function closeAddAppointmentModal() {
 }
 
 function showAddPatientModal() {
-  document.getElementById("patientModal")?.classList.add("active");
+  return window.GMPatientCreation.open();
 }
 
 function closePatientModal() {
@@ -4526,45 +4542,8 @@ function addAppointment() {
 }
 
 function addPatient() {
-  const p_name = document.getElementById("p_name")?.value.trim();
-  const p_age = document.getElementById("p_age")?.value.trim();
-  const p_gender = document.getElementById("p_gender")?.value.trim();
-  const p_contact = document.getElementById("p_contact")?.value.trim();
-  const p_condition = document.getElementById("p_condition")?.value.trim();
-  const p_lastVisit = document.getElementById("p_lastVisit")?.value.trim();
-  const p_address = document.getElementById("p_address")?.value.trim();
-
-  if (!p_name) {
-    showToast("Patient name is required.");
-    return;
-  }
-
-  const appointments = getAppointments();
-
-  appointments.unshift({
-    id: String(Date.now()),
-    dentistId: currentDentistUser?.id || "",
-    dentistEmail: currentDentistUser?.email || "",
-    dentistName: currentDentistUser?.name || "",
-    patientName: p_name,
-    patientPhone: p_contact,
-    patientAddress: p_address,
-    age: p_age,
-    gender: p_gender,
-    patientCondition: p_condition,
-    service: "No appointment yet",
-    price: 0,
-    schedule: p_lastVisit ? `${p_lastVisit} • -` : "",
-    status: "Profile Only",
-    paid: false,
-    createdAt: new Date().toISOString()
-  });
-
-  saveAppointments(appointments);
-
-  showToast("Patient added.");
   closePatientModal();
-  refreshDentistUI();
+  return window.GMPatientCreation.open();
 }
 
 // ---------------------------
@@ -4590,6 +4569,36 @@ function loadQuickNotes() {
 // ---------------------------
 // PROFILE
 // ---------------------------
+function formatDentistProfileSchedule(schedules) {
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const time = value => {
+    const match = String(value || '').match(/^(\d{1,2}):(\d{2})/);
+    if (!match) return String(value || '');
+    const hour = Number(match[1]);
+    return `${hour % 12 || 12}:${match[2]} ${hour >= 12 ? 'PM' : 'AM'}`;
+  };
+  const shifts = (schedules || []).filter(s => !s.archived && s.day && s.start && s.end);
+  const unique = [...new Map(shifts.map(s => [`${s.day}|${s.start}|${s.end}`, s])).values()];
+  return unique.sort((a,b) => days.indexOf(a.day) - days.indexOf(b.day) || a.start.localeCompare(b.start))
+    .map(s => `${s.day}: ${time(s.start)} - ${time(s.end)}`).join('\n') || 'No clinic schedule assigned yet.';
+}
+
+function refreshDentistProfileSchedule() {
+  const field = document.getElementById('profileSchedule');
+  if (!field) return;
+  const db = getClinicDb();
+  const records = (window.GMDefaultAccounts ? GMDefaultAccounts.normalizeDb(db) : db).dentists || [];
+  const email = String(currentDentistUser?.email || '').trim().toLowerCase();
+  const accountId = String(currentDentistUser?.id || '');
+  const dentist = records.find(d => email && String(d.email || '').trim().toLowerCase() === email)
+    || records.find(d => accountId && [d.accountId, d.userId, d.id].some(id => String(id || '') === accountId));
+  field.value = formatDentistProfileSchedule(dentist?.schedules);
+  field.rows = Math.max(2, field.value.split('\n').length);
+  field.readOnly = true;
+  const specialty = document.getElementById('profileSpecialty');
+  if (specialty && specialty.disabled) specialty.value = dentist?.specialty || '';
+}
+
 function loadDentistProfile() {
   const sessionEmail = String(currentDentistUser?.email || "").trim().toLowerCase();
   const sessionName = currentDentistUser?.name || currentDentistUser?.fullName || "";
@@ -4613,11 +4622,12 @@ function loadDentistProfile() {
       };
 
   // The authoritative display name always comes from the logged-in session.
-  // Other fields (specialty, phone, schedule) come from the per-user cache.
+  // Clinic schedules and specialties come from the shared clinic roster.
   const displayName = sessionName || saved.fullName || "Dentist";
   const displayEmail = currentDentistUser?.email || saved.email || "";
   // Use the matching clinic record rather than relying only on a device cache.
-  const dentistRecords = getClinicDb().dentists || [];
+  const profileDb = getClinicDb();
+  const dentistRecords = (window.GMDefaultAccounts ? GMDefaultAccounts.normalizeDb(profileDb) : profileDb).dentists || [];
   const accountId = String(currentDentistUser?.id || "");
   const clinicProfile = dentistRecords.find(d => accountId && String(d.accountId || d.id || "") === accountId)
     || dentistRecords.find(d => sessionEmail && String(d.email || "").trim().toLowerCase() === sessionEmail);
@@ -4629,12 +4639,18 @@ function loadDentistProfile() {
     profileEmail: displayEmail,
     profileSpecialty: specialty,
     profilePhone: currentDentistUser?.mobile || saved.phone || "",
-    profileSchedule: saved.schedule || ""
+    profileSchedule: formatDentistProfileSchedule(clinicProfile?.schedules)
   };
 
   Object.entries(profileFields).forEach(([id, value]) => {
     const el = document.getElementById(id);
-    if (el) el.value = value;
+    if (el) {
+      el.value = value;
+      if (id === 'profileSchedule') {
+        el.readOnly = true;
+        el.rows = Math.max(2, String(value).split('\n').length);
+      }
+    }
   });
 
   const heading = document.getElementById("profileHeadingName");
@@ -4699,7 +4715,6 @@ function initProfileEdit() {
       "profileEmail",
       "profileSpecialty",
       "profilePhone",
-      "profileSchedule",
       "profileNewPassword",
       "profileConfirmPassword"
     ];
@@ -4812,6 +4827,7 @@ function logoutDentist() {
 // ---------------------------
 
 function refreshDentistUI() {
+  refreshDentistProfileSchedule();
   renderDashboard();
   renderScheduleTable();
   renderRescheduleRequests();

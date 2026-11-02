@@ -20,9 +20,15 @@
     const name = key(typeof service === 'string' ? service : service.serviceName || service.name || service.service);
     return durations[aliases[name] || name] || 60;
   }
+  function servicesFor(appointment = {}) {
+    const lines = Array.isArray(appointment.services) ? appointment.services : [];
+    if (lines.some(line => line.participantId)) return lines;
+    return [...lines, ...(appointment.dependents || []).flatMap(dep => (dep.services || []).map(service => ({...service, participantId: dep.id, participantName: dep.name})))];
+  }
   function duration(appointment = {}) {
-    const services = Array.isArray(appointment.services) && appointment.services.length
-      ? appointment.services : String(appointment.service || appointment.serviceName || 'Consultation').split(/\s*\+\s*/);
+    const combined = servicesFor(appointment);
+    const services = combined.length
+      ? combined : String(appointment.service || appointment.serviceName || 'Consultation').split(/\s*\+\s*/);
     return Math.max(Number(appointment.durationMinutes) || 0, services.reduce((sum, service) => sum + serviceDuration(service), 0));
   }
   function minutes(time) {
@@ -37,8 +43,11 @@
   const overlaps = (start, length, otherStart, otherLength) =>
     Number.isFinite(start) && Number.isFinite(otherStart) && start < otherStart + otherLength && otherStart < start + length;
   const clock = value => `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;
-  const overlapsLunch = (start, length) => overlaps(start, length, 13 * 60, 30);
-  const api = { overlapsLunch, durations, serviceDuration, duration, minutes, overlaps, clock };
+  const local24Hours = () => typeof module === 'object' && module.exports
+    ? process.env.GM_LOCAL_24_HOURS === '1' && process.env.VERCEL !== '1'
+    : ['localhost', '127.0.0.1', '[::1]'].includes(root.location?.hostname);
+  const overlapsLunch = (start, length) => !local24Hours() && overlaps(start, length, 13 * 60, 30);
+  const api = { local24Hours, servicesFor, overlapsLunch, durations, serviceDuration, duration, minutes, overlaps, clock };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.BookingTime = api;
 })(typeof globalThis === 'object' ? globalThis : this);

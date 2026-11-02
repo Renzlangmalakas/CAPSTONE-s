@@ -22,6 +22,15 @@
 <link rel="stylesheet" href="../Shared/metric-cards.css?v=20261029-compact">
 <link rel="stylesheet" href="../Shared/sidebar-icons.css?v=20261028-1">
 <link rel="stylesheet" href="../Shared/ui-icons.css?v=20261028-profile-camera">
+<link rel="stylesheet" href="../Shared/appointment-ui.css?v=20261102-transparent-toolbar">
+<link rel="stylesheet" href="../Shared/fee-editor.css?v=20261102">
+<link rel="stylesheet" href="../Shared/history-calendar.css?v=20261102-numbers">
+<link rel="stylesheet" href="../Shared/interaction-speed.css?v=20261102">
+<link rel="stylesheet" href="../Shared/patient-creation.css?v=20261102">
+<link rel="stylesheet" href="../Shared/theme-controls.css?v=20261102">
+<link rel="stylesheet" href="../Shared/detail-views.css?v=20261102-compact">
+<link rel="stylesheet" href="../Shared/edit-dialogs.css?v=20261102">
+<link rel="stylesheet" href="../Shared/scrollbars.css?v=20261102">
 </head>
 <body data-portal-role="dentist">
   <div class="app-shell" id="appShell">
@@ -58,9 +67,6 @@
         </a>
         <a href="#" id="link-history" class="nav-link" onclick="showSection('history')">
           <i class="bi bi-clock-history"></i><span>Treatment Log</span>
-        </a>
-        <a href="#" id="link-archive" class="nav-link" onclick="showSection('archive')">
-          <i class="bi bi-archive" aria-hidden="true"></i><span>Archive</span>
         </a>
 
         <div class="nav-label">ACCOUNT</div>
@@ -231,11 +237,11 @@
             </div>
             <div class="page-actions">
               <button class="btn-soft" onclick="showAddAppointmentModal()"><i class="bi bi-plus-lg"></i> Add Appointment</button>
-              <button class="btn-gradient" onclick="showSection('archive')"><i class="bi bi-archive"></i> View Archive</button>
+
             </div>
           </div>
 
-          <div class="toolbar-card"> 
+          <div class="toolbar-card">
           <div class="toolbar-grid">
             <input type="text" id="scheduleSearch" class="form-control form-dark" placeholder="Search patient or service...">
 
@@ -364,14 +370,14 @@
             </div>
           </div>
 
-          <div class="records-toolbar"><label>Search patients<input id="directorySearch" type="search" class="form-control" placeholder="Search by patient name" oninput="dentistListPages.directory=1;renderPatients()"></label><label>Sort by<select id="directorySort" class="form-select" onchange="dentistListPages.directory=1;renderPatients()"><option value="name">Name: A-Z</option><option value="name-desc">Name: Z-A</option><option value="visit">Last visit: Newest</option><option value="appointments">Most appointments</option></select></label><label>Per page<select id="directoryPageSize" class="form-select" onchange="dentistListPages.directory=1;renderPatients()"><option>8</option><option>12</option><option>24</option></select></label></div><div class="records-table-wrap"><table class="records-table" data-pagination="off"><thead><tr><th>Patient</th><th>Contact</th><th>Condition</th><th>Last visit</th><th>Status</th><th>Actions</th></tr></thead><tbody id="patientCards"></tbody></table></div><div id="directoryPagination" class="records-pagination"></div>
+          <div class="records-toolbar"><label>Search patients<input id="directorySearch" type="search" class="form-control" placeholder="Search by patient name" oninput="dentistListPages.directory=1;renderPatients()"></label><label>Sort by<select id="directorySort" class="form-select" onchange="dentistListPages.directory=1;renderPatients()"><option value="name">Name: A-Z</option><option value="name-desc">Name: Z-A</option><option value="visit">Last visit: Newest</option><option value="appointments">Most appointments</option></select></label><label>Per page<select id="directoryPageSize" class="form-select" onchange="dentistListPages.directory=1;renderPatients()"><option>8</option><option>12</option><option>24</option></select></label></div><div class="records-table-wrap"><table class="records-table" data-pagination="off"><thead><tr><th>Patient</th><th>Contact</th><th>Last visit</th><th>Status</th><th>Actions</th></tr></thead><tbody id="patientCards"></tbody></table></div><div id="directoryPagination" class="records-pagination"></div>
 
         <div class="mt-4">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h4 class="fw-bold mb-0">Disabled Patients</h4>
             <small class="text-muted">Hidden from active directory</small>
           </div>
-          <div class="records-toolbar"><label>Search patients<input id="disabledSearch" type="search" class="form-control" placeholder="Search by patient name" oninput="dentistListPages.disabled=1;renderPatients()"></label><label>Sort by<select id="disabledSort" class="form-select" onchange="dentistListPages.disabled=1;renderPatients()"><option value="name">Name: A-Z</option><option value="name-desc">Name: Z-A</option><option value="visit">Last visit: Newest</option><option value="appointments">Most appointments</option></select></label><label>Per page<select id="disabledPageSize" class="form-select" onchange="dentistListPages.disabled=1;renderPatients()"><option>8</option><option>12</option><option>24</option></select></label></div><div class="records-table-wrap"><table class="records-table" data-pagination="off"><thead><tr><th>Patient</th><th>Contact</th><th>Condition</th><th>Last visit</th><th>Status</th><th>Actions</th></tr></thead><tbody id="disabledPatientCards"></tbody></table></div><div id="disabledPagination" class="records-pagination"></div>
+          <div class="records-toolbar"><label>Search patients<input id="disabledSearch" type="search" class="form-control" placeholder="Search by patient name" oninput="dentistListPages.disabled=1;renderPatients()"></label><label>Sort by<select id="disabledSort" class="form-select" onchange="dentistListPages.disabled=1;renderPatients()"><option value="name">Name: A-Z</option><option value="name-desc">Name: Z-A</option><option value="visit">Last visit: Newest</option><option value="appointments">Most appointments</option></select></label><label>Per page<select id="disabledPageSize" class="form-select" onchange="dentistListPages.disabled=1;renderPatients()"><option>8</option><option>12</option><option>24</option></select></label></div><div class="records-table-wrap"><table class="records-table" data-pagination="off"><thead><tr><th>Patient</th><th>Contact</th><th>Last visit</th><th>Status</th><th>Actions</th></tr></thead><tbody id="disabledPatientCards"></tbody></table></div><div id="disabledPagination" class="records-pagination"></div>
         </div>
         </section>
 
@@ -392,7 +398,7 @@
               </button>
             </div>
           </div>
-          <div class="treatment-log-toolbar"><label for="treatmentLogSort">Sort by</label><select id="treatmentLogSort" class="form-select" onchange="renderHistoryTable()"><option value="newest">Schedule: Newest first</option><option value="oldest">Schedule: Oldest first</option><option value="name">Patient: A-Z</option><option value="name-desc">Patient: Z-A</option><option value="service">Service: A-Z</option><option value="status">Result: A-Z</option></select></div>
+          <div class="treatment-log-toolbar"><div class="treatment-log-sort"><label for="treatmentLogSort">Sort by</label><select id="treatmentLogSort" class="form-select" onchange="renderHistoryTable()"><option value="newest">Schedule: Newest first</option><option value="oldest">Schedule: Oldest first</option><option value="name">Patient: A-Z</option><option value="name-desc">Patient: Z-A</option><option value="service">Service: A-Z</option><option value="status">Result: A-Z</option></select></div></div>
           <div class="settings-card">
             <div class="table-modern">
               <table class="table">
@@ -464,6 +470,11 @@
         </section>
 
         <section id="profile" class="view">
+    <div class="settings-card gm-settings-archive">
+      <div><h3>Archived appointments</h3><p>Finished appointment history is automatically archived after 6 months. Records remain available here for viewing.</p></div>
+      <button type="button" class="btn btn-outline-primary" onclick="showSection('archive')">View archived records</button>
+    </div>
+
           <div class="container-fluid py-4 px-0">
             <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
               <h2 class="fw-bold mb-0">Dentist Settings</h2>
@@ -506,7 +517,7 @@
                   </div>
                   <div class="mb-3">
                     <label class="form-label small text-muted">Specialty</label>
-                    <input type="text" id="profileSpecialty" class="form-control bg-transparent" value="" disabled>
+                    <textarea id="profileSpecialty" class="form-control bg-transparent" rows="2" disabled style="resize:none"></textarea>
                   </div>
                   <div class="mb-3">
                     <label class="form-label small text-muted">Phone Number</label>
@@ -520,7 +531,7 @@
                   <h5 class="fw-bold mb-4">Availability & Security</h5>
                   <div class="mb-3">
                     <label class="form-label small text-muted">Clinic Schedule</label>
-                   <input type="text" id="profileSchedule" class="form-control bg-transparent" value="Mon, Wed, Fri â€¢ 9:00 AM - 5:00 PM" disabled>  
+                   <textarea id="profileSchedule" class="form-control bg-transparent" rows="4" readonly aria-label="Your clinic working days and hours" style="resize:none;line-height:1.8"></textarea>
                   </div>
                   <div class="gm-password-field mb-3" hidden>
                     <label class="form-label small text-muted">New Password</label>
@@ -664,7 +675,7 @@
               <option value="">Select Gender</option>
               <option>Male</option>
               <option>Female</option>
-              <option>Other</option>
+
             </select>
           </div>
           <div class="col-md-6"><input id="p_contact" class="form-control form-dark" placeholder="Contact Number"></div>
@@ -898,17 +909,27 @@
 </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="../Shared/default-accounts.js?v=20261005-patients"></script>
+  <script src="../Shared/default-accounts.js?v=20261102-schedules"></script>
 <script src="../Shared/dentist-access.js"></script>
-<script src="../Shared/shared-supabase-sync.js?v=20261007-staff-edits"></script>
+<script src="../Shared/shared-supabase-sync.js?v=20261102-fast-record-save"></script>
 <script src="../Shared/account-security.js"></script>
   <script src="../Shared/additional-fees.js"></script>
   <script src="../Shared/service-catalog.js?v=20261027-services-az"></script>
   <script src="../Shared/site-content.js?v=20261026-typography"></script>
   <script src="../Shared/published-content.js?v=20261027-photo-aliases"></script>
-  <script src="dentist_page.js?v=20261029-profile"></script>
+  <script src="dentist_page.js?v=20261102-schedule-refresh"></script>
 <script src="record-calendar.js?v=20261028-floating"></script>
-<script src="patient-record.js?v=20261028-calendar"></script>
+<script src="patient-record.js?v=20261102-fast-record-save"></script>
+<script src="../Shared/appointment-actions.js?v=20261102"></script>
+<script src="../Shared/history-calendar.js?v=20261102"></script>
+<script src="../Shared/appointment-ui.js?v=20261102-log-toolbar"></script>
+<script src="../Shared/booking-time.js"></script>
+<script src="../Shared/dentist-services.js"></script>
+<script src="../Shared/clinic-hours.js"></script>
+<script src="../Staff/staff-availability.js"></script>
+<script src="../Shared/patient-creation.js?v=20261102-login"></script>
+<script src="../Shared/detail-views.js?v=20261102-compact"></script>
+<script src="../Shared/audit-interactions.js?v=20261102"></script>
 </body>
 </html>
 

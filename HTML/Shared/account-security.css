@@ -43,6 +43,13 @@
 .gm-account-security .gm-security-status {
   color: var(--gm-security-muted) !important;
 }
+.gm-account-security .gm-security-status.is-error {
+  color: #ef4444 !important;
+}
+.gm-account-security .gm-security-status.is-error::before {
+  content: '\26A0';
+  margin-right: .4em;
+}
 .gm-account-security input,
 .gm-account-security button:not(.gm-submit) {
   background: var(--gm-security-input) !important;

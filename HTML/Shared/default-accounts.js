@@ -5,7 +5,7 @@
     "name": "Dr. Carla Mendoza",
     "email": "carla.mendoza@gmdental.com",
     "role": "dentist",
-    "specialty": "Periodontist"
+    "specialty": "Periodontist, General Dentist"
   },
   {
     "name": "Dr. Imelda Mappala",
@@ -17,37 +17,37 @@
     "name": "Dr. Sofia Ramirez",
     "email": "sofia.ramirez@gmdental.com",
     "role": "dentist",
-    "specialty": "Endodontist"
+    "specialty": "Endodontist, General Dentist"
   },
   {
     "name": "Dr. Daniel Santos",
     "email": "daniel.santos@gmdental.com",
     "role": "dentist",
-    "specialty": "Orthodontist"
+    "specialty": "Orthodontist, General Dentist"
   },
   {
     "name": "Dr. Andrea Cruz",
     "email": "andrea.cruz@gmdental.com",
     "role": "dentist",
-    "specialty": "Oral Surgeon"
+    "specialty": "Oral Surgeon, General Dentist"
   },
   {
     "name": "Dr. Paolo Villanueva",
     "email": "paolo.villanueva@gmdental.com",
     "role": "dentist",
-    "specialty": "Cosmetic Dentist"
+    "specialty": "Cosmetic Dentist, General Dentist"
   },
   {
     "name": "Dr. Miguel Torres",
     "email": "miguel.torres@gmdental.com",
     "role": "dentist",
-    "specialty": "Prosthodontist"
+    "specialty": "Prosthodontist, General Dentist"
   },
   {
     "name": "Dr. Maria Reyes",
     "email": "maria.reyes@gmdental.com",
     "role": "dentist",
-    "specialty": "Pediatric Dentist"
+    "specialty": "Pediatric Dentist, General Dentist"
   },
   {
     "name": "Administrator",
@@ -67,13 +67,13 @@
 ];
   // Existing clinic booking roster; saved working hours take precedence.
   const workingDays = {
-    "maria.reyes@gmdental.com": ["Thursday"],
-    "carla.mendoza@gmdental.com": ["Friday"],
-    "imelda.mappala@gmdental.com": ["Monday", "Thursday", "Saturday"],
-    "sofia.ramirez@gmdental.com": ["Monday", "Friday", "Saturday"],
+    "maria.reyes@gmdental.com": ["Wednesday", "Thursday"],
+    "carla.mendoza@gmdental.com": ["Tuesday", "Friday"],
+    "imelda.mappala@gmdental.com": ["Monday", "Wednesday", "Friday", "Saturday"],
+    "sofia.ramirez@gmdental.com": ["Monday", "Friday"],
     "daniel.santos@gmdental.com": ["Wednesday", "Saturday"],
-    "andrea.cruz@gmdental.com": ["Wednesday"],
-    "paolo.villanueva@gmdental.com": ["Tuesday"],
+    "andrea.cruz@gmdental.com": ["Wednesday", "Friday"],
+    "paolo.villanueva@gmdental.com": ["Tuesday", "Thursday"],
     "miguel.torres@gmdental.com": ["Tuesday", "Saturday"]
   };
   function defaultSchedules(account) {
@@ -113,6 +113,7 @@
       if (!positions.has(a.email)) result.push({ ...a, id: "default-" + a.email.split("@")[0], schedules: [], archived: false });
     }
     for (const item of result) {
+      if ((role || item.role) === "staff") item.position = "All Staff Positions";
       const account = match(item, role || item.role);
       if (account?.role !== "dentist") continue;
       if (!Array.isArray(item.schedules) || !item.schedules.length) item.schedules = defaultSchedules(account);
@@ -210,6 +211,14 @@
       const a = match({ name: row.dentist }, "dentist");
       if (a) row.dentist = a.name;
     }
+    // Normalize native database shifts before joining them to the roster.
+    db.dentistSchedules = (db.dentistSchedules || []).map(row => ({
+      ...row,
+      day: row.day || ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][row.dayOfWeek ?? row.day_of_week],
+      start: String(row.start || row.startTime || row.start_time || '').slice(0,5),
+      end: String(row.end || row.endTime || row.end_time || '').slice(0,5),
+      archived: Boolean(row.archived || row.isActive === false || row.is_active === false)
+    }));
     // Separate saved schedule rows are also used by the clinic database.
     for (const dentist of db.dentists || []) {
       const saved = (db.dentistSchedules || []).filter(row => !row.archived &&

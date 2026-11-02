@@ -9,6 +9,7 @@
     const response = await window.GmDentalApiFetch(`${base}${path}`, {
       method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
     });
+    if(response.status===304)return {user:session(),message:'No changes to save.'};
     const result = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(result.message || 'Unable to verify your account. Please try again.');
     return result;
@@ -74,8 +75,9 @@
           busy = true;
           dialog.querySelectorAll('button').forEach(button => { button.disabled = true; });
           status.textContent = 'Verifying…';
+          status.classList.remove('is-error');
           try { await task(); }
-          catch (error) { status.textContent = error.message; }
+          catch (error) { status.classList.add('is-error'); status.textContent = error.message; }
           finally {
             busy = false;
             dialog.querySelectorAll('button').forEach(button => { button.disabled = false; });

@@ -1004,26 +1004,7 @@ function initPatientRecordFilters() {
 }
 
 function moveAppointmentToArchive(id, source = "patient") {
-    const appointments = getAppointmentsShared();
-    const index = appointments.findIndex(apt => String(apt.id) === String(id) && matchesCurrentPatient(apt));
-    if (index === -1) {
-        showToast("Appointment not found.");
-        return false;
-    }
-
-    appointments[index] = normalizeAppointmentFinancials({
-        ...appointments[index],
-        statusBeforeArchive: appointments[index].lifecycleStatus || appointments[index].status || "Pending",
-        archived: false,
-        archivedForPatient: true,
-        archivedAt: new Date().toISOString(),
-        archivedBy: source,
-        updatedAt: new Date().toISOString()
-    });
-
-    saveAppointmentsShared(appointments);
-
-    return true;
+    return showToast("Only an administrator can manage archived appointment records.", "error");
 }
 
 // LOAD TABLE
@@ -1144,21 +1125,7 @@ function loadAppointmentsUI() {
 }
 
 function deleteHistory(id) {
-    const apt = getAppointmentById(id);
-    if (!apt) {
-        showToast("Appointment not found.");
-        return;
-    }
-
-    openPatientCrudWarning({
-        title: "Move History Record to Archive?",
-        message: `This will move ${apt.service || "this history record"} to Archive. You can restore it later from the Archive tab.`,
-        confirmLabel: "Archive",
-        confirmClass: "btn-gradient",
-        iconClass: "icon-box-archive",
-        icon: "bi bi-archive",
-        onConfirm: () => performArchiveAppointment(id, "patient-history", "History record moved to archive.", "A history record was moved to archive.")
-    });
+    return showToast("Only an administrator can manage archived appointment records.", "error");
 }
 
 
@@ -1209,71 +1176,15 @@ function confirmPatientCrudWarning() {
 document.getElementById("patientCrudConfirmBtn")?.addEventListener("click", confirmPatientCrudWarning);
 
 function performArchiveAppointment(id, source = "patient", successMessage = "Appointment archived.", notificationMessage = "An appointment was moved to archive.") {
-    const moved = moveAppointmentToArchive(id, source);
-    if (!moved) return;
-
-    closeAllPatientActionMenus?.();
-    showToast(successMessage);
-    addNotification(notificationMessage);
-    renderAllPatientUI();
+    return showToast("Only an administrator can manage archived appointment records.", "error");
 }
 
 function performMoveManyAppointmentsToArchive(statuses = [], source = "patient-bulk", successMessage = "Appointments moved to archive.", notificationMessage = "Appointments were moved to archive.", emptyMessage = "No matching appointments found.") {
-    const appointments = getAppointmentsShared();
-    const allowedStatuses = Array.isArray(statuses) ? statuses : [];
-
-    const toArchive = appointments.filter(item =>
-        matchesCurrentPatient(item) &&
-        allowedStatuses.includes(String(item.status || "").trim()) &&
-        item.archivedForPatient !== true &&
-        item.archived !== true
-    );
-
-    if (!toArchive.length) {
-        showToast(emptyMessage);
-        return;
-    }
-
-    const nextAppointments = appointments.map(item => {
-        if (!toArchive.some(target => String(target.id) === String(item.id))) {
-            return item;
-        }
-
-        return normalizeAppointmentFinancials({
-            ...item,
-            statusBeforeArchive: item.lifecycleStatus || item.status || "Pending",
-            archived: false,
-            archivedForPatient: true,
-            updatedAt: new Date().toISOString(),
-            archivedAt: new Date().toISOString(),
-            archivedBy: source
-        });
-    });
-
-    saveAppointmentsShared(nextAppointments);
-
-    showToast(successMessage);
-    addNotification(notificationMessage);
-    renderAllPatientUI();
+    return showToast("Only an administrator can manage archived appointment records.", "error");
 }
 
 function performClearArchive() {
-    const archive = getArchivedAppointmentsShared();
-
-    if (!archive.length) {
-        showToast("Archive is already empty.");
-        return;
-    }
-
-    const remainingAppointments = getAppointmentsShared().filter(item => {
-        if (!matchesCurrentPatient(item)) return true;
-        return item.archivedForPatient !== true && item.archived !== true;
-    });
-
-    saveAppointmentsShared(remainingAppointments);
-    showToast("Archive cleared permanently.");
-    addNotification("Archived records were permanently removed.");
-    renderAllPatientUI();
+    return showToast("Only an administrator can manage archived appointment records.", "error");
 }
 
 // 1. Trigger the Custom Modal instead of alert
@@ -1477,7 +1388,7 @@ function getSelectedServicesTotalPrice() {
 
 function getSelectedServicesTotalDurationLabel() {
     const totalMinutes = getBookingServices().reduce((sum, service) => {
-        return sum + Number(service.chairMinutes || 0);
+        return sum + BookingTime.serviceDuration(service);
     }, 0);
 
     if (totalMinutes <= 0) {
@@ -1503,6 +1414,7 @@ function updateMainPatientDisplay() {
 }
 
 function addDependent(index = -1) {
+
     editingDependentIndex = index;
     const dep = bookingDependents[index];
     const modal = document.getElementById("dependentModal");
@@ -1511,7 +1423,8 @@ function addDependent(index = -1) {
     document.getElementById("dependentRelationshipInput").value = dep?.relationship || "";
     document.getElementById("dependentModalTitle").textContent = dep ? "Edit dependent" : "Add dependent / child";
     document.getElementById("saveDependentButton").textContent = dep ? "Save changes" : "Add dependent";
-    document.getElementById("dependentServicesList").innerHTML = services.map((service, i) => `
+    document.getElementById("saveDependentButton").disabled = !selectedDentistObj;
+    document.getElementById("dependentServicesList").innerHTML = !selectedDentistObj ? '<p role="status">Select dentist first to see eligible services</p>' : services.map((service, i) => ({service, i})).filter(({service}) => dentistCanPerformService(selectedDentistObj, service.name)).map(({service, i}) => `
         <label class="dependent-service-option">
             <input type="checkbox" value="${i}" ${dep?.services?.some(item => item.name === service.name) ? "checked" : ""}>
             <span>${escapeHtml(service.name)}<small>${formatBillingCurrency(service.price || 0)} ? ${BookingTime.serviceDuration(service)} min</small></span>
@@ -1531,7 +1444,8 @@ function saveDependent() {
     const relationship = document.getElementById("dependentRelationshipInput").value.trim();
     const selected = Array.from(document.querySelectorAll("#dependentServicesList input:checked"))
         .map(input => services[Number(input.value)]).filter(Boolean);
-    if (!name) { showToast("Enter the dependent's full name."); return; }
+    if (!name || /\p{N}/u.test(name)) { showToast("Enter a valid dependent name without numbers.", "error"); return; }
+    if (!selectedDentistObj || selected.some(service => !dentistCanPerformService(selectedDentistObj, service.name))) return showToast("Choose services eligible for the selected dentist.", "error");
     if (!ageInput.checkValidity()) { ageInput.reportValidity(); return; }
     if (!selected.length) { showToast("Choose at least one service for this dependent."); return; }
     const dep = { id: bookingDependents[editingDependentIndex]?.id || createClinicEntityId("dep"), name, age, relationship, services: selected };
@@ -1550,8 +1464,8 @@ function renderDependentsList() {
         item.className = "dependent-item";
         item.innerHTML = `<div class="dependent-info">
             <span class="dependent-name">${escapeHtml(dep.name)}</span>
-            <span class="dependent-details">${escapeHtml(dep.relationship || "Dependent")}${dep.age ? " ? Age " + escapeHtml(dep.age) : ""}</span>
-            <div class="dependent-service-summary">${(dep.services || []).map(service => `<span>${escapeHtml(service.name)} ? ${formatBillingCurrency(service.price || 0)}</span>`).join("")}</div>
+            <span class="dependent-details">${escapeHtml(dep.relationship || "Dependent")}${dep.age !== undefined && dep.age !== null && dep.age !== "" ? " &middot; Age " + escapeHtml(dep.age) : ""}</span>
+            <div class="dependent-service-summary">${(dep.services || []).map(service => `<span>${escapeHtml(service.name)} &middot; ${formatBillingCurrency(service.price || 0)}</span>`).join("")}</div>
         </div><div class="dependent-actions">
             <button type="button" class="btn btn-outline-primary btn-sm" onclick="addDependent(${index})">Edit</button>
             <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeDependent(${index})" aria-label="Remove ${escapeHtml(dep.name)}">Remove</button>
@@ -1668,7 +1582,7 @@ async function refreshBookingReservations() {
             const base = window.GmDentalSupabaseSync?.apiBaseUrl || window.GM_DENTAL_API_BASE || "";
             // Read independently of the write-sync queue. Unsaved local changes
             // must not hide reservations made on another device.
-            const response = await window.GmDentalApiFetch(`${base}/api/clinic-db`, { cache: "no-store" });
+            const response = await window.GmDentalApiFetch(`${base}/api/booking-availability`, { cache: "no-store" });
             if (!response.ok) throw new Error("Could not refresh appointment availability.");
             const result = await response.json();
             if (!Array.isArray(result.db?.appointments)) throw new Error("Invalid appointment availability response.");
@@ -2487,12 +2401,13 @@ function dentistWorksOnDateAndTime(dentist, dateString, timeDisplayValue, durati
 
   const bookingStart = BookingTime.minutes(selectedTime24);
   const bookingEnd = bookingStart + durationMinutes;
-  if (!Number.isFinite(bookingStart) || bookingStart < 9 * 60 || bookingEnd > 17 * 60) return false;
+  if (!Number.isFinite(bookingStart) || bookingStart < (BookingTime.local24Hours() ? 0 : 9 * 60) || bookingEnd > (BookingTime.local24Hours() ? 1440 : 17 * 60)) return false;
   if (!schedules.length) return true;
 
   return schedules.some((slot) => {
     const slotDay = normalizeDayName(slot.day);
     if (slotDay !== dayName) return false;
+    if (BookingTime.local24Hours()) return true;
 
     const start = String(slot.start || "").trim();
     const end = String(slot.end || "").trim();
@@ -2745,8 +2660,8 @@ function populateDentistDropdownFromSnapshot() {
 }
 
 function getAllBookingTimeSlots() {
-  return Array.from({ length: 96 }, (_, index) => {
-    const value = 9 * 60 + index * 5;
+  return Array.from({ length: BookingTime.local24Hours() ? 288 : 96 }, (_, index) => {
+    const value = (BookingTime.local24Hours() ? 0 : 9 * 60) + index * 5;
     const hour = Math.floor(value / 60);
     return `${hour % 12 || 12}:${String(value % 60).padStart(2, "0")} ${hour < 12 ? "AM" : "PM"}`;
   });
@@ -5631,9 +5546,9 @@ async function handleServiceLevelPaymentSubmit(e) {
       }
       const message = decision.status === "verified" ? `Receipt approved. ${formatBillingCurrency(decision.amount)} deducted from your bill. Remaining balance: ${formatBillingCurrency(updatedBilling.remainingBalance)}.` : decision.status === "pending" ? "Receipt submitted for staff review. Some image details could not be read confidently. Your balance will update after approval." : `Receipt automatically rejected: ${decision.rejectionReason}`;
       document.getElementById("receiptPendingStatus").textContent = message;
-      showToast(message);
+      showToast(message, decision.status === "rejected" ? "error" : decision.status === "pending" ? "warning" : "success");
       pushDentistNotification(`${item.patientName || "Patient"}: ${message}`, { appointmentId: item.id, eventType: "payment_review" });
-    } catch (error) { showToast(error.message || "Unable to submit receipt."); }
+    } catch (error) { showToast(error.message || "Unable to submit receipt.", "error"); }
     finally { billingSubmitLocked = false; }
     return;
   }
@@ -7123,83 +7038,29 @@ function submitReview(appointmentId, rating, text) {
 }
 
 function archiveAppointment(id) {
-    const apt = getAppointmentById(id);
-    if (!apt) {
-        showToast("Appointment not found.");
-        return;
-    }
-
-    openPatientCrudWarning({
-        title: "Archive Appointment?",
-        message: `This will move ${apt.service || "this appointment"} to Archive. You can restore it later from the Archive tab.`,
-        confirmLabel: "Archive",
-        confirmClass: "btn-gradient",
-        iconClass: "icon-box-archive",
-        icon: "bi bi-archive",
-        onConfirm: () => performArchiveAppointment(id, "patient", "Appointment archived.", "An appointment was moved to archive.")
-    });
+    return showToast("Only an administrator can manage archived appointment records.", "error");
 }
 
 function clearAppointments() {
-    openPatientCrudWarning({
-        title: "Archive All Active Appointments?",
-        message: "This will move all active appointments to Archive. You can restore them later from the Archive tab.",
-        confirmLabel: "Archive All",
-        confirmClass: "btn-gradient",
-        iconClass: "icon-box-archive",
-        icon: "bi bi-archive",
-        onConfirm: () => performMoveManyAppointmentsToArchive(
-            ["Pending", "Approved", "Ongoing", "Reschedule Requested", "Reschedule Rejected"],
-            "patient-clear-all",
-            "All active appointments moved to archive.",
-            "All active appointments were archived.",
-            "No active appointments to archive."
-        )
-    });
+    return showToast("Only an administrator can manage archived appointment records.", "error");
 }
 
 function archiveAllHistory() {
-    openPatientCrudWarning({
-        title: "Archive All History Records?",
-        message: "This will move all history records to Archive. You can restore them later from the Archive tab.",
-        confirmLabel: "Archive All",
-        confirmClass: "btn-gradient",
-        iconClass: "icon-box-archive",
-        icon: "bi bi-archive",
-        onConfirm: () => performMoveManyAppointmentsToArchive(
-            ["Completed", "Cancelled", "Rejected"],
-            "patient-history-archive-all",
-            "All history records moved to archive.",
-            "All history records were archived.",
-            "No history records to archive."
-        )
-    });
+    return showToast("Only an administrator can manage archived appointment records.", "error");
 }
 
 function clearArchive() {
-    openPatientCrudWarning({
-        title: "Clear Archived Appointments?",
-        message: "This will permanently delete every archived record. This action cannot be undone.",
-        confirmLabel: "Clear Archive",
-        confirmClass: "btn-danger-final",
-        iconClass: "icon-box-danger",
-        icon: "bi bi-exclamation-triangle",
-        onConfirm: performClearArchive
-    });
+    return showToast("Only an administrator can manage archived appointment records.", "error");
 }
 
 // Remove all appointments and archived appointments for the patient and refresh UI
 function clearAllAppointments() {
-  const db = ensureClinicDbShape(getClinicDb());
-  db.appointments = [];
-  db.archivedAppointments = [];
-  saveClinicDb(db);
-  refreshPatientUI();
+    return showToast("Only an administrator can manage archived appointment records.", "error");
 }
 
 // Function to pull an appointment out of Archive
 function restoreFromArchive(id) {
-    restoreAppointment(id);
+    return showToast("Only an administrator can manage archived appointment records.", "error");
 }
 
 // Function to render the Archive table
@@ -7297,7 +7158,12 @@ function viewAppointmentDetails(id) {
     }
 
     const modal = document.getElementById("appointmentDetailsModal");
-    if (modal) modal.classList.add("active");
+    if (modal) {
+        // Keep the overlay outside transformed or clipped dashboard containers.
+        document.body.appendChild(modal);
+        modal.classList.add("active");
+        modal.querySelector('.apt-detail-grid')?.scrollTo(0, 0);
+    }
 }
 
 function closeAppointmentDetailsModal() {
@@ -7306,28 +7172,7 @@ function closeAppointmentDetailsModal() {
 }
 
 function restoreAppointment(id) {
-    const appointments = getAppointmentsShared();
-    const itemIndex = appointments.findIndex(item => String(item.id) === String(id) && matchesCurrentPatient(item));
-    if (itemIndex === -1) {
-        showToast("Archived item not found.");
-        return;
-    }
-
-    appointments[itemIndex] = normalizeAppointmentFinancials({
-        ...appointments[itemIndex],
-        status: appointments[itemIndex].statusBeforeArchive || appointments[itemIndex].status || "Pending",
-        archived: false,
-        archivedForPatient: false,
-        updatedAt: new Date().toISOString(),
-        archivedAt: "",
-        archivedBy: ""
-    });
-
-    saveAppointmentsShared(appointments);
-
-    showToast("Appointment restored.");
-    addNotification("An archived appointment was restored.");
-    renderAllPatientUI();
+    return showToast("Only an administrator can manage archived appointment records.", "error");
 }
 
 
@@ -7351,11 +7196,7 @@ document.getElementById("confirmClearAllBtn").onclick = function() {
 let permanentDeleteId = null;
 
 function permanentlyDelete(id) {
-    permanentDeleteId = String(id);
-    const modal = document.getElementById("permanentDeleteModal");
-    if (modal) {
-        modal.classList.add("active");
-    }
+    return showToast("Only an administrator can delete appointment records.", "error");
 }
 
 function closePermanentDeleteModal() {
@@ -7387,9 +7228,10 @@ document.getElementById("confirmPermanentDeleteBtn")?.addEventListener("click", 
 let isEditingProfile = false;
 
 function setProfileEditingState(isEditing) {
+    const email = document.getElementById("profileEmail");
+    if (email) email.disabled = true;
     const fields = [
         document.getElementById("profileFullName"),
-        document.getElementById("profileEmail"),
         document.getElementById("profilePhone"),
         document.getElementById("profileNewPassword"),
         document.getElementById("profileConfirmPassword")

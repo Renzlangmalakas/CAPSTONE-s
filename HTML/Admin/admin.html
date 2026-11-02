@@ -25,6 +25,16 @@
 <link rel="stylesheet" href="../Shared/metric-cards.css?v=20261028-1">
 <link rel="stylesheet" href="../Shared/sidebar-icons.css?v=20261028-1">
 <link rel="stylesheet" href="../Shared/ui-icons.css?v=20261028-1">
+<link rel="stylesheet" href="../Shared/appointment-ui.css?v=20261102-warning-icons">
+<link rel="stylesheet" href="../Shared/history-calendar.css?v=20261102-numbers">
+<link rel="stylesheet" href="../Shared/interaction-speed.css?v=20261102">
+<link rel="stylesheet" href="../Shared/patient-creation.css?v=20261102">
+<link rel="stylesheet" href="../Shared/theme-controls.css?v=20261102">
+<link rel="stylesheet" href="audit-log.css?v=20261102-dialog">
+<link rel="stylesheet" href="../Shared/detail-views.css?v=20261102-compact">
+  <link rel="stylesheet" href="patient-merge.css?v=20261102">
+<link rel="stylesheet" href="../Shared/edit-dialogs.css?v=20261102">
+<link rel="stylesheet" href="../Shared/scrollbars.css?v=20261102">
 </head>
 <body data-portal-role="admin">
   <div class="app-shell">
@@ -324,9 +334,16 @@
             <option value="month">This Month</option>
             <option value="week">This Week</option>
             <option value="day">Specific Day</option>
+            <option value="custom">Custom Date Range</option>
           </select>
           <input type="date" id="revenueDateSpecific" class="input hidden" />
+          <div id="revenueCustomRange" class="revenue-custom-range hidden">
+            <label for="revenueStartDate">Start Date<input type="date" id="revenueStartDate" class="input" aria-describedby="revenueRangeSummary" /></label>
+            <label for="revenueEndDate">End Date<input type="date" id="revenueEndDate" class="input" aria-describedby="revenueRangeSummary" /></label>
+          </div>
+          <button id="exportRevenueBtn" type="button" class="btn primary"><i class="bi bi-download"></i> Export CSV</button>
         </div>
+        <p id="revenueRangeSummary" class="revenue-range-summary" role="status" aria-live="polite"></p>
 
         <div class="stats-grid">
           <article class="stat-card purple">
@@ -352,6 +369,7 @@
           </article>
         </div>
 
+        <p id="revenueReconciliation" class="revenue-range-summary is-error" role="status" aria-live="polite"></p>
         <article class="panel">
           <div class="panel-header">
             <h2><i class="bi bi-graph-up-arrow"></i> Revenue Records</h2>
@@ -494,7 +512,14 @@
         </div>
 
         <div id="discountReportControls" class="hidden"><p id="discountReportStatus" role="status"></p><button type="button" class="btn secondary" id="discountRefreshBtn">Refresh Discounted Prices</button></div>
-        <div id="auditReportControls" class="hidden"><p id="auditReportStatus" role="status"></p><button type="button" class="btn secondary" id="auditRefreshBtn">Refresh Audit Log</button><button type="button" class="btn secondary hidden" id="auditMoreBtn">Load More</button></div>
+        <div id="auditReportControls" class="hidden"><div class="audit-heading"><div><p class="audit-eyebrow">ACCOUNTABILITY</p><h2>User audit log</h2><p>Review account activity, record changes, and security events.</p></div></div><div class="audit-filters">
+<label>From<input id="auditFrom" type="date"></label><label>To<input id="auditTo" type="date"></label>
+<label>User email<input id="auditUser" type="email" placeholder="Exact email"></label>
+<label>Role<select id="auditRole"><option value="">All roles</option><option>admin</option><option>dentist</option><option>staff</option><option>patient</option><option>system</option></select></label>
+<label>Action<input id="auditAction" placeholder="e.g. Created Appointment"></label>
+<label>Outcome<select id="auditOutcome"><option value="">All outcomes</option><option>Success</option><option>Failed</option><option>Denied</option></select></label>
+</div><details class="audit-alerts-panel"><summary>Recent security alerts</summary><div id="auditAlerts" role="status"></div></details>
+<div class="audit-controls-footer"><p id="auditReportStatus" role="status"></p><button type="button" class="btn secondary" id="auditRefreshBtn">Refresh Audit Log</button><button type="button" class="btn secondary hidden" id="auditMoreBtn">Load More</button></div></div>
         <div class="toolbar">
           <input type="text" id="patientSearch" class="input" placeholder="Search patient..." />
           <select id="patientSort" class="input select">
@@ -632,6 +657,7 @@
         <article class="panel space-top">
           <div class="panel-header panel-header-between">
             <h2><i class="bi bi-people"></i> User Accounts</h2>
+            <button class="btn secondary" type="button" id="mergeAccountsBtn">Merge Accounts</button>
             <button class="btn danger" type="button" id="clearAccountsBtn">
               <i class="bi bi-trash"></i> Clear All Active
             </button>
@@ -835,16 +861,28 @@
   </div>
 
   <script src="../Shared/default-accounts.js?v=20261005-patients"></script>
-<script src="../Shared/shared-supabase-sync.js?v=20261005-no-retry-button"></script>
+<script src="../Shared/shared-supabase-sync.js?v=20261102-audit-v2"></script>
 <script src="../Shared/account-security.js"></script>
   <script src="../Shared/additional-fees.js"></script>
 <script src="../Shared/service-catalog.js?v=20261027-services-az"></script>
   <script src="csv-export.js?v=20261026"></script>
 <script src="patient-details.js?v=20261026"></script>
-<script src="admin.js?v=20261028-dentist-active"></script>
+<script src="admin.js?v=20261102-audit-v2"></script>
   <script src="../Shared/site-content.js?v=20261026-typography"></script>
-  <script src="cms.js?v=20261027-services-az"></script>
+  <script src="cms.js?v=20261102-audit-v2"></script>
   <script src="../Shared/payment-receipts.js?v=20261001-cash-approval"></script>
   <script src="../Shared/receipt-review.js?v=20261001-cash-approval"></script>
+<script src="../Shared/appointment-actions.js?v=20261102"></script>
+<script src="../Shared/history-calendar.js?v=20261102"></script>
+<script src="../Shared/appointment-ui.js?v=20261102-warning-icons"></script>
+<script src="../Shared/booking-time.js"></script>
+<script src="../Shared/dentist-services.js"></script>
+<script src="../Shared/clinic-hours.js"></script>
+<script src="../Staff/staff-availability.js"></script>
+<script src="../Shared/patient-creation.js?v=20261102-login"></script>
+<script src="../Shared/detail-views.js?v=20261102-compact"></script>
+<script src="patient-merge.js?v=20261102"></script>
+<script src="audit-details.js?v=20261102"></script>
+<script src="../Shared/audit-interactions.js?v=20261102"></script>
 </body>
 </html>

@@ -26,6 +26,15 @@
 <link rel="stylesheet" href="../Shared/metric-cards.css?v=20261028-1">
 <link rel="stylesheet" href="../Shared/sidebar-icons.css?v=20261028-1">
 <link rel="stylesheet" href="../Shared/ui-icons.css?v=20261028-1">
+<link rel="stylesheet" href="../Shared/appointment-ui.css?v=20261102-warning-icons">
+<link rel="stylesheet" href="../Shared/fee-editor.css?v=20261102">
+<link rel="stylesheet" href="../Shared/history-calendar.css?v=20261102-numbers">
+<link rel="stylesheet" href="../Shared/interaction-speed.css?v=20261102">
+<link rel="stylesheet" href="../Shared/patient-creation.css?v=20261102">
+<link rel="stylesheet" href="../Shared/theme-controls.css?v=20261102">
+<link rel="stylesheet" href="../Shared/detail-views.css?v=20261102-compact">
+<link rel="stylesheet" href="../Shared/edit-dialogs.css?v=20261102">
+<link rel="stylesheet" href="../Shared/scrollbars.css?v=20261102">
 </head>
 <body data-portal-role="staff">
   <div class="app-shell">
@@ -401,7 +410,8 @@
 
               <div>
                 <label class="label" for="staffRole">Role / job title</label>
-                <input class="input" id="staffRole" type="text" />
+                <input class="input" id="staffRole" type="text" value="All Staff Positions" readonly aria-describedby="staffRoleHelp" />
+                <small id="staffRoleHelp">All staff can handle reception, patient queues, appointments, patient records and billing.</small>
               </div>
 
               <div>
@@ -509,20 +519,27 @@
   <div class="toast-wrap" id="toastWrap"></div>
 
   <script src="../Shared/default-accounts.js?v=20261005-patients"></script>
-<script src="../Shared/shared-supabase-sync.js?v=20261005-no-retry-button"></script>
+<script src="../Shared/shared-supabase-sync.js?v=20261102-audit-v2"></script>
 <script src="../Shared/account-security.js"></script>
   <script src="../Shared/additional-fees.js"></script>
   <script src="../Shared/dentist-services.js?v=20261007-imelda"></script>
-  <script src="../Shared/booking-time.js?v=20261007-lunch"></script>
+  <script src="../Shared/booking-time.js?v=20261102-appointments"></script>
   <script src="./staff-availability.js?v=20261007-lunch"></script>
   <script src="../Shared/clinic-hours.js?v=20261007-lunch"></script>
   <script src="dentist-schedule.js"></script>
   <script src="appointment-list.js?v=20261027"></script>
-<script src="staff.js?v=20261027-settings"></script>
+<script src="../Admin/patient-details.js?v=20261102-profile-view"></script>
+<script src="staff.js?v=20261102-login"></script>
   <script src="../Shared/payment-receipts.js?v=20261007-auto-review"></script>
   <script src="../Shared/receipt-review.js?v=20261007-auto-review"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
   <script src="../Patient/receipt-recipient-ocr.js"></script>
   <script src="./receipt-recheck.js?v=20261007-auto-review"></script>
+<script src="../Shared/appointment-actions.js?v=20261102"></script>
+<script src="../Shared/history-calendar.js?v=20261102"></script>
+<script src="../Shared/appointment-ui.js?v=20261102-warning-icons"></script>
+<script src="../Shared/patient-creation.js?v=20261102-login"></script>
+<script src="../Shared/detail-views.js?v=20261102-compact"></script>
+<script src="../Shared/audit-interactions.js?v=20261102"></script>
 </body>
 </html>

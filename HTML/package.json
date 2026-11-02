@@ -5,6 +5,8 @@
   "private": true,
   "type": "commonjs",
   "scripts": {
+    "dev": "node scripts/local-preview.js",
+    "dev:watch": "node --watch scripts/local-preview.js",
     "build": "node scripts/build-landing-pages.js",
     "start": "node api/_app.js",
     "test": "node --test tests/*.test.js"

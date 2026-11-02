@@ -10,7 +10,7 @@ function deletionRoute({ fail = false, role = 'admin' } = {}) {
   let written;
   const source = fs.readFileSync(path.join(__dirname, '../api/_app.js'), 'utf8');
   const start = source.indexOf('app.delete("/api/admin/patients/:id"');
-  const end = source.indexOf('\napp.get("/api/clinic-db"', start);
+  const end = source.indexOf("\napp.get('/api/booking-availability'", start);
   vm.runInNewContext(source.slice(start, end), {
     app: { delete: (_path, handler) => { route = handler; } }, console,
     requireSupabase: () => true, requireServiceRoleKey: () => true,

@@ -29,7 +29,6 @@ function describeEvent(event, actor, req, payload, status) {
   else if (path === '/api/admin/site-content') action = req.body?.action === 'publish' ? 'published website content' : 'saved website content draft';
   else if (path === '/api/account/verification-code') action = 'requested an account verification code';
   else if (path === '/api/account/verify-password') action = 'verified their current password';
-  else if (event.action === 'clinic.sync') action = 'saved clinic records (no appointment or service changes)';
   else action = `${req.method === 'DELETE' ? 'deleted' : 'submitted'} ${path.replace(/^\/api\//, '').replace(/\//g, ' ')}`;
   return `${who} ${status >= 400 ? '— failed: ' : ''}${action}.`;
 }
@@ -42,63 +41,6 @@ function serviceChanges(before, after) {
     return [{ action: old ? 'service.updated' : 'service.created', resource: String(row.id || row.name), details: { name: row.name, fields, priceBefore: old?.price ?? 0, priceAfter: row.price } }];
   });
 }
-function middleware(db, findActor) {
-  return async (req, res, next) => {
-    if (!db || !['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) return next();
-    const login = req.path === '/login';
-    const reset = req.path === '/reset-password';
-    if (!req.user && !login && !reset) return next();
-    let actorRecord;
-    if (findActor && (req.user?.email || reset && req.body?.email)) {
-      try { actorRecord = await findActor(req.user?.email || String(req.body.email).trim().toLowerCase()); } catch { /* Fall back to verified session identity. */ }
-    }
-    let before, beforeServices;
-    const snapshot = req.path === '/api/clinic-db';
-    if (snapshot) {
-      const read = await db.from('clinic_appointments').select('id,data');
-      if (!read.error) before = read.data;
-      if (req.user?.role === 'admin') {
-        const services = await db.from('services').select('id,name,price,archived,description,duration');
-        if (!services.error) beforeServices = services.data;
-      }
-    }
-    const original = res.json.bind(res);
-    res.json = payload => {
-      const status = res.statusCode;
-      const identity = req.user || (status < 400 && payload?.user ? payload.user : reset && status < 400 ? actorRecord : null);
-      const actor = identity ? { ...identity, name: actorRecord?.name || identity.name } : null;
-      if (!actor) return original(payload);
-      const changes = snapshot && status < 400 && before ? appointmentChanges(before, payload?.db?.appointments || req.body?.db?.appointments) : null;
-      const events = (changes || []).map(change => ({ action: change.action, resource: change.id, details: change }));
-      if (snapshot && status < 400 && beforeServices) events.push(...serviceChanges(beforeServices, payload?.db?.services || []));
-      if (!events.length) events.push({ action: login ? 'account.login' : snapshot ? 'clinic.sync' : `${req.method} ${req.route?.path || req.path}`, resource: req.path, details: { httpStatus: status } });
-      for (const event of events) event.details = { ...event.details, description: describeEvent(event, actor, req, payload, status) };
-      // Store only allowlisted metadata, never request bodies, passwords or tokens.
-      const rows = events.map(event => ({ ...event, actor_email: actor.email, actor_role: actor.role,
-        outcome: status < 400 ? 'success' : 'failed' }));
-      Promise.resolve(db.from('clinic_audit_log').insert(rows)).then(result => {
-        if (result.error) console.error('Audit log write failed:', result.error.code);
-        original(payload);
-      }).catch(() => { console.error('Audit log write failed'); original(payload); });
-      return res;
-    };
-    next();
-  };
-}
-function listHandler(db) {
-  return async (req, res) => {
-    if (req.user?.role !== 'admin') return res.status(403).json({ message: 'Administrator access is required.' });
-    const offset = Math.max(0, Math.min(1000000, Number.parseInt(req.query.offset, 10) || 0));
-    let query = db.from('clinic_audit_log').select('*').order('created_at', { ascending: false }).order('id', { ascending: false }).range(offset, offset + 199);
-    for (const [key, operator] of [['from', 'gte'], ['to', 'lt']]) {
-      if (!req.query[key]) continue;
-      const date = new Date(req.query[key]);
-      if (!Number.isFinite(date.getTime())) return res.status(400).json({ message: 'Invalid date filter.' });
-      query = query[operator]('created_at', date.toISOString());
-    }
-    const { data, error } = await query;
-    if (error) return res.status(500).json({ message: 'Unable to load audit log.' });
-    return res.json({ rows: data, hasMore: data.length === 200 });
-  };
-}
-module.exports = { appointmentChanges, serviceChanges, describeEvent, middleware, listHandler };
+// Compatibility entry point; committed changes are audited by database triggers.
+const {middleware,listHandler}=require('./_audit-v2');
+module.exports={appointmentChanges,serviceChanges,describeEvent,middleware,listHandler};

@@ -32,7 +32,7 @@ function createCompleteAppointmentHandler({ supabase, findUser }) {
         const assigned = require('../Shared/dentist-access').assigned(appointment, user);
         if (!assigned) return res.status(403).json({ message: "This appointment belongs to another dentist." });
       }
-      if (appointment.status === "Completed") return res.json({ appointment });
+      if (appointment.status === "Completed") return res.status(304).end();
       if (!["approved", "confirmed", "ongoing", "in progress"].includes(String(appointment.status || "").trim().toLowerCase())) return res.status(409).json({ message: "Only approved or ongoing appointments can be completed." });
       const now = new Date().toISOString();
       const completed = { ...appointment, status: "Completed", visitStatus: "Completed", lifecycleStatus: "Completed",

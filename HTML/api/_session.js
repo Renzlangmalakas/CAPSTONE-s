@@ -6,7 +6,7 @@ function createSessions(secret) {
   }
   return {
     issue(user) {
-      const payload = Buffer.from(JSON.stringify({ email: user.email, role: user.role, exp: Date.now() + 8 * 60 * 60 * 1000 })).toString('base64url');
+      const payload = Buffer.from(JSON.stringify({ id: user.id, name: user.name, email: user.email, role: user.role, exp: Date.now() + 8 * 60 * 60 * 1000 })).toString('base64url');
       return `${payload}.${sign(payload)}`;
     },
     verify(token) {

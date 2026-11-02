@@ -30,7 +30,9 @@ function createCmsHandlers(db) {
         if (!['draft', 'publish'].includes(req.body?.action)) throw new Error('Choose Save Draft or Publish.');
       } catch (error) { return res.status(400).json({ message: error.message }); }
       try {
-        await read();
+        const current=await read();
+        if(current.revision!==req.body.revision)return res.status(409).json({message:'Content changed. Reload before saving.'});
+        if(require('node:util').isDeepStrictEqual(validate(content(current.draft)),draft) && (req.body.action==='draft'||require('node:util').isDeepStrictEqual(validate(content(current.published)),draft)))return res.status(304).end();
         const now = new Date().toISOString();
         const change = { draft, revision: req.body.revision + 1, updated_at: now, updated_by: req.user.id || req.user.email || 'admin' };
         if (req.body.action === 'publish') Object.assign(change, { published: draft, published_at: now });

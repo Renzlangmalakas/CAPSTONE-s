@@ -1,0 +1,233 @@
+/* Read-only detail windows. Form editors and confirmation dialogs keep their layouts. */
+body :is(#viewBackdrop,#appointmentDetailsModal,#serviceModal:not(:has(#servicePickerTitle)),#invoiceModal,#bookedSlotsModal,#patientNotesModal) {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100dvh;
+  box-sizing: border-box;
+  padding: 16px;
+  overscroll-behavior: contain;
+}
+body #viewBackdrop > .modal-card,
+body #serviceModal:not(:has(#servicePickerTitle)) > .service-modal-content,
+body #invoiceModal > .service-modal-content {
+  width: min(760px, 100%) !important;
+  max-width: 100% !important;
+  max-height: calc(100dvh - 32px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--gm-dialog-bg);
+  color: var(--gm-control-text);
+  border: 1px solid var(--gm-control-border);
+}
+body :is(#viewBackdrop,#serviceModal:not(:has(#servicePickerTitle)),#invoiceModal) .modal-header {
+  flex: 0 0 auto;
+  padding: 16px 20px;
+  gap: 16px;
+  border-bottom: 1px solid var(--gm-control-border);
+}
+body :is(#viewBackdrop,#serviceModal:not(:has(#servicePickerTitle)),#invoiceModal) .modal-header :is(h3,h5) {
+  margin: 0;
+  min-width: 0;
+  font-size: clamp(18px, 2vw, 22px);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  color: var(--gm-control-text);
+}
+body :is(#viewBackdrop,#serviceModal:not(:has(#servicePickerTitle)),#invoiceModal) .modal-header button {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 10px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+}
+body :is(#viewBackdrop,#serviceModal:not(:has(#servicePickerTitle)),#invoiceModal) .modal-body {
+  min-height: 0;
+  min-width: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gm-control-border) transparent;
+  padding: 20px;
+  font-size: 15px;
+  line-height: 1.55;
+}
+body #viewBody .detail-list,
+body #appointmentDetailsModal .apt-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0 24px;
+  margin: 0;
+}
+body #viewBody .detail-box,
+body #appointmentDetailsModal .apt-detail-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 6px;
+  min-width: 0;
+  width: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 14px 0;
+  border: 0;
+  border-bottom: 1px solid var(--gm-control-border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  color: var(--gm-control-text);
+  font-size: 15px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+body #viewBody .detail-box > strong:first-child,
+body #appointmentDetailsModal .apt-detail-label {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+  color: var(--gm-control-muted);
+}
+body #viewBody .gm-detail-wide,
+body #appointmentDetailsModal :is(.apt-detail-divider,#aptDetailCancelRow,.apt-detail-row:has(#aptDetailNotes),.apt-detail-row:has(#aptDetailRefundProofs)) {
+  grid-column: 1 / -1;
+}
+body #viewBody .gm-detail-value { min-width: 0; max-width: 100%; white-space: pre-wrap; overflow-wrap: anywhere; }
+body #viewBody :is(img,video), body #appointmentDetailsModal img { max-width: 100%; height: auto; border-radius: 10px; }
+body #viewBody :is(table,pre) { max-width: 100%; }
+body #appointmentDetailsModal .apt-detail-modal-card {
+  width: min(760px, 100%) !important;
+  max-width: 100% !important;
+  max-height: calc(100dvh - 32px);
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--gm-dialog-bg);
+  color: var(--gm-control-text);
+}
+body #appointmentDetailsModal :is(.apt-detail-modal-header,.apt-detail-footer) {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 16px 20px;
+  gap: 12px;
+}
+body #appointmentDetailsModal .apt-detail-grid { min-height: 0; padding: 0 20px; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+body #appointmentDetailsModal .apt-detail-value { max-width: 100%; text-align: left; font-size: 15px; color: var(--gm-control-text); white-space: normal; overflow-wrap: anywhere; }
+body #appointmentDetailsModal .apt-detail-divider { display: none; }
+body #appointmentDetailsModal .apt-detail-footer button { min-height: 44px; }
+body :is(#invoiceModal,#bookedSlotsModal,#patientNotesModal) > :is(.gmd-modal-content,.service-modal-content) {
+  max-width: 100% !important; max-height: calc(100dvh - 32px); overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; overflow-wrap: anywhere;
+}
+@media (max-width: 767px) {
+  body :is(#viewBackdrop,#appointmentDetailsModal,#serviceModal:not(:has(#servicePickerTitle)),#invoiceModal,#bookedSlotsModal,#patientNotesModal) { padding: 12px; }
+  body #viewBackdrop > .modal-card, body #serviceModal:not(:has(#servicePickerTitle)) > .service-modal-content, body #appointmentDetailsModal .apt-detail-modal-card { max-height: calc(100dvh - 24px); border-radius: 16px; }
+  body :is(#viewBackdrop,#serviceModal:not(:has(#servicePickerTitle)),#invoiceModal) :is(.modal-header,.modal-body), body #appointmentDetailsModal :is(.apt-detail-modal-header,.apt-detail-footer) { padding: 14px 16px; }
+  body #viewBody .detail-list, body #appointmentDetailsModal .apt-detail-grid { column-gap: 16px; }
+  body #appointmentDetailsModal .apt-detail-grid { padding: 0 16px; }
+  body #viewBody .detail-box, body #appointmentDetailsModal .apt-detail-row { font-size: 14px; padding: 12px 0; }
+}
+
+body #invoiceModal > .service-modal-content { overflow: hidden; }
+body #invoiceModal :is(.invoice-snapshot-card,.invoice-details-card) { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0 24px; padding: 0; margin: 0 0 16px; background: transparent; border: 0; box-shadow: none; }
+body #invoiceModal :is(.invoice-snapshot-row,.invoice-row) { display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 6px; min-width: 0; padding: 12px 0; margin: 0; font-size: 15px; overflow-wrap: anywhere; border-bottom: 1px solid var(--gm-control-border); }
+body #invoiceModal :is(.invoice-snapshot-row,.invoice-row) > strong { font-size: 11px; text-transform: uppercase; letter-spacing: .055em; color: var(--gm-control-muted); }
+body #invoiceModal .invoice-services-section { grid-column: 1 / -1; min-width: 0; }
+body #invoiceModal .table-responsive { overflow-x: auto; max-width: 100%; }
+body #invoiceModal [hidden] { display: none !important; }
+
+body #appointmentDetailsModal .apt-detail-modal-header { flex-direction: row; text-align: left; border-bottom: 1px solid var(--gm-control-border); }
+body #appointmentDetailsModal .apt-detail-modal-header .icon-box-info { flex: 0 0 40px; width: 40px; height: 40px; margin: 0; border-radius: 12px; }
+body #appointmentDetailsModal .apt-detail-modal-header h3 { text-align: left; font-size: 20px; }
+/* Consistent compact read-only layout, including legacy .form-grid.one views. */
+body #viewBody .gm-detail-grid {
+  display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  align-items:start; gap:0 24px !important;
+}
+body #viewBody .detail-box { height:auto !important; min-height:0 !important; gap:6px !important; padding:16px 0 !important; }
+body #viewBody .gm-detail-value > p { margin:0 !important; padding:0; }
+body :is(#viewBackdrop,#invoiceModal,#serviceModal:not(:has(#servicePickerTitle))) > :is(.modal-card,.service-modal-content) {
+  box-sizing:border-box; margin:auto !important; padding:0 !important; min-height:0 !important;
+  width:min(800px,100%) !important; max-height:calc(100dvh - 32px) !important;
+}
+body :is(#viewBackdrop,#invoiceModal) .modal-header {
+  position:static !important; display:flex; align-items:center; justify-content:space-between;
+  margin:0 !important; padding:18px 24px !important; background:var(--gm-dialog-bg);
+}
+body :is(#viewBackdrop,#invoiceModal) .modal-header :is(h3,h4,h5) { margin:0 !important; font-size:21px; color:var(--gm-control-text); }
+body :is(#viewBackdrop,#invoiceModal) .modal-header button { position:static !important; margin:0; transform:none !important; }
+body :is(#viewBackdrop,#invoiceModal) .modal-body {
+  box-sizing:border-box; flex:1 1 auto; height:auto !important; max-height:none !important;
+  width:100%; min-height:0; padding:20px 24px !important; margin:0 !important; overflow:auto !important;
+}
+body #invoiceModal .invoice-card-header { display:flex; justify-content:space-between; align-items:center; gap:16px; margin:0 0 18px; }
+body #invoiceModal .invoice-subtitle { color:var(--gm-control-muted); font-size:10px; letter-spacing:.1em; margin:0 0 5px; }
+body #invoiceModal .invoice-title { font-size:21px; color:var(--gm-control-text); margin:0; }
+body #invoiceModal .invoice-status-badge { padding:7px 12px; border-radius:999px; min-width:0; font-size:12px; line-height:1.5; flex-shrink:0; }
+body #invoiceModal .invoice-snapshot-card { gap:0 24px; margin-bottom:20px; }
+body #invoiceModal .invoice-details-card { padding:16px !important; border:1px solid var(--gm-control-border); border-radius:14px; background:var(--gm-secondary-bg); }
+body #invoiceModal :is(.invoice-row,.invoice-snapshot-row) { min-height:0 !important; height:auto !important; gap:6px; padding:12px 0 !important; align-self:start; }
+body #invoiceModal .invoice-row > span { font-variant-numeric:tabular-nums; }
+body #invoiceModal :is(#invoiceTotal,#invoiceRemaining) { font-size:20px; font-weight:700; color:var(--gm-control-text); }
+body #invoiceModal .invoice-services-section { padding-top:18px; margin-top:12px; border-top:1px solid var(--gm-control-border); }
+body #invoiceModal #invoiceServicesList { padding:0; margin:12px 0 18px; list-style:none; }
+body #invoiceModal #invoiceServicesList > li { padding:12px; margin:8px 0; border:1px solid var(--gm-control-border); border-radius:10px; overflow-wrap:anywhere; }
+body #bookedSlotsModal > .service-modal-content { display:flex; flex-direction:column; padding:0; width:min(800px,100%); overflow:hidden; background:var(--gm-dialog-bg); color:var(--gm-control-text); }
+body #bookedSlotsModal .modal-header { flex-shrink:0; padding:18px 24px; margin:0; }
+body #bookedSlotsModal #bookedSlotsModalList { min-height:0; overflow:auto; padding:20px 24px; }
+body #bookedSlotsModal .booked-slot-modal-item { display:grid; grid-template-columns:100px minmax(0,1fr) auto; align-items:start; gap:16px; padding:16px; border:1px solid var(--gm-control-border); border-radius:12px; background:var(--gm-secondary-bg); margin-bottom:12px; }
+body #bookedSlotsModal .booked-slot-modal-details :is(h6,p) { margin:0 0 6px; overflow-wrap:anywhere; }
+@media(max-width:600px) {
+ body #viewBody .gm-detail-grid { gap:0 16px !important; }
+ body :is(#viewBackdrop,#invoiceModal) .modal-header,body :is(#viewBackdrop,#invoiceModal) .modal-body { padding:16px !important; }
+ body #invoiceModal .invoice-details-card { padding:12px !important; gap:0 16px; }
+ body #bookedSlotsModal .booked-slot-modal-item { grid-template-columns:minmax(0,1fr) auto; }
+ body #bookedSlotsModal .booked-slot-modal-time { grid-column:1/-1; }
+}
+@media(max-width:379px) {
+ body #viewBody .gm-detail-grid,body #invoiceModal :is(.invoice-snapshot-card,.invoice-details-card) { grid-template-columns:minmax(0,1fr) !important; }
+}
+body #bookedSlotsModal > .service-modal-content > .modal-body { min-height:0; overflow:auto; padding:0; }
+body #bookedSlotsModal #bookedSlotsModalList { overflow:visible; }
+/* Override the legacy dark-mode zero-padding rule (which contains an ID in :not). */
+body #invoiceModal .invoice-modal-card > .modal-body { padding:20px 24px !important; background:var(--gm-dialog-bg) !important; }
+@media(max-width:600px) { body #invoiceModal .invoice-modal-card > .modal-body { padding:16px !important; } }
+/* Keep the patient appointment window inside the viewport above the portal header. */
+body #appointmentDetailsModal { position:fixed !important; inset:0 !important; z-index:20000 !important; height:100dvh !important; padding:16px !important; overflow:hidden !important; transform:none !important; align-items:center !important; justify-content:center !important; }
+body #appointmentDetailsModal.active { display:flex !important; }
+body #appointmentDetailsModal > .gmd-modal-content.apt-detail-modal-card {
+  box-sizing:border-box !important; display:grid !important; grid-template-rows:auto minmax(0,1fr) auto;
+  width:min(760px,100%) !important; min-width:0 !important; max-width:100% !important;
+  height:auto !important; min-height:0 !important; max-height:calc(100dvh - 32px) !important;
+  margin:0 !important; padding:0 !important; transform:none !important; overflow:hidden !important;
+}
+body #appointmentDetailsModal .apt-detail-modal-header { display:flex !important; align-items:center; flex-direction:row !important; padding:16px 20px !important; margin:0 !important; }
+body #appointmentDetailsModal .apt-detail-modal-header h3 { flex:1; margin:0; min-width:0; font-size:20px; }
+body #appointmentDetailsModal .apt-detail-close { width:44px; height:44px; min-width:44px; padding:0; border:1px solid var(--gm-control-border); border-radius:12px; background:var(--gm-secondary-bg); color:var(--gm-control-text); font-size:28px; cursor:pointer; }
+body #appointmentDetailsModal .apt-detail-grid { box-sizing:border-box; min-height:0 !important; max-height:none !important; margin:0 !important; padding:0 20px !important; border:0 !important; border-radius:0 !important; overflow:auto !important; align-content:start; }
+body #appointmentDetailsModal .apt-detail-label { min-width:0 !important; max-width:100%; }
+body #appointmentDetailsModal .apt-detail-footer { padding:12px 20px !important; border-top:1px solid var(--gm-control-border); background:var(--gm-dialog-bg); justify-content:flex-end; }
+body #appointmentDetailsModal .apt-detail-footer button { padding:10px 24px; margin:0; }
+@media(max-width:600px) {
+ body #appointmentDetailsModal { padding:10px !important; }
+ body #appointmentDetailsModal > .gmd-modal-content.apt-detail-modal-card { max-height:calc(100dvh - 20px) !important; }
+ body #appointmentDetailsModal .apt-detail-modal-header { padding:12px 16px !important; }
+ body #appointmentDetailsModal .apt-detail-modal-header h3 { font-size:18px; }
+ body #appointmentDetailsModal .apt-detail-grid { padding:0 16px !important; }
+ body #appointmentDetailsModal .apt-detail-footer button { width:100%; }
+}
+/* Viewport changes must resize the overlay immediately, without a height transition. */
+body #appointmentDetailsModal { box-sizing:border-box !important; transition:opacity .15s ease !important; }
+body #appointmentDetailsModal > .apt-detail-modal-card { transition:none !important; }

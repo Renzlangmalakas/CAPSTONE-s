@@ -1,0 +1,107 @@
+/* Shared presentation only: all billing controls and calculations stay intact. */
+:is(#dentistAdditionalFeeModal, .modal-card:has(.staff-fee-editor)) {
+  --fee-bg: #fff;
+  --fee-card: #f5f8fd;
+  --fee-line: #dce5f0;
+  --fee-text: #20334f;
+  --fee-muted: #586c87;
+  --fee-accent: #356df3;
+  color: var(--fee-text);
+}
+:is(.dark, .dark-mode) :is(#dentistAdditionalFeeModal, .modal-card:has(.staff-fee-editor)) {
+  --fee-bg: #101d30;
+  --fee-card: #15253b;
+  --fee-line: #30415a;
+  --fee-text: #edf3ff;
+  --fee-muted: #adbed6;
+  --fee-accent: #79a5ff;
+}
+#dentistAdditionalFeeModal .modal-dialog {
+  width: calc(100% - 32px) !important;
+  max-width: 860px !important;
+  margin: 24px auto !important;
+}
+#dentistAdditionalFeeModal .modal-content,
+.modal-card:has(.staff-fee-editor) {
+  width: 100%;
+  max-height: calc(100dvh - 48px) !important;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden !important;
+  border: 1px solid var(--fee-line);
+  border-radius: 20px;
+  background: var(--fee-bg) !important;
+  color: var(--fee-text) !important;
+}
+.modal-card:has(.staff-fee-editor) { width: min(860px, calc(100vw - 32px)) !important; }
+#dentistAdditionalFeeModal :is(.modal-header, .modal-footer),
+.modal-card:has(.staff-fee-editor) .modal-header {
+  flex-shrink: 0;
+  padding: 16px 20px;
+  background: var(--fee-bg);
+  border-color: var(--fee-line);
+}
+#dentistAdditionalFeeModal .modal-body,
+.modal-card:has(.staff-fee-editor) #modalBody {
+  min-height: 0;
+  overflow: auto !important;
+  overscroll-behavior: contain;
+  padding: 20px !important;
+  background: var(--fee-bg);
+}
+:is(#dentistFeePicker, #staffFeePicker) fieldset { margin: 0; }
+:is(#dentistFeePicker, #staffFeePicker) legend { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+:is(#dentistFeePicker, #staffFeePicker) p { color: var(--fee-muted); font-size: 13px; line-height: 1.6; margin: 8px 0 16px; }
+:is(#dentistFeePicker, #staffFeePicker) fieldset > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  max-height: none !important;
+  overflow: visible !important;
+}
+:is(#dentistFeePicker, #staffFeePicker) [data-fee-choice] {
+  min-width: 0;
+  padding: 16px !important;
+  border: 1px solid var(--fee-line) !important;
+  border-radius: 14px;
+  background: var(--fee-card);
+  display: flex;
+  flex-direction: column;
+}
+:is(#dentistFeePicker, #staffFeePicker) [data-fee-choice]:has(:checked) { border-color: var(--fee-accent) !important; }
+:is(#dentistFeePicker, #staffFeePicker) [data-fee-choice] > label { align-items: flex-start !important; cursor: pointer; font-size: 14px; line-height: 1.5; }
+:is(#dentistFeePicker, #staffFeePicker) [data-fee-check] { accent-color: var(--fee-accent); margin-top: 2px; }
+:is(#dentistFeePicker, #staffFeePicker) [data-fee-choice] > div { display: grid !important; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); margin-top: auto; }
+:is(#dentistFeePicker, #staffFeePicker) [data-fee-choice] > div label { min-width: 0; font-size: 12px; color: var(--fee-muted); }
+:is(#dentistFeePicker, #staffFeePicker) input:not([type=checkbox]) {
+  box-sizing: border-box;
+  width: 100%; min-width: 0; height: 44px !important;
+  padding: 10px !important; margin-top: 6px;
+  border: 1px solid var(--fee-line); border-radius: 9px;
+  color: var(--fee-text) !important; background: var(--fee-bg) !important;
+  font-size: 16px;
+}
+:is(#dentistFeePicker, #staffFeePicker) input:disabled { opacity: .55; }
+:is(#dentistAdditionalFeeModal, .staff-fee-editor) .btn { min-height: 44px; font-size: 14px; white-space: normal; }
+:is(#addDentistFeeBtn, #addStaffFeeLineBtn) { margin-top: 16px; width: 100%; }
+:is(#dentistFeeLines, #staffFeeLines) { font-size: 14px; overflow-wrap: anywhere; }
+#dentistFeeLines > div { gap: 16px; padding: 14px 0 !important; }
+#dentistFeeLines > div > span:first-child { min-width: 0; }
+#dentistFeeLines > div > span:last-child { flex-shrink: 0; text-align: right; }
+#dentistFeeLines small { color: var(--fee-muted); line-height: 1.5; }
+.staff-fee-editor .fee-discount,
+.staff-fee-editor .detail-box {
+  padding: 16px; border: 1px solid var(--fee-line); border-radius: 14px;
+  background: var(--fee-card); margin: 0;
+}
+.staff-fee-editor .fee-discount legend { float: none; width: auto; font-size: 16px; font-weight: 700; padding: 0 6px; }
+.staff-fee-editor .fee-discount p { font-size: 13px; color: var(--fee-muted); line-height: 1.6; }
+@media (max-width: 600px) {
+  #dentistAdditionalFeeModal .modal-dialog { width: calc(100% - 16px) !important; margin: 8px auto !important; }
+  #dentistAdditionalFeeModal .modal-content, .modal-card:has(.staff-fee-editor) { max-height: calc(100dvh - 16px) !important; border-radius: 16px; }
+  .modal-card:has(.staff-fee-editor) { width: calc(100vw - 16px) !important; }
+  #dentistAdditionalFeeModal .modal-body, .modal-card:has(.staff-fee-editor) #modalBody { padding: 14px !important; }
+  :is(#dentistFeePicker, #staffFeePicker) fieldset > div { grid-template-columns: minmax(0, 1fr); }
+  #dentistAdditionalFeeModal .modal-footer .btn { width: 100%; }
+  #dentistFeeLines > div { flex-wrap: wrap; }
+}

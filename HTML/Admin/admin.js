@@ -625,7 +625,7 @@ function init() {
   function showInvoiceView(id) {
     const inv = state.appointments?.find(a => a.id === id);
     if (!inv) return showToast('Invoice not found', 'error');
-    
+
     const pt = state.patients?.find(p => p.name === inv.patient);
     openViewModal(`${inv.patient} Invoice`, `
       <div class="detail-list">
@@ -866,17 +866,18 @@ function syncAdminStateToClinicDb() {
     updatedAt: service.updatedAt || service.createdAt
   }));
 
+  const previousSchedules = db.dentistSchedules || [];
   db.dentistSchedules = (state.dentists || []).flatMap(dentist =>
-    (Array.isArray(dentist.schedules) ? dentist.schedules : []).map((schedule, index) => ({
-      id: `${dentist.id || dentist.name || uid()}-${index}`,
-      dentistId: dentist.id || "",
-      dentist: dentist.name || "",
-      day: schedule.day || "",
-      start: schedule.start || "",
-      end: schedule.end || "",
-      archived: !!dentist.archived,
-      updatedAt: new Date().toISOString()
-    }))
+    (Array.isArray(dentist.schedules) ? dentist.schedules : []).map(schedule => {
+      const existing = previousSchedules.find(row => String(row.dentistId || row.dentist_id) === String(dentist.id) && String(row.day || '').toLowerCase() === String(schedule.day || '').toLowerCase());
+      return {
+        id: existing?.id || `${dentist.id}-${String(schedule.day).toLowerCase()}`,
+        dentistId: dentist.id || '', dentist: dentist.name || '',
+        day: schedule.day || '', start: schedule.start || '', end: schedule.end || '',
+        archived: !!dentist.archived,
+        updatedAt: existing && existing.start === schedule.start && existing.end === schedule.end && !!existing.archived === !!dentist.archived ? existing.updatedAt : new Date().toISOString()
+      };
+    })
   );
 
   db.payments = (state.appointments || [])
@@ -1337,6 +1338,9 @@ function bindSectionButtons() {
     renderRevenue();
   });
   safeOn(qs("#revenueDateSpecific"), "change", renderRevenue);
+  safeOn(qs("#revenueStartDate"), "change", renderRevenue);
+  safeOn(qs("#revenueEndDate"), "change", renderRevenue);
+  safeOn(qs("#exportRevenueBtn"), "click", exportRevenueCsv);
   safeOn(qs("#userSearch"), "input", renderAccounts);
   safeOn(qs("#userRoleFilter"), "change", renderAccounts);
 
@@ -1524,11 +1528,12 @@ async function fetchUsersFromDatabase() {
   }
 }
 
-async function syncAccountsFromDatabase() {
+async function syncAccountsFromDatabase({ skipClinicMirror = false } = {}) {
   const result = await fetchUsersFromDatabase();
   if (!result || !Array.isArray(result.users)) return;
   state.registeredPatientAccounts = result.users.filter(row => row.role === "patient").map(row => ({
     id: row.id, name: row.name, role: "patient", email: row.email,
+    sex: row.sex, dob: row.dob, address: row.address,
     contact: row.mobile || row.contact || "", createdAt: row.created_at || row.createdAt || ""
   }));
 
@@ -1543,15 +1548,16 @@ async function syncAccountsFromDatabase() {
       email,
       contact: row.mobile || row.contact || "",
       createdAt: row.created_at || row.createdAt || "",
-      username: row.username || email
+      username: row.username || email, archived: Boolean(row.archived), mergedInto: row.merged_into || null
     });
   });
 
   state.accounts = window.GMDefaultAccounts.merge(state.accounts, null, false);
   state.patients = (state.patients || []).map(p => GMAdminPatientDetails.enrich(p, state.registeredPatientAccounts || state.accounts));
-  saveState();
+  saveState(skipClinicMirror);
   if (typeof renderAccounts === "function") renderAccounts();
   if (typeof renderPatients === "function") renderPatients();
+  if (typeof renderArchivedUsers === "function") renderArchivedUsers();
 }
 
 function upsertLocalAccount(account) {
@@ -1565,7 +1571,8 @@ function upsertLocalAccount(account) {
     contact: account.contact || "",
     username: account.username || email,
     createdAt: account.createdAt || existing?.createdAt || "",
-    archived: false
+    archived: Boolean(account.archived),
+    mergedInto: account.mergedInto || null
   };
 
   if (existing) {
@@ -1989,7 +1996,7 @@ const revenue = activeAppointments.reduce((sum, a) => {
   .sort((a, b) => a.time.localeCompare(b.time));
 
 const todayItems = allTodayItems.slice(0, 3);
-    
+
 
   if (!todayItems.length) {
     todayBox.innerHTML = `<div class="empty-state">No appointments today.</div>`;
@@ -3011,11 +3018,11 @@ function openDentistModal(id = null) {
           </div>
 
           <div>
-            <label class="label" for="modalDentistSpecialty">Specialty</label>
-            <select class="input select" id="modalDentistSpecialty">
-              <option value="">Select specialty</option>
+            <label class="label" for="modalDentistSpecialty">Specialties (select one or more)</label>
+            <select class="input select" id="modalDentistSpecialty" multiple size="5" aria-label="Specializations (select one or more)">
+
               ${specialtyOptions.map(spec => `
-                <option value="${escapeAttr(spec)}" ${draft.specialty === spec ? "selected" : ""}>
+                <option value="${escapeAttr(spec)}" ${String(draft.specialty).split(/[,;|]/).map(value => value.trim()).includes(spec) ? "selected" : ""}>
                   ${escapeHtml(spec)}
                 </option>
               `).join("")}
@@ -3060,7 +3067,7 @@ function openDentistModal(id = null) {
 
     qs("#addScheduleBtn").addEventListener("click", () => {
       draft.accountId = qs("#modalDentistName").value;
-      draft.specialty = qs("#modalDentistSpecialty").value;
+      draft.specialty = Array.from(qs("#modalDentistSpecialty").selectedOptions, option => option.value).filter(Boolean).join(", ");
       draft.contact = qs("#modalDentistContact").value.trim();
       const day = qs("#schedDay").value;
       const start = qs("#schedStart").value;
@@ -3083,7 +3090,7 @@ function openDentistModal(id = null) {
     qsa("[data-remove-schedule]").forEach(btn => {
       btn.addEventListener("click", () => {
         draft.accountId = qs("#modalDentistName").value;
-        draft.specialty = qs("#modalDentistSpecialty").value;
+        draft.specialty = Array.from(qs("#modalDentistSpecialty").selectedOptions, option => option.value).filter(Boolean).join(", ");
         draft.contact = qs("#modalDentistContact").value.trim();
         schedules.splice(Number(btn.dataset.removeSchedule), 1);
         renderModal();
@@ -3094,7 +3101,7 @@ function openDentistModal(id = null) {
       const accountId = qs("#modalDentistName").value;
       const account = dentistAccounts.find(a => a.id === accountId);
       const name = account?.name?.trim() || "";
-      const specialty = qs("#modalDentistSpecialty").value;
+      const specialty = Array.from(qs("#modalDentistSpecialty").selectedOptions, option => option.value).filter(Boolean).join(", ");
       const contact = qs("#modalDentistContact").value.trim();
       const email = account?.email || item?.email || "";
 
@@ -3156,20 +3163,9 @@ function renderScheduleListHtml(schedules) {
 }
 
 function openPatientModal(id = null) {
+  if (!id) return window.GMPatientCreation.open();
   const item = id ? state.patients.find(p => p.id === id) : null;
 
-  const conditionOptions = [
-    "Tooth Decay",
-    "Braces Adjustment",
-    "Routine Checkup",
-    "Gingivitis",
-    "Tooth Sensitivity",
-    "Dental Cleaning",
-    "Tooth Extraction",
-    "Root Canal",
-    "Mouth Ulcer",
-    "Broken Tooth"
-  ];
 
   openSharedModal(
     item ? "Edit Patient" : "Add Patient",
@@ -3191,18 +3187,6 @@ function openPatientModal(id = null) {
             <option value="">Select gender</option>
             ${["Male", "Female"].map(g => `
               <option value="${g}" ${item?.gender === g ? "selected" : ""}>${g}</option>
-            `).join("")}
-          </select>
-        </div>
-
-        <div>
-          <label class="label" for="modalPatientCondition">Condition</label>
-          <select class="input select" id="modalPatientCondition">
-            <option value="">Select condition</option>
-            ${conditionOptions.map(condition => `
-              <option value="${escapeAttr(condition)}" ${item?.condition === condition ? "selected" : ""}>
-                ${escapeHtml(condition)}
-              </option>
             `).join("")}
           </select>
         </div>
@@ -3236,11 +3220,10 @@ function openPatientModal(id = null) {
     const name = qs("#modalPatientName").value.trim();
     const age = Number(qs("#modalPatientAge").value);
     const gender = qs("#modalPatientGender").value;
-    const condition = qs("#modalPatientCondition").value;
     const address = qs("#modalPatientAddress").value.trim();
     const contact = qs("#modalPatientContact").value.trim();
 
-    if (!name || Number.isNaN(age) || !gender || !condition || !address || !contact) {
+    if (!name || Number.isNaN(age) || !gender || !address || !contact) {
       alert("Please fill all patient fields.");
       return;
     }
@@ -3251,10 +3234,10 @@ function openPatientModal(id = null) {
     }
 
     if (item) {
-      Object.assign(item, { name, age, gender, condition, address, contact });
+      Object.assign(item, { name, age, gender, address, contact });
       addNotification("Patient Updated", `${name} record was updated.`);
     } else {
-      state.patients.push({ id: uid(), name, age, gender, condition, address, contact, archived: false, createdAt: new Date().toISOString() });
+      state.patients.push({ id: uid(), name, age, gender, address, contact, archived: false, createdAt: new Date().toISOString() });
       addNotification("New Patient", `${name} was added.`);
     }
 
@@ -3265,18 +3248,19 @@ function openPatientModal(id = null) {
 }
 
 function showPatientView(id) {
-  const p = state.patients.find(x => x.id === id);
-  if (!p) return;
+  const patient = state.patients.find(x => x.id === id);
+  if (!patient) return;
+  const db = getClinicDb();
+  const p = GMAdminPatientDetails.view(patient, db.patients || [], db.appointments || [], state.registeredPatientAccounts || state.accounts || []);
 
   openViewModal(
     p.name,
     `
       <div class="detail-list">
-        <div class="detail-box"><strong>Age</strong>${p.age} yrs old</div>
-        <div class="detail-box"><strong>Gender</strong>${escapeHtml(capitalize(p.gender))}</div>
-        <div class="detail-box"><strong>Condition</strong>${escapeHtml(p.condition)}</div>
-        <div class="detail-box"><strong>Address</strong>${escapeHtml(p.address)}</div>
-        <div class="detail-box"><strong>Contact</strong>${escapeHtml(p.contact)}</div>
+        <div class="detail-box"><strong>Age</strong>${p.age !== '' && p.age != null ? escapeHtml(String(p.age)) + ' yrs old' : 'Not recorded'}</div>
+        <div class="detail-box"><strong>Gender</strong>${escapeHtml(p.gender ? capitalize(p.gender) : 'Not recorded')}</div>
+        <div class="detail-box"><strong>Address</strong>${escapeHtml(p.address || 'Not recorded')}</div>
+        <div class="detail-box"><strong>Contact</strong>${escapeHtml(p.contact || 'Not recorded')}</div>
       </div>
     `
   );
@@ -3845,10 +3829,10 @@ function renderArchivedUsers() {
   if (!table) return;
 
   const archivedItems = [
-    ...(state.accounts || []).filter(item => item.archived).map(item => ({ id: item.id, name: item.name, role: item.role || "dentist", source: "Account", type: "accounts" })),
+    ...(state.accounts || []).filter(item => item.archived).map(item => ({ id: item.id, name: item.name, role: item.role || "dentist", source: item.mergedInto ? "Archived - History merged" : "Account", type: "accounts", mergedInto: item.mergedInto })),
     ...(state.dentists || []).filter(item => item.archived).map(item => ({ id: item.id, name: item.name, role: "dentist", source: "Dentist", type: "dentists" })),
     ...((state.staff || []).filter(item => item.archived).map(item => ({ id: item.id, name: item.name, role: "staff", source: "Staff", type: "staff" }))),
-    ...(state.patients || []).filter(item => item.archived).map(item => ({ id: item.id, name: item.name, role: "patient", source: "Patient", type: "patients" }))
+    ...(state.patients || []).filter(item => item.archived).map(item => ({ id: item.id, name: item.name, role: "patient", source: item.mergedInto ? "Archived - History merged" : "Patient", type: "patients", mergedInto: item.mergedInto }))
   ];
 
   if (!archivedItems.length) {
@@ -3870,6 +3854,7 @@ function renderArchivedUsers() {
         </div>
       </td>
     `;
+    if (item.mergedInto) tr.querySelector(".inline-actions").innerHTML = '<span class="badge">Archived - Merged</span>';
     safeOn(tr.querySelector(".edit"), "click", () => recoverItem(item.type, item.id));
     safeOn(tr.querySelector(".delete"), "click", () => deleteArchivedItem(item.type, item.id));
     table.appendChild(tr);
@@ -3884,6 +3869,8 @@ function openSharedModal(title, html) {
   modalTitle.textContent = title;
   modalBody.innerHTML = html;
   modalBackdrop.classList.remove("hidden");
+  modalBody.scrollTop = 0;
+  modalBackdrop.scrollTop = 0;
 }
 
 function closeSharedModal() {
@@ -4095,7 +4082,8 @@ function ensureFloatingRowMenu() {
 
     if (type === "appointment") {
       if (action === "view" || action === "edit") return openAppointmentModal(id);
-      if (action === "archive") return archiveItem("appointments", id);
+      if (action === "archive") return GMAppointmentActions.archive(id);
+      if (action === "reschedule") return GMAppointmentActions.reschedule(id);
     }
 
     if (type === "dentist") {
@@ -4323,7 +4311,8 @@ function renderAppointments() {
         <td><span class="table-muted">${formatTime(item.time)}</span></td>
         <td>${statusBadge(item.status)}</td>
         ${buildRowMenu("appointment", item.id, [
-          { action: "view", label: "View", icon: "bi-eye" }
+          { action: "view", label: "View", icon: "bi-eye" },
+          terminal ? { action: "archive", label: "Archive", icon: "bi-archive" } : { action: "reschedule", label: "Reschedule", icon: "bi-calendar-event" }
         ])}
       `;
 
@@ -4407,6 +4396,7 @@ function downloadCsv(filename, headers, rows) {
   link.click();
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+  window.recordAuditInteraction?.('export', filename).catch(error => showToast(error.message));
 }
 
 function reportArray(value) {
@@ -4641,8 +4631,8 @@ function getAdminReportConfig(type = safeValue(qs("#reportExportType")) || "pati
   };
   if (type === "audit") return {
     filename: `user-audit-log-${todayISO()}.csv`,
-    headers: ["Date / Time", "User", "Role", "Action", "Record", "Outcome", "Details"],
-    rows: adminAuditReport.rows.map(row => ({ "Date / Time": new Date(row.created_at).toLocaleString(), User: row.actor_email, Role: row.actor_role, Action: row.details?.description || row.action, Record: row.resource, Outcome: row.outcome, Details: JSON.stringify(row.details) }))
+    headers: ["Date / Time", "Account ID", "User", "Role", "IP Address", "Device", "Action", "Module", "Record", "Before", "After", "Outcome", "Error", "Details"],
+    rows: adminAuditReport.rows.map(row => ({ "Date / Time": row.created_at, "Account ID": row.actor_id, User: row.actor_email, Role: row.actor_role, "IP Address":row.ip_address, Device:row.user_agent, Action:row.action, Module:row.module, Record:row.resource, Before:JSON.stringify(row.before_state), After:JSON.stringify(row.after_state), Outcome:row.outcome, Error:row.error_reason, Details:JSON.stringify(row.details) }))
   };
 
   const configs = {
@@ -4683,6 +4673,7 @@ function getAdminReportConfig(type = safeValue(qs("#reportExportType")) || "pati
 
 function renderAdminReportPreviewIfNeeded() {
   const type = safeValue(qs("#reportExportType")) || "patients";
+  qs('#patients')?.classList.toggle('audit-view', type === 'audit');
   qs("#patientsTable")?.closest("table")?.classList.toggle("discount-report-table", type === "discounts");
   qs("#patientsTable")?.closest(".table-wrap")?.classList.toggle("discount-report-wrap", type === "discounts");
   qs("#discountReportControls")?.classList.toggle("hidden", type !== "discounts");
@@ -4690,6 +4681,7 @@ function renderAdminReportPreviewIfNeeded() {
     qs("#discountRefreshBtn").onclick = loadAdminDiscountedPrices;
     if (!adminDiscountReport.loaded && !adminDiscountReport.loading) loadAdminDiscountedPrices();
   }
+  qs("#patientsTable")?.closest("table")?.classList.toggle("audit-log-table",type === "audit");
   const auditControls = qs("#auditReportControls");
   auditControls?.classList.toggle("hidden", type !== "audit");
   if (type === "audit") {
@@ -4699,6 +4691,7 @@ function renderAdminReportPreviewIfNeeded() {
       loadAdminAuditLog(false);
     }
     qs("#auditRefreshBtn").onclick = () => loadAdminAuditLog(false);
+    ["auditFrom","auditTo","auditUser","auditRole","auditAction","auditOutcome"].forEach(id=>{qs("#"+id).onchange=()=>loadAdminAuditLog(false);});
     qs("#auditMoreBtn").onclick = () => loadAdminAuditLog(true);
   }
   if (type === "patients") return false;
@@ -4707,6 +4700,24 @@ function renderAdminReportPreviewIfNeeded() {
   const tbody = qs("#patientsTable");
   const headerRow = table?.querySelector("thead tr");
   if (!table || !tbody || !headerRow) return false;
+
+  if (type === 'audit') {
+    headerRow.innerHTML = ['Date / time', 'Account', 'Activity', 'Outcome', 'Details'].map(label => `<th>${label}</th>`).join('');
+    tbody.innerHTML = adminAuditReport.rows.length ? adminAuditReport.rows.map((row, index) => {
+      const outcome = ['Success', 'Failed', 'Denied', 'Logged'].includes(row.outcome) ? row.outcome : 'Logged';
+      return `<tr class="audit-event-row">
+        <td data-label="Date / time"><time>${escapeHtml(row.created_at || '')}</time></td>
+        <td data-label="Account"><strong>${escapeHtml(row.actor_email || 'System')}</strong><span class="audit-role">${escapeHtml(row.actor_role || 'system')}</span></td>
+        <td data-label="Activity"><strong>${escapeHtml(row.action || '')}</strong><span class="audit-module">${escapeHtml(row.module || '')}</span></td>
+        <td data-label="Outcome"><span class="audit-outcome" data-outcome="${escapeAttr(outcome)}">${escapeHtml(outcome)}</span>${row.security_event ? '<span class="audit-security-flag">Security event</span>' : ''}</td>
+        <td data-label="Details"><button type="button" class="audit-detail-button" data-audit-detail="${index}">View details</button></td>
+      </tr>`;
+    }).join('') : tableEmptyRow(5, adminAuditReport.loading ? 'Loading audit events' : 'No matching events', 'Adjust the filters to review another period.', 'bi-shield-check');
+    tbody.querySelectorAll('[data-audit-detail]').forEach(button => {
+      button.onclick = () => window.openAuditDetails(adminAuditReport.rows[Number(button.dataset.auditDetail)], button);
+    });
+    return true;
+  }
 
   const config = getAdminReportConfig(type);
   headerRow.innerHTML = config.headers.map(header => `<th>${escapeHtml(header)}</th>`).join("");
@@ -4720,6 +4731,7 @@ function renderAdminReportPreviewIfNeeded() {
   config.rows.forEach(row => {
     const tr = document.createElement("tr");
     tr.className = "appointment-table-row entity-table-row";
+    if(type === "audit") tr.style.cssText="white-space:normal;overflow-wrap:anywhere";
     tr.innerHTML = config.headers.map(header => {
       let value = row[header] ?? "";
       const money = type === "discounts" && ["Service Total", "Additional Fees", "Before Discount", "Discount", "Final Total"].includes(header);
@@ -4738,6 +4750,7 @@ function renderAdminReportPreviewIfNeeded() {
 }
 
 function exportPatientRecordsCsv() {
+  if (safeValue(qs("#reportExportType")) === "audit") { exportFullAuditCsv(); return; }
   const config = getAdminReportConfig();
 
   if (!config.rows.length) {
@@ -4753,6 +4766,55 @@ function syncAdminRevenueDateFilterInput() {
   const input = qs("#revenueDateSpecific");
   if (!select || !input) return;
   input.classList.toggle("hidden", select.value !== "day");
+  qs("#revenueCustomRange")?.classList.toggle("hidden", select.value !== "custom");
+}
+
+function getAdminRevenueCustomRange() {
+  const start = safeValue(qs('#revenueStartDate'));
+  const end = safeValue(qs('#revenueEndDate'));
+  const validDate = value => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+    const date = new Date(`${value}T00:00:00`);
+    return !Number.isNaN(date.getTime()) && date.getFullYear() === Number(value.slice(0,4))
+      && date.getMonth()+1 === Number(value.slice(5,7)) && date.getDate() === Number(value.slice(8,10));
+  };
+  const error = !start || !end ? 'Select a Start Date and End Date.'
+    : !validDate(start) || !validDate(end) ? 'Enter valid start and end dates.'
+    : end < start ? 'End Date cannot be before Start Date.' : '';
+  return { start, end, error };
+}
+
+function updateAdminRevenueRangeSummary() {
+  const custom = safeValue(qs('#revenueDateFilter')) === 'custom';
+  const range = getAdminRevenueCustomRange();
+  const summary = qs('#revenueRangeSummary');
+  if (summary) {
+    summary.textContent = custom ? range.error || `Showing revenue: ${formatDate(range.start)} to ${formatDate(range.end)} (inclusive)` : '';
+    summary.classList.toggle('is-error', custom && Boolean(range.error));
+  }
+  const end = qs('#revenueEndDate');
+  if (end) {
+    end.min = range.start;
+    end.setCustomValidity(custom && range.start && range.end ? range.error : '');
+    end.setAttribute('aria-invalid', String(custom && Boolean(range.start && range.end && range.error)));
+  }
+  const button = qs('#exportRevenueBtn');
+  if (button) button.disabled = custom && Boolean(range.error);
+}
+
+function exportRevenueCsv() {
+  const filter = safeValue(qs('#revenueDateFilter')) || 'year';
+  const range = getAdminRevenueCustomRange();
+  if (filter === 'custom' && range.error) { updateAdminRevenueRangeSummary(); return; }
+  const records = getAdminRevenueRecords().sort((a,b) => parseAdminRevenueDate(b) - parseAdminRevenueDate(a));
+  if (!records.length) { alert('No matching revenue records to export.'); return; }
+  const period = filter === 'custom' ? `${range.start}_to_${range.end}` : filter;
+  downloadCsv(`revenue_${period}.csv`, ['Patient','Dentist','Service','Date','Method','Online Payments','Clinic Payments','Collected','Status','Unclassified / Reconciliation Difference'], records.map(item => [
+    item.patient || item.patientName || '', item.dentist || item.dentistName || '', item.service || item.serviceName || '',
+    parseAdminRevenueDate(item)?.toLocaleDateString('en-CA') || '',
+    item.paymentMethod || item.method || (item.revenueOnline > 0 ? 'GCash' : item.revenueClinic > 0 ? 'Cash' : ''),
+    item.revenueOnline, item.revenueClinic, item.revenueCollected, item.paymentStatus || 'Paid', item.revenueUnclassified
+  ]));
 }
 
 function parseAdminRevenueDate(record = {}) {
@@ -4769,6 +4831,10 @@ function matchesAdminRevenueFilter(record = {}) {
   if (!date) return false;
 
   const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  if (filter === 'custom') {
+    const { start, end, error } = getAdminRevenueCustomRange();
+    return !error && dateOnly >= new Date(`${start}T00:00:00`) && dateOnly <= new Date(`${end}T00:00:00`);
+  }
   const today = new Date();
   const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
@@ -4792,6 +4858,24 @@ function matchesAdminRevenueFilter(record = {}) {
   return date.getFullYear() === today.getFullYear();
 }
 
+function reconcileAdminRevenue(item) {
+  const cents = value => Number.isFinite(Number(value)) ? Math.round(Number(value) * 100) : 0;
+  const amount = value => value !== null && value !== undefined && value !== '' && typeof value !== 'boolean' && Number.isFinite(Number(value));
+  let online = Math.max(0, cents(item.amountPaidOnline));
+  let clinic = Math.max(0, cents(item.amountPaidInClinic));
+  // Explicit collection totals (including zero) take priority over legacy fields.
+  const stored = [item.totalCollected, item.amountPaid, item.paid].find(amount);
+  const collected = stored === undefined ? online + clinic : Math.max(0, cents(stored));
+  let difference = collected - online - clinic;
+  const method = String(item.paymentMethod || item.method || '').trim().toLowerCase();
+  // Historical collections can predate the channel counters. Only use a recorded method.
+  if (difference > 0 && ['gcash', 'online', 'online payment'].includes(method)) online += difference;
+  else if (difference > 0 && ['cash', 'clinic', 'in-clinic', 'in clinic', 'clinic payment'].includes(method)) clinic += difference;
+  difference = collected - online - clinic;
+  return { ...item, revenueOnline: online / 100, revenueClinic: clinic / 100,
+    revenueCollected: collected / 100, revenueUnclassified: difference / 100 };
+}
+
 function getAdminRevenueRecords() {
   const db = typeof getClinicDb === "function" ? getClinicDb() : {};
   const appointmentRecords = [...reportArray(state.appointments), ...reportArray(db.appointments)];
@@ -4806,26 +4890,16 @@ function getAdminRevenueRecords() {
     paymentStatus: plan.paymentStatus || (Number(plan.remainingBalance || 0) <= 0 ? "Paid" : Number(plan.amountPaid || plan.totalCollected || 0) > 0 ? "Partial" : "Unpaid"),
     amountPaidOnline: Number(plan.amountPaidOnline || 0),
     amountPaidInClinic: Number(plan.amountPaidInClinic || 0),
-    totalCollected: Number(plan.totalCollected || plan.amountPaid || 0)
+    totalCollected: plan.totalCollected ?? plan.amountPaid
   }));
 
   return uniqueAdminRecords([...appointmentRecords, ...treatmentRevenueRecords])
-    .map(item => {
-      const online = Number(item.amountPaidOnline || 0);
-      const clinic = Number(item.amountPaidInClinic || 0);
-      const collected = Number(item.totalCollected ?? (online + clinic) ?? 0);
-      const paid = collected || (typeof item.paid === "number" ? Number(item.paid || 0) : 0);
-      return {
-        ...item,
-        revenueOnline: online,
-        revenueClinic: clinic,
-        revenueCollected: paid
-      };
-    })
+    .map(reconcileAdminRevenue)
     .filter(item => item.revenueCollected > 0 && matchesAdminRevenueFilter(item));
 }
 
 function renderRevenue() {
+  updateAdminRevenueRangeSummary();
   const tbody = qs("#revenueTable");
   if (!tbody) return;
 
@@ -4837,7 +4911,14 @@ function renderRevenue() {
 
   if (qs("#revenueTotal")) qs("#revenueTotal").textContent = formatMoney(total);
   if (qs("#revenueOnline")) qs("#revenueOnline").textContent = formatMoney(online);
-  if (qs("#revenueClinic")) qs("#revenueClinic").textContent = formatMoney(clinic || Math.max(0, total - online));
+  if (qs("#revenueClinic")) qs("#revenueClinic").textContent = formatMoney(clinic);
+  const reconciliation = qs('#revenueReconciliation');
+  if (reconciliation) {
+    const unresolved = records.filter(item => item.revenueUnclassified !== 0);
+    const difference = unresolved.reduce((sum,item) => sum + item.revenueUnclassified, 0);
+    reconciliation.textContent = unresolved.length
+      ? `${unresolved.length} payment record(s) need review. Unclassified / reconciliation difference: ${formatMoney(difference)}. Total revenue equals online payments + clinic payments + this difference.` : '';
+  }
 
   tbody.innerHTML = "";
 
@@ -4926,12 +5007,7 @@ function openStaffModal(id = null) {
   const item = id ? (state.staff || []).find(s => s.id === id) : null;
 
   const positionOptions = [
-    "Receptionist",
-    "Dental Assistant",
-    "Office Staff",
-    "Hygienist",
-    "Cashier",
-    "Secretary"
+    "All Staff Positions"
   ];
 
   openSharedModal(
@@ -4946,13 +5022,13 @@ function openStaffModal(id = null) {
         <div>
           <label class="label" for="modalStaffPosition">Position</label>
           <select class="input select" id="modalStaffPosition">
-            <option value="">Select position</option>
             ${positionOptions.map(pos => `
               <option value="${escapeAttr(pos)}" ${item?.position === pos ? "selected" : ""}>
                 ${escapeHtml(pos)}
               </option>
             `).join("")}
           </select>
+          <small>All staff share access to reception, patient queues, appointments, patient records and billing.</small>
         </div>
 
         <div>
@@ -5156,7 +5232,7 @@ function adminAuditDateParams() {
 }
 async function loadAdminAuditLog(more = false) {
   const key = adminAuditReport.key;
-  const params = adminAuditDateParams();
+  const params = adminAuditFilterParams();
   if (!more) adminAuditReport.rows = [];
   params.set("offset", String(more ? adminAuditReport.rows.length : 0));
   const requestId = adminAuditReport.requestId = (adminAuditReport.requestId || 0) + 1;
@@ -5170,7 +5246,8 @@ async function loadAdminAuditLog(more = false) {
     if (!response.ok) throw new Error(result.message || "Unable to load audit log.");
     adminAuditReport.rows = more ? [...adminAuditReport.rows, ...result.rows] : result.rows;
     adminAuditReport.hasMore = result.hasMore;
-    qs("#auditReportStatus").textContent = `${adminAuditReport.rows.length} events loaded. CSV exports loaded events. Logs begin when auditing was enabled.`;
+    qs("#auditAlerts").innerHTML = (result.alerts || []).map(a=>`<p style="white-space:normal;overflow-wrap:anywhere">${escapeHtml(a.created_at)}: ${escapeHtml(a.description)}</p>`).join("") || "No alerts.";
+    qs("#auditReportStatus").textContent = `${adminAuditReport.rows.length} events loaded. CSV exports all matching events. Logs begin when auditing was enabled.`;
     qs("#auditMoreBtn").classList.toggle("hidden", !result.hasMore);
   } catch (error) {
     if (requestId === adminAuditReport.requestId) qs("#auditReportStatus").textContent = error.message;
@@ -5201,3 +5278,38 @@ function exportBillingCsv() {
   });
   downloadCsv(`billing-${todayISO()}.csv`,headers,rows);
 }
+
+function adminAuditFilterParams() {
+ const params=adminAuditDateParams();
+ for(const [id,key] of [["auditUser","user"],["auditRole","role"],["auditAction","action"],["auditOutcome","outcome"]]) {const v=qs("#"+id)?.value.trim();if(v)params.set(key,v);}
+ const from=qs("#auditFrom")?.value,to=qs("#auditTo")?.value;
+ if(from)params.set("from",new Date(from+"T00:00:00").toISOString());
+ if(to){const end=new Date(to+"T00:00:00");end.setDate(end.getDate()+1);params.set("to",end.toISOString());}
+ return params;
+}
+async function exportFullAuditCsv(){
+ try {const params=adminAuditFilterParams();params.set("export","csv");
+ const response=await window.GmDentalApiFetch(`${API_BASE_URL}/api/admin/audit-log?${params}`,{cache:"no-store"});
+ if(!response.ok)throw Error("Audit export failed.");
+ const url=URL.createObjectURL(await response.blob()),a=document.createElement("a");a.href=url;a.download="user-audit-log.csv";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ await window.recordAuditInteraction?.('export', `${params.get('from') || 'All dates'} to ${params.get('to') || 'present'}`);
+ }catch(error){qs("#auditReportStatus").textContent=error.message;}
+}
+
+// Alert polling reads only the latest alert summaries, not medical records.
+let auditAlertPollBusy=false;
+async function pollAuditAlerts(){
+ if(document.visibilityState==='hidden'||auditAlertPollBusy)return;
+ auditAlertPollBusy=true;
+ try {
+ const response=await window.GmDentalApiFetch(`${API_BASE_URL}/api/admin/audit-alerts`,{cache:'no-store'});
+ if(!response.ok)return;
+ const {alerts=[]}=await response.json();
+ const nav=document.querySelector('[data-section="audit"]');if(!nav)return;
+ let badge=document.getElementById('auditAlertBadge');if(!badge){badge=document.createElement('span');badge.id='auditAlertBadge';badge.setAttribute('role','status');nav.appendChild(badge);}
+ badge.textContent=alerts.length?`${alerts.length} recent alerts`:'';
+ badge.title=alerts[0]?.description||'';
+ }catch{}finally{auditAlertPollBusy=false;}
+}
+setTimeout(pollAuditAlerts,1500);
+setInterval(pollAuditAlerts,60000);

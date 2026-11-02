@@ -146,7 +146,8 @@ test('dentist dashboard counts dated appointments, sorts the queue and excludes 
   assert.equal(context.isTodayDate('invalid'), false);
 });
 
-function browser(file, fetch = async () => ({ ok: false })) {
+function browser(file, fetch = async () => ({ ok: false }), interact = true) {
+  const events={};
   class Storage {
     constructor() { this.data = new Map(); }
     getItem(key) { return this.data.get(key) ?? null; }
@@ -154,13 +155,14 @@ function browser(file, fetch = async () => ({ ok: false })) {
     removeItem(key) { this.data.delete(key); }
   }
   const storage = new Storage();
-  const context = { Storage, localStorage: storage, sessionStorage: new Storage(), Headers, fetch, console, Blob,
+  const context = { Storage, localStorage: storage, sessionStorage: new Storage(), Headers, fetch:(...args)=>Promise.resolve(fetch(...args)).then(r=>r&&Object.assign(r,{clone(){return {...this};}})), console, Blob,
     navigator: { sendBeacon: () => true },
-    document: { readyState: 'loading', addEventListener() {} },
+    document: { body:{dataset:{portalRole:'staff'}}, readyState: 'loading', addEventListener(type,fn) {events[type]=fn;} },
     window: { location: { hostname: 'example.com', protocol: 'https:', origin: 'https://example.com' },
       addEventListener() {}, dispatchEvent() {}, clearTimeout() {}, setTimeout() {}, setInterval() {} },
     StorageEvent: class {}, CustomEvent: class {} };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), context);
+  if(interact)events.pointerdown?.({isTrusted:true});
   return context;
 }
 
@@ -601,3 +603,5 @@ test('edits during conflict recovery cannot retry the same appointment indefinit
   assert.equal(drafts[0].data.notes, 'First edit');
   assert.equal(drafts[1].data.notes, 'New edit');
 });
+
+test('startup normalization does not schedule a write before user interaction',()=>{const c=browser('Shared/shared-supabase-sync.js',undefined,false);c.localStorage.setItem('gm_dental_db_v1',JSON.stringify({patients:[{id:'initial'}]}));assert.equal(c.localStorage.getItem('gm_dental_local_change_stamp'),null);});

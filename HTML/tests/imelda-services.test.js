@@ -27,9 +27,9 @@ test('Imelda is eligible for every catalog service in Staff and patient booking'
   }
   assert.equal(eligibility.canPerform({ specialty: 'General Dentist' }, 'Root Canal Treatment'), false);
 });
-test('default Saturday duty includes Imelda and Sofia from 9 AM to 5 PM', () => {
+test('default Saturday duty includes Imelda and Daniel from 9 AM to 5 PM', () => {
   const dentists = defaults.merge([], 'dentist');
-  for (const email of ['imelda.mappala@gmdental.com', 'sofia.ramirez@gmdental.com']) {
+  for (const email of ['imelda.mappala@gmdental.com', 'daniel.santos@gmdental.com']) {
     assert.deepEqual(dentists.find(d => d.email === email).schedules.find(s => s.day === 'Saturday'), { day: 'Saturday', start: '09:00', end: '17:00' });
   }
 });

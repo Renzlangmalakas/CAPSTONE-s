@@ -1297,6 +1297,18 @@ body.dark .action-btn {
   }
 }
 
+#revenue .toolbar { display:flex; flex-wrap:wrap; align-items:flex-end; gap:12px; }
+#revenue .toolbar > select { flex:1 1 180px; }
+#revenue .revenue-custom-range { display:flex; flex:2 1 320px; flex-wrap:wrap; gap:12px; min-width:0; }
+#revenue .revenue-custom-range.hidden { display:none; }
+#revenue .revenue-custom-range label { display:grid; flex:1 1 140px; gap:6px; min-width:0; font-size:13px; font-weight:600; }
+#revenue .revenue-custom-range input { width:100%; min-width:0; min-height:44px; }
+#revenue .revenue-range-summary { margin:0 0 20px; color:var(--text-soft); }
+#revenue .revenue-range-summary:empty { display:none; }
+#revenue .revenue-range-summary.is-error { color:#b42332; }
+body.dark #revenue .revenue-range-summary.is-error { color:#ff9aa8; }
+@media(max-width:600px) { #revenue .toolbar > select, #revenue .toolbar > button { width:100%; flex-basis:100%; } }
+
 
 #floatingRowMenu {
   position: fixed;

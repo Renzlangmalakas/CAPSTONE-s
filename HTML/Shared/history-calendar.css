@@ -1,0 +1,37 @@
+.history-date-picker {
+  --hc-bg: #fff; --hc-text: #20334f; --hc-line: #d8e1ee; --hc-hover: #edf2fa;
+  min-width: 0; width: 100%;
+}
+:is(.dark, .dark-mode) .history-date-picker {
+  --hc-bg: #101d30; --hc-text: #e3eaf6; --hc-line: #30435e; --hc-hover: #1b2c46;
+}
+.gm-history-dates .history-date-trigger {
+  width: 100%; text-align: left; min-height: 44px; padding: 10px 14px;
+  border: 1px solid var(--hc-line); border-radius: 10px;
+  background: var(--hc-bg); color: var(--hc-text); font: inherit;
+}
+.history-calendar {
+  position: fixed; inset: auto; margin: 0; z-index: 20000;
+  box-sizing: border-box; padding: 14px; overflow: auto;
+  background: var(--hc-bg); color: var(--hc-text);
+  border: 1px solid var(--hc-line); border-radius: 16px;
+  box-shadow: 0 16px 40px #0003; font-family: inherit; font-size: 14px; line-height: 1.5;
+}
+.history-calendar[hidden] { display: none !important; }
+.history-calendar-header { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 12px; }
+.history-calendar-header strong { font-size: 15px; }
+body[data-portal-role] .gm-history-dates .history-calendar button {
+  display: grid; place-items: center; min-width: 0; width: auto; min-height: 40px;
+  grid-column: auto; white-space: nowrap; overflow-wrap: normal; word-break: normal; line-height: 1; height: 40px;
+  margin: 0; padding: 0; border: 1px solid transparent; border-radius: 9px;
+  background: transparent; color: var(--hc-text); font: inherit; cursor: pointer;
+}
+body[data-portal-role] .gm-history-dates .history-calendar-header button { width: 40px; }
+.history-calendar-header svg { width: 18px; height: 18px; }
+.history-calendar-grid { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 3px; text-align: center; }
+body[data-portal-role] .gm-history-dates .history-calendar-grid > span { grid-column: auto; color: var(--hc-text); font-size: 12px; line-height: 32px; }
+body[data-portal-role] .gm-history-dates .history-calendar button:hover { background: var(--hc-hover); border-color: var(--hc-line); }
+body[data-portal-role] .gm-history-dates .history-calendar-grid button[aria-current=date] { border-color: #818cf8; }
+body[data-portal-role] .gm-history-dates .history-calendar-grid button[aria-pressed=true] { background: #4f46e5; border-color: #818cf8; color: #fff; }
+body[data-portal-role] .gm-history-dates .history-calendar .history-calendar-today { width: 100%; margin-top: 14px; border-top: 1px solid var(--hc-line); color: #818cf8; }
+.history-date-picker button:focus-visible { outline: 2px solid #818cf8; outline-offset: 2px; }

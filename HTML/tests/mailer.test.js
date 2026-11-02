@@ -20,9 +20,9 @@ test('SMTP auth failure stops queued attempts and allows recovery after cooldown
 test('clinic snapshot writes succeed without calling any email reminder service', async () => {
   const source = fs.readFileSync(require.resolve('../api/_app'), 'utf8');
   const start = source.indexOf('async function handleClinicDbWrite(');
-  const end = source.indexOf('\napp.put("/api/clinic-db"', start);
+  const end = source.indexOf('\napp.post("/api/appointments/:id/manage"', start);
   let written;
-  const context = { clinicTableMap: { appointments: {} }, notificationTargets: [], requireSupabase: () => true, requireServiceRoleKey: () => true,
+  const context = { require:name=>require('../api/'+name.replace('./','')),readClinicDbFromSupabase:async()=>({appointments:[{id:'fixture'}]}), clinicTableMap: { appointments: {} }, notificationTargets: [], requireSupabase: () => true, requireServiceRoleKey: () => true,
     processAppointmentEmailReminders: () => { throw new Error('SMTP must not run during sync'); },
     writeClinicDbToSupabase: async db => { written = db; }, console,
     isSupabaseRlsError: () => false, isMissingSupabaseTable: () => false };

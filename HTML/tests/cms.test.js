@@ -13,7 +13,7 @@ function fixture() {
   } };
   return { handlers: createCmsHandlers(db), row: () => row };
 }
-function response() { return { code: 200, status(value) { this.code = value; return this; }, set() {}, json(value) { this.body = value; return this; } }; }
+function response() { return { code: 200, status(value) { this.code = value; return this; }, set() {}, end() { return this; }, json(value) { this.body = value; return this; } }; }
 const admin = { role: 'admin', email: 'admin@example.com' };
 test('CMS draft stays private until published; public response excludes draft and editor identity', async () => {
   const { handlers } = fixture();
@@ -35,7 +35,7 @@ test('CMS rejects patient and staff changes and stale revisions', async () => {
     const res = response(); await handlers.save({ user: { role }, body: { content: defaults, revision: 0, action: 'publish' } }, res);
     assert.equal(res.code, 403); assert.equal(row().revision, 0);
   }
-  const req = { user: admin, body: { content: defaults, revision: 0, action: 'draft' } };
+  const req = { user: admin, body: { content: {...defaults,heroTitle:'Changed heading'}, revision: 0, action: 'draft' } };
   await handlers.save(req, response());
   const res = response(); await handlers.save(req, res);
   assert.equal(res.code, 409); assert.equal(row().revision, 1);
@@ -100,3 +100,5 @@ test('new service photo keys survive draft/publish and reject unsafe images', as
   await handlers.save({ user: admin, body: { content, revision: 1, action: 'publish' } }, response());
   res = response(); await handlers.published({}, res); assert.equal(res.body.content.images[key], photo);
 });
+
+test('unchanged CMS draft returns 304 without revision increment',async()=>{const {handlers,row}=fixture();const res=response();await handlers.save({user:admin,body:{content:defaults,revision:0,action:'draft'}},res);assert.equal(res.code,304);assert.equal(row().revision,0);});

@@ -1,0 +1,18 @@
+/* Fast portal feedback without changing request completion or validation. */
+body[data-portal-role] { --gm-motion-fast: 100ms; --gm-motion-normal: 140ms; }
+body[data-portal-role] :is(button, .btn, .icon-btn, .nav-link, .menu-link, .action-btn) {
+  transition-duration: 100ms !important;
+  transition-delay: 0ms !important;
+  touch-action: manipulation;
+}
+body[data-portal-role] :is(button, .btn):not(:disabled):active {
+  filter: brightness(.92);
+}
+body[data-portal-role] :is(button, .btn)[aria-busy=true] { cursor: progress; }
+body[data-portal-role] :is(.modal-card, dialog[open], .modal.show .modal-content) {
+  animation-duration: 140ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  body[data-portal-role] :is(button, .btn, .icon-btn, .nav-link, .menu-link, .action-btn) { transition-duration: .01ms !important; }
+  body[data-portal-role] :is(.modal-card, dialog[open], .modal.show .modal-content) { animation-duration: .01ms !important; }
+}

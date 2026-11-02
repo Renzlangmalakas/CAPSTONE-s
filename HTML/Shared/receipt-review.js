@@ -106,6 +106,7 @@
                     body: JSON.stringify({ collection, recordId: record.id, proofId: proof.id,
                       action: action.toLowerCase(), confirmed: check.checked, reason: reason.value.trim() })
                   });
+                  if(response.status===304){await window.GmDentalSupabaseSync.pull();render();return;}
                   const result = await response.json();
                   if (!response.ok) throw new Error(result.message || 'Could not save payment review.');
                   const reviewed = result.record?.paymentProofs?.find(item => item.id === proof.id);

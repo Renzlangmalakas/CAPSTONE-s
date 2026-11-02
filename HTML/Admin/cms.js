@@ -168,6 +168,7 @@
       try {
         const response = await window.GmDentalApiFetch(api, { ...options, signal: controller.signal });
         if (response.status === 401 || response.status === 403) throw new Error('Your administrator session has expired or is unavailable. Sign in again, then reload the CMS.');
+        if(response.status===304)return request();
         let data;
         try { data = await response.json(); }
         catch (error) {

@@ -66,8 +66,8 @@ test('missing hours use the booking roster and saved working hours take preceden
   ], 'dentist');
   assert.ok(rows.every(row => row.schedules.length));
   assert.deepEqual(rows.find(r => r.id === 'daniel').schedules, [{ day: 'Tuesday', start: '10:00', end: '18:00' }]);
-  assert.deepEqual(rows.find(r => r.id === 'andrea').schedules, [{ day: 'Wednesday', start: '09:00', end: '17:00' }]);
-  assert.equal(rows.find(r => r.id === 'andrea').specialty, 'Oral Surgeon');
+  assert.deepEqual(rows.find(r => r.id === 'andrea').schedules, [{ day: 'Wednesday', start: '09:00', end: '17:00' }, { day: 'Friday', start: '09:00', end: '17:00' }]);
+  assert.equal(rows.find(r => r.id === 'andrea').specialty, 'Oral Surgeon, General Dentist');
   const db = roster.normalizeDb({ dentists: rows, dentistSchedules: [
     { dentistId: 'andrea', day: 'Saturday', start: '10:00', end: '14:00' }
   ] });
@@ -75,6 +75,7 @@ test('missing hours use the booking roster and saved working hours take preceden
 });
 
 test('account reconciliation reuses IDs and passwords, removes duplicates and is repeatable', async () => {
+  let updates = 0;
   let rows = [
     { id: 'old-admin', email: 'admin@test.com', name: 'Admin', role: 'admin', password: 'saved-hash' },
     { id: 'old-dentist', email: 'imelda.mappala@gmdental.test', name: 'Dr. Imelda G. Mappala', role: 'dentist', password: 'dentist-hash' },
@@ -82,7 +83,7 @@ test('account reconciliation reuses IDs and passwords, removes duplicates and is
   ];
   const supabase = { from() { return {
     select: async () => ({ data: rows }),
-    update: patch => ({ eq: async (_, id) => { Object.assign(rows.find(r => r.id === id), patch); return {}; } }),
+    update: patch => ({ eq: async (_, id) => { updates++; Object.assign(rows.find(r => r.id === id), patch); return {}; } }),
     delete: () => ({ eq: async (_, id) => { rows = rows.filter(r => r.id !== id); return {}; } }),
     upsert: async row => { if (!rows.some(r => r.email === row.email)) rows.push(row); return {}; }
   }; } };
@@ -100,6 +101,19 @@ test('account reconciliation reuses IDs and passwords, removes duplicates and is
   assert.equal(rows.find(r => r.id === 'old-dentist').password, 'dentist-hash');
   assert.ok(!rows.some(r => r.id === 'extra'));
   const once = JSON.stringify(rows);
+  const firstUpdates = updates;
   await context.seedSupabaseUsers();
   assert.equal(JSON.stringify(rows), once);
+  assert.equal(updates, firstUpdates, 'unchanged accounts must not cause database writes');
+});
+
+
+test('native schedule rows link to the dentist and inactive shifts are excluded', () => {
+ const db = roster.normalizeDb({dentists:[{id:'imelda',name:'Dr. Imelda Mappala'}],dentistSchedules:[
+ {dentistId:'imelda',dayOfWeek:1,startTime:'09:00:00',endTime:'17:00:00',isActive:true},
+ {dentistId:'imelda',dayOfWeek:4,startTime:'09:00:00',endTime:'17:00:00',isActive:false}
+ ]});
+ assert.deepEqual(db.dentists.find(d=>d.id==='imelda').schedules,[{day:'Monday',start:'09:00',end:'17:00'}]);
+ const defaults=roster.merge([], 'dentist');
+ for(const dentist of defaults) assert.equal(dentist.schedules.length,dentist.name==='Dr. Imelda Mappala'?4:2);
 });

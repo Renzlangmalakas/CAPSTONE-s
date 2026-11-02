@@ -20,12 +20,12 @@ test('audit awaits persistent insert and records authenticated actor, never requ
  let inserted,finish;
  const db={from:()=>({insert:rows=>{inserted=rows;return new Promise(resolve=>{finish=resolve;});}})};
  let sent=false;
- const req={method:'POST',path:'/api/appointments/a/complete',user:{email:'doctor@example.com',role:'dentist'},body:{password:'secret',sessionToken:'secret'}};
- const res={statusCode:200,json(){sent=true;}};
+ const req={method:'POST',path:'/api/appointments/a/complete',headers:{},socket:{},params:{id:'a'},user:{email:'doctor@example.com',role:'dentist'},body:{password:'secret',sessionToken:'secret'}};
+ const res={statusCode:403,json(){sent=true;}};
  await middleware(db)(req,res,()=>{});
- res.json({appointment:{id:'a',status:'Completed'}});
+ res.json({message:'Not your assigned patient.'});
  assert.equal(sent,false);
- assert.equal(inserted[0].actor_email,'doctor@example.com');
+ assert.equal(inserted.actor_email,'doctor@example.com');
  assert.ok(!JSON.stringify(inserted).includes('secret'));
  finish({error:null});await new Promise(resolve=>setImmediate(resolve));
  assert.equal(sent,true);

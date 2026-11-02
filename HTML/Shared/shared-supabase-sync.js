@@ -15,6 +15,9 @@
   if (!API_BASE_URL && !window.location.origin) return;
 
   let isApplyingRemote = false;
+  // Startup normalizers must not become writes. Explicit flushes remain available.
+  let userHasInteracted = false;
+  ["pointerdown","keydown"].forEach(type=>document.addEventListener(type,event=>{if(event.isTrusted)userHasInteracted=true;},{capture:true,passive:true}));
   let pushTimer = 0;
   let pushInFlight = null;
   let pushFailures = 0;
@@ -35,14 +38,23 @@
     catch { return ""; }
   }
 
+  const pendingMutations=new Map();
   window.GmDentalApiFetch = function (url, options = {}) {
     const headers = new Headers(options.headers || {});
     const token = sessionToken();
     if (token) headers.set("Authorization", `Bearer ${token}`);
-    return fetch(url, { ...options, headers });
+    const method=String(options.method||"GET").toUpperCase();
+    if(!["POST","PUT","PATCH","DELETE"].includes(method))return fetch(url,{...options,headers});
+    const key=method+" "+url+" "+String(options.body||"");
+    if(!pendingMutations.has(key)){
+      const promise=fetch(url,{...options,headers});pendingMutations.set(key,promise);
+      promise.finally(()=>pendingMutations.delete(key)).catch(()=>{});
+    }
+    return pendingMutations.get(key).then(response=>response.clone());
   };
 
   function apiUrl(path) {
+    if (path === '/api/clinic-db' && document.body.dataset.portalRole === 'patient') path='/api/patient-db';
     return `${API_BASE_URL}${path}`;
   }
 
@@ -50,6 +62,7 @@
     try {
       const db = JSON.parse(localStorage.getItem(CLINIC_DB_KEY) || "{}");
       const user = JSON.parse(sessionStorage.getItem("gm_dental_current_user") || "{}");
+      if (user.role === "patient" && window.GMPatientAccess) return window.GMPatientAccess.scope(db,user);
       return user.role === "dentist" && window.GMDentistAccess ? window.GMDentistAccess.scope(db,user) : db;
     } catch {
       return {};
@@ -60,7 +73,7 @@
   // this shared browser cache. Server checks remain authoritative.
   try {
     const user = JSON.parse(sessionStorage.getItem("gm_dental_current_user") || "{}");
-    if (user.role === "dentist" && window.GMDentistAccess) {
+    if (user.role === "patient" && window.GMPatientAccess || user.role === "dentist" && window.GMDentistAccess) {
       originalSetItem(CLINIC_DB_KEY, JSON.stringify(getLocalClinicDb()));
     }
   } catch { /* An unreadable cache will be replaced on the next successful pull. */ }
@@ -128,14 +141,16 @@
   function applyRemoteClinicDb(db) {
     if (db && window.GMDefaultAccounts) window.GMDefaultAccounts.normalizeDb(db);
     if (!db || typeof db !== "object" || Array.isArray(db) || !Object.keys(db).length) return;
+    const serialized = JSON.stringify(db);
+    const changed = localStorage.getItem(CLINIC_DB_KEY) !== serialized;
     isApplyingRemote = true;
     try {
-      originalSetItem(CLINIC_DB_KEY, JSON.stringify(db));
+      originalSetItem(CLINIC_DB_KEY, serialized);
       // Remote state matches what we just wrote; clear dirty so we don't push back.
       const stamp = Date.now();
       originalSetItem(LOCAL_CHANGE_STAMP_KEY, String(stamp));
       originalSetItem(LAST_PUSHED_STAMP_KEY, String(stamp));
-      notifyLocalPages();
+      if (changed) notifyLocalPages();
     } finally {
       isApplyingRemote = false;
     }
@@ -252,7 +267,7 @@
       const remoteDb = result.db || {};
       if (!hasClinicRows(remoteDb)) {
         const localDb = getLocalClinicDb();
-        if (hasClinicRows(localDb)) schedulePush(250);
+        if (userHasInteracted && hasUnpushedChanges() && hasClinicRows(localDb)) schedulePush(250);
         return;
       }
 
@@ -289,6 +304,7 @@
           body: JSON.stringify({ db })
         });
 
+        if (response.status === 304) { markLastPushed(stampAtSend); pushFailures=0;nextPushAt=0;return true; }
         if (!response.ok) {
           pushFailures += 1;
           nextPushAt = Date.now() + Math.min(60000, 1000 * 2 ** Math.min(pushFailures, 6));
@@ -338,11 +354,12 @@
       return await pushInFlight;
     } finally {
       pushInFlight = null;
-      if (hasUnpushedChanges()) schedulePush(Math.min(60000, 1000 * 2 ** Math.min(pushFailures, 6)));
+      // New edits during a successful save should not wait through failure backoff.
+      if (hasUnpushedChanges()) schedulePush(pushFailures ? Math.min(60000, 1000 * 2 ** Math.min(pushFailures, 6)) : 100);
     }
   }
 
-  function schedulePush(delay = 250) {
+  function schedulePush(delay = 100) {
     if (isApplyingRemote || conflictPaused || localStorage.getItem(CONFLICT_PAUSE_KEY) === "true") return;
     window.clearTimeout(pushTimer);
     pushTimer = window.setTimeout(pushClinicDb, delay);
@@ -388,7 +405,7 @@
   Storage.prototype.setItem = function patchedSetItem(key, value) {
     const previous = this.getItem(key);
     const result = storageSetItem.call(this, key, value);
-    if (this === localStorage && key === CLINIC_DB_KEY && previous !== String(value) && !isApplyingRemote) {
+    if (this === localStorage && key === CLINIC_DB_KEY && previous !== String(value) && !isApplyingRemote && userHasInteracted) {
       markLocalDirty();
       schedulePush();
     }
@@ -410,7 +427,26 @@
     else pullClinicDb();
   });
 
+  // Merge an acknowledged row without triggering another full-database write.
+  function acceptRecord(collection, record) {
+    if (!['patientClinicalNotes','appointments'].includes(collection) || !record?.id) return;
+    const wasDirty = hasUnpushedChanges() || Boolean(pushInFlight);
+    const db = getLocalClinicDb();
+    db[collection] = [record, ...(db[collection] || []).filter(row => String(row.id) !== String(record.id))];
+    isApplyingRemote = true;
+    try {
+      originalSetItem(CLINIC_DB_KEY, JSON.stringify(db));
+      // In-flight reads must not replace a newly acknowledged record.
+      markLocalDirty();
+      if (!wasDirty) markLastPushed(getLocalChangeStamp());
+    }
+    finally { isApplyingRemote = false; }
+    // UI listeners refresh from this confirmed row without starting another network read.
+    window.dispatchEvent(new StorageEvent("storage",{key:SYNC_STAMP_KEY}));
+  }
+
   window.GmDentalSupabaseSync = {
+    acceptRecord,
     pull: pullClinicDb,
     push: pushClinicDb,
     flushNow,
@@ -424,5 +460,7 @@
     pullClinicDb();
   }
 
-  window.setInterval(pullClinicDb, /\/Dentist\//i.test(window.location.pathname) ? 15000 : 60000);
+  // Explicit saves and refreshes still run immediately; background snapshots
+  // should not reload the clinic database four times per minute per dentist tab.
+  window.setInterval(pullClinicDb, 60000);
 })();

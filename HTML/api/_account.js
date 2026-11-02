@@ -18,7 +18,12 @@ function createAccountHandlers({ findUser, readCode, saveCode, commit, sendCode,
       try { await fn(req, res); }
       catch (error) {
         if (!error.status) console.error('Account update failed:', error.code || 'storage or email unavailable');
-        res.status(error.status || 503).json({ message: error.status ? error.message : 'Account service is unavailable. Please try again.' });
+        const emailMessages = {
+          EMAIL_NOT_CONFIGURED: 'Verification email is not configured. Please contact the clinic administrator. Your password has not changed.',
+          EAUTH: 'Verification email could not be sent because the email provider rejected the clinic login. Please contact the clinic administrator. Your password has not changed.',
+          EMAIL_COOLDOWN: 'Verification email is temporarily paused. Please try again later. Your password has not changed.'
+        };
+        res.status(error.status || 503).json({ message: error.status ? error.message : emailMessages[error.code] || 'Account service is unavailable. Please try again.' });
       }
     };
   }
@@ -71,7 +76,7 @@ function createAccountHandlers({ findUser, readCode, saveCode, commit, sendCode,
         changes.password = await bcrypt.hash(body.newPassword, 10);
         changes.verification_token = null;
       }
-      if (!Object.keys(changes).length) throw fail(400, 'No account changes were supplied.');
+      if (Object.entries(changes).every(([key,value])=>value===(key==='profile_title'?user.profileTitle:user[key]))) return res.status(304).end();
       // The password and OTP token are checked again by the database update.
       // A simultaneous request cannot reuse a consumed code or old password.
       const updated = await commit(user, changes, entry);

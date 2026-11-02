@@ -20,7 +20,7 @@ function fixture({ role = 'dentist', failSave = false, assigned = true } = {}) {
   } };
   const handler = createCompleteAppointmentHandler({ supabase: db, findUser: async () => ({ id: 'dentist-one', name: 'Dr. Test', email: 'test@example.com' }) });
   const req = { user: { email: 'test@example.com', role }, params: { id: state.row.id } };
-  const res = { code: 200, status(code) { this.code = code; return this; }, json(value) { this.body = value; return this; } };
+  const res = { code: 200, status(code) { this.code = code; return this; }, end(){return this;}, json(value) { this.body = value; return this; } };
   return { state, handler, req, res };
 }
 

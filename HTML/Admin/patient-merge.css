@@ -1,0 +1,10 @@
+.patient-merge-dialog{width:min(850px,calc(100vw - 24px));max-height:calc(100dvh - 24px);padding:0;border:1px solid var(--border,#33465f);border-radius:22px;background:var(--gm-dialog-bg,var(--surface,#fff));color:var(--text,#e6edf8);overflow:auto}
+.patient-merge-dialog::backdrop{background:#020a18b8;backdrop-filter:blur(4px)}
+.patient-merge-dialog header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px 24px;border-bottom:1px solid #819bb433;background:inherit;position:sticky;top:0;z-index:1}
+.patient-merge-dialog h2,.patient-merge-dialog h3{margin:0 0 10px}.patient-merge-dialog p{margin:8px 0 16px;line-height:1.5}
+.merge-body{padding:24px}.merge-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-bottom:20px}.merge-columns section{min-width:0}.merge-columns input,.merge-columns select{width:100%;margin:8px 0;min-height:44px}.merge-summary{padding:18px;border:1px solid #819bb433;border-radius:14px;overflow-wrap:anywhere}.merge-summary small{line-height:1.6}
+.merge-counts{margin:12px 0 20px}.merge-counts>div{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid #819bb426}.merge-counts dd{margin:0;font-weight:700}.merge-check{display:flex;align-items:flex-start;gap:12px;margin:18px 0;line-height:1.6}.merge-check input{flex:none;width:20px;height:20px;margin-top:4px;accent-color:#5578ff}.merge-error{color:#ff8494;line-height:1.6}.patient-merge-dialog button{min-height:44px;white-space:normal}.patient-merge-dialog button:disabled{opacity:.5;cursor:not-allowed}
+body.light-mode .patient-merge-dialog,body[data-theme="light"] .patient-merge-dialog,html[data-theme="light"] .patient-merge-dialog{background:#fff;color:#172b49}body.light-mode .merge-error,[data-theme="light"] .merge-error{color:#b91c36}
+@media(max-width:600px){.merge-columns{grid-template-columns:1fr}.merge-body{padding:16px}.patient-merge-dialog header{padding:16px}.patient-merge-dialog h2{font-size:1.3rem}}
+
+body:not(.dark):not(.dark-mode) .merge-error{color:#b91c36}

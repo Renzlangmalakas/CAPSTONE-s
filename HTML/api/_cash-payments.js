@@ -46,7 +46,7 @@ function createCashReviewHandler({ supabase }) {
       const proof = (record.paymentProofs || []).find(p => p.id === proofId);
       if (!proof || proof.method !== 'cash') return res.status(400).json({ message: 'Cash request not found.' });
       const target = action === 'approve' ? 'verified' : 'rejected';
-      if (proof.status === target) return res.json({ record });
+      if (proof.status === target) return res.status(304).end();
       if (proof.status !== 'pending') return res.status(409).json({ message: 'This payment has already been reviewed.' });
       let updated;
       if (action === 'approve') {

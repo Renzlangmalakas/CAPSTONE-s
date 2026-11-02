@@ -1,0 +1,78 @@
+.gm-validation-error { display:flex !important; align-items:flex-start; gap:10px; background:#fff1f2 !important; color:#b42332 !important; border:1px solid #f3b6be !important; }
+body:is(.dark,.dark-mode) .gm-validation-error, html[data-theme="dark"] .gm-validation-error { background:#291d29 !important; color:#ff9aa8 !important; border-color:#80414f !important; }
+.gm-validation-error .gm-warning-icon { width:22px; height:22px; flex:0 0 22px; margin-top:2px; color:inherit !important; }
+.gm-validation-error .gm-warning-text { min-width:0; color:inherit !important; line-height:1.5; overflow-wrap:anywhere; }
+[aria-invalid="true"] { border-color:#d92d20 !important; }
+/* Shared date-range toolbar, scoped to avoid changing booking calendars. */
+body[data-portal-role="dentist"] .treatment-log-toolbar {
+  display:flex; flex-direction:row; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:16px;
+}
+body[data-portal-role="dentist"] .treatment-log-sort {
+  display:grid; gap:7px; min-width:0; flex:0 1 280px; margin-left:auto;
+}
+body[data-portal-role="dentist"] .treatment-log-sort label { margin:0; font-size:12px; font-weight:600; }
+body[data-portal-role="dentist"] .treatment-log-sort select { width:100%; min-height:44px; }
+body[data-portal-role="dentist"] .treatment-log-toolbar .gm-history-dates {
+  flex:1 1 430px; grid-template-columns:repeat(2,minmax(0,180px)) auto; margin:0; padding:0;
+  border:0; border-radius:0; background:transparent;
+}
+@media(max-width:767px) {
+  body[data-portal-role="dentist"] .treatment-log-toolbar .gm-history-dates { flex-basis:100%; grid-template-columns:repeat(2,minmax(0,1fr)); }
+  body[data-portal-role="dentist"] .treatment-log-sort { flex-basis:100%; margin-left:0; }
+}
+body[data-portal-role] .gm-history-dates {
+  --date-bg: #fff; --date-border: #d8e1ed; --date-ink: #233b59; --date-muted: #61748e;
+  display: grid; grid-template-columns: minmax(150px,210px) minmax(150px,210px) auto;
+  align-items: end; justify-content: start; gap: 10px 12px;
+  margin: 16px 0 20px; padding: 16px;
+  border: 1px solid var(--date-border); border-radius: 16px; background: #f4f7fc;
+}
+body[data-portal-role]:is(.dark,.dark-mode) .gm-history-dates {
+  --date-bg: #0d1b30; --date-border: #2c405d; --date-ink: #e5edf9; --date-muted: #a9bdd8;
+  background: #112037; color-scheme: dark;
+}
+/* Inline Treatment Log filters sit directly on the page in either theme. */
+body[data-portal-role="dentist"] .treatment-log-toolbar .gm-history-dates,
+body[data-portal-role="dentist"]:is(.dark,.dark-mode) .treatment-log-toolbar .gm-history-dates {
+  background: transparent;
+}
+body[data-portal-role] .gm-history-dates label {
+  display: grid; gap: 7px; min-width: 0; margin: 0;
+  color: var(--date-muted); font-size: 12px; font-weight: 600; line-height: 1.4;
+}
+body[data-portal-role] .gm-history-dates :is(input,button) {
+  box-sizing: border-box; width: 100%; min-width: 0; height: 44px; min-height: 44px;
+  margin: 0; padding: 10px 12px; border: 1px solid var(--date-border); border-radius: 10px;
+  background: var(--date-bg); color: var(--date-ink); font: inherit; font-size: 14px; line-height: 1.4;
+}
+body[data-portal-role] .gm-history-dates input { color-scheme: light; }
+body[data-portal-role]:is(.dark,.dark-mode) .gm-history-dates input { color-scheme: dark; }
+body[data-portal-role] .gm-history-dates input::-webkit-calendar-picker-indicator { cursor: pointer; opacity: .8; }
+body[data-portal-role] .gm-history-dates button { width: auto; padding-inline: 18px; cursor: pointer; font-weight: 600; }
+body[data-portal-role] .gm-history-dates :is(input,button):focus-visible { outline: 2px solid #4d89ff; outline-offset: 3px; }
+body[data-portal-role] .gm-history-dates button:hover { border-color: #4d89ff; }
+body[data-portal-role] .gm-history-dates [role="status"] { grid-column: 1 / -1; color: var(--date-muted); font-size: 12px; }
+body[data-portal-role] .gm-history-dates [role="status"]:empty { display: none; }
+body[data-portal-role] .gm-history-dates [role="status"].is-error { color: #ef5350; }
+@media (max-width: 767px) {
+  body[data-portal-role] .gm-history-dates { grid-template-columns: repeat(2,minmax(0,1fr)); padding: 12px; gap: 12px; }
+  body[data-portal-role] .gm-history-dates input { font-size: 16px; padding-inline: 8px; }
+  body[data-portal-role] .gm-history-dates button { grid-column: 1 / -1; width: 100%; }
+}
+body[data-portal-role="patient"] #profileEmail:disabled { opacity:1; color:#738196 !important; background:#8c9db51a !important; cursor:not-allowed; }
+body[data-portal-role] button[hidden], body[data-portal-role] tr[hidden] { display:none !important; }
+.gm-assist-dialog { width:min(440px,calc(100vw - 32px)); border:1px solid #8195b5; border-radius:18px; padding:24px; background:#fff; color:#172b4d; }
+.gm-assist-dialog::backdrop { background:#09152799; }
+.gm-assist-dialog form,.gm-assist-dialog label { display:grid; gap:12px; }
+.gm-assist-dialog input,.gm-assist-dialog textarea,.gm-assist-dialog button { min-height:44px; padding:10px; border:1px solid #8c9db5; border-radius:8px; font:inherit; }
+body.dark .gm-assist-dialog { background:#102139; color:#e6edf8; }
+.gm-assist-dialog [role="alert"] { color:#d92d20; }
+body[data-portal-role] [onclick][hidden] { display:none !important; }
+#modalDentistSpecialty[multiple] { height:auto !important; min-height:150px; padding:8px; }
+#modalDentistSpecialty[multiple] option { padding:8px 10px; }
+
+.gm-settings-archive { display:flex; align-items:center; justify-content:space-between; gap:20px; margin-bottom:24px; }
+.gm-settings-archive h3 { font-size:18px; margin:0 0 8px; }
+.gm-settings-archive p { margin:0; max-width:65ch; font-size:14px; opacity:.8; }
+.gm-settings-archive button { min-height:44px; flex-shrink:0; }
+@media(max-width:767px) { .gm-settings-archive { flex-direction:column; align-items:stretch; } }

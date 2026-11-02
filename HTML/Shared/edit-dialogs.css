@@ -1,0 +1,51 @@
+/* Shared form dialogs: header stays in its own row; only the form scrolls. */
+body #modalBackdrop:not(.hidden) { padding:20px; box-sizing:border-box; align-items:center; }
+body #modalBackdrop > .modal-card,
+body :is(#dependentModal,#rescheduleModal,#addAppointmentModal,#patientModal,#patientNotesModal) > :is(.service-modal-content,.gmd-modal-content) {
+  display:grid; grid-template-rows:auto minmax(0,1fr); width:min(820px,100%);
+  max-width:calc(100vw - 32px); max-height:calc(100dvh - 40px); min-height:0;
+  margin:auto; padding:0; overflow:hidden; border-radius:20px;
+  background:var(--gm-dialog-bg,var(--surface,#fff)); color:var(--gm-control-text,var(--text,#20334f));
+  border:1px solid var(--gm-control-border,#ccd8e8); box-sizing:border-box;
+}
+body :is(#modalBackdrop,#dependentModal,#rescheduleModal,#addAppointmentModal,#patientModal,#patientNotesModal) .modal-header {
+  position:relative; top:auto; display:flex; align-items:center; justify-content:space-between;
+  gap:16px; padding:20px 24px; margin:0; background:inherit; border-bottom:1px solid var(--gm-control-border,#ccd8e8);
+}
+body :is(#modalBackdrop,#dependentModal,#rescheduleModal,#addAppointmentModal,#patientModal,#patientNotesModal) .modal-header :is(h3,h4,h5) {
+  margin:0; font-size:clamp(18px,2vw,23px); line-height:1.3; overflow-wrap:anywhere;
+}
+body :is(#modalBackdrop,#dependentModal,#rescheduleModal,#addAppointmentModal,#patientModal,#patientNotesModal) .modal-header button {
+  position:static; transform:none; flex:0 0 44px; width:44px; height:44px; min-height:44px; padding:10px;
+  display:grid; place-items:center; margin:0; border-radius:12px;
+}
+body :is(#modalBackdrop,#dependentModal,#rescheduleModal,#addAppointmentModal,#patientModal,#patientNotesModal) .modal-body {
+  min-height:0; max-height:none; height:auto; overflow:auto; overscroll-behavior:contain;
+  padding:24px; margin:0; scrollbar-width:thin; scrollbar-color:var(--gm-control-border,#889bb4) transparent;
+}
+body #modalBody > .form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; align-items:start; }
+body #modalBody > .form-grid > * { min-width:0; }
+body #modalBody > .form-grid > :is(button,.form-actions-inline,.form-grid),
+body #modalBody > .form-grid > div:has(textarea),
+body #modalBody > .form-grid > div:has(input[id$="Address"],input[id$="AddressInput"],input[id$="Name"],input[id$="NameInput"]) { grid-column:1 / -1; }
+body #modalBody .form-grid.two { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
+body #modalBody .label { display:block; margin:0 0 8px; font-size:14px; font-weight:600; line-height:1.4; }
+body #modalBody :is(.input,.select) { width:100%; min-width:0; min-height:46px; margin:0; padding:11px 14px; border-radius:12px; box-sizing:border-box; }
+body #modalBody textarea { min-height:100px; resize:vertical; }
+body #modalBody :is(.form-actions-inline,.form-actions) { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:12px; margin:0; }
+body #modalBody button { min-height:44px; }
+body #modalBody > .form-grid > button { width:auto; justify-self:end; min-width:160px; margin-top:4px; }
+body #dependentModal .dependent-modal-body { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+body #dependentModal .dependent-modal-body > :is(p,fieldset,.modal-actions),
+body #dependentModal .dependent-modal-body > .form-group:has(#dependentNameInput) { grid-column:1/-1; }
+body #dependentModal .dependent-modal-body > * { min-width:0; margin-top:0 !important; }
+body .gm-assist-dialog { max-height:calc(100dvh - 32px); overflow:auto; overscroll-behavior:contain; }
+@media(max-width:600px) {
+  body #modalBackdrop:not(.hidden) { padding:12px; }
+  body #modalBackdrop > .modal-card,
+  body :is(#dependentModal,#rescheduleModal,#addAppointmentModal,#patientModal,#patientNotesModal) > :is(.service-modal-content,.gmd-modal-content) { max-width:calc(100vw - 24px); max-height:calc(100dvh - 24px); border-radius:16px; }
+  body :is(#modalBackdrop,#dependentModal,#rescheduleModal,#addAppointmentModal,#patientModal,#patientNotesModal) :is(.modal-header,.modal-body) { padding:16px; }
+  body #modalBody > .form-grid { grid-template-columns:minmax(0,1fr); gap:16px; }
+  body #modalBody :is(.input,.select) { font-size:16px; }
+  body #modalBody > .form-grid > button,body #modalBody .form-actions-inline button { width:100%; }
+}

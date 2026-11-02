@@ -1,0 +1,31 @@
+/* Shared page, sidebar, table, dialog and form scrollbars. */
+:root {
+  --gm-scroll-thumb: #7292bd;
+  --gm-scroll-track: #14233b;
+  --gm-scroll-hover: #94b3da;
+}
+html, body, body * {
+  scrollbar-width: thin !important;
+  scrollbar-color: var(--gm-scroll-thumb) var(--gm-scroll-track) !important;
+}
+/* Fallback for browsers without the standard scrollbar properties. */
+::-webkit-scrollbar {
+  width: 10px !important;
+  height: 10px !important;
+}
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: var(--gm-scroll-track) !important;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--gm-scroll-thumb) !important;
+  border: 2px solid var(--gm-scroll-track) !important;
+  border-radius: 999px !important;
+  min-height: 28px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gm-scroll-hover) !important;
+}
+@media (forced-colors: active) {
+  html, body, body * { scrollbar-color: auto !important; }
+}

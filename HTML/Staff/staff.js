@@ -19,7 +19,7 @@ const defaultData = {
   staff: {
     name: "Front Desk Staff",
     email: "staff@email.com",
-    role: "Receptionist",
+    role: "All Staff Positions",
     phone: "09123456789",
     profileImage: "https://ui-avatars.com/api/?name=Clinic+Staff&background=2563eb&color=fff"
   },
@@ -60,7 +60,7 @@ function ensureStaffSession() {
   if (currentUser.email) state.staff.email = currentUser.email;
   if (currentUser.mobile) state.staff.phone = currentUser.mobile;
   if (currentUser.profileImage) state.staff.profileImage = currentUser.profileImage;
-  state.staff.role = currentUser.profileTitle || "Receptionist";
+  state.staff.role = "All Staff Positions";
   return true;
 }
 
@@ -231,6 +231,9 @@ function clinicAppointmentToStaff(a) {
     services: a.services,
     rescheduleHistory: a.rescheduleHistory,
     arrivedAt: a.arrivedAt,
+    autoCancelled: a.autoCancelled === true,
+    lateArrivalAt: a.lateArrivalAt,
+    reinstatementHistory: a.reinstatementHistory,
     dentistId: a.dentistId,
     dentistEmail: a.dentistEmail,
     dentistName: a.dentistName,
@@ -336,7 +339,7 @@ function pullStaffProfileFromClinicDb(db) {
   state.staff.name = me.name || match.name || state.staff.name;
   state.staff.email = me.email || match.email || state.staff.email;
   state.staff.phone = me.mobile || match.contact || state.staff.phone;
-  state.staff.role = me.profileTitle || match.position || state.staff.role;
+  state.staff.role = "All Staff Positions";
 }
 
 /* ---------- core pull / push ---------- */
@@ -760,7 +763,7 @@ function bindProfileUploadUI() {
 async function saveStaffAccount() {
   const name = qs("#staffName").value.trim();
   const email = qs("#staffEmail").value.trim();
-  const role = qs("#staffRole").value.trim();
+  const role = "All Staff Positions";
   const phone = qs("#staffPhone").value.trim();
   const password = qs("#staffPassword").value;
   const confirm = qs("#staffConfirmPassword").value;
@@ -781,7 +784,7 @@ async function saveStaffAccount() {
   if (!verified) return;
   state.staff.name = verified.name;
   state.staff.email = verified.email;
-  state.staff.role = verified.profileTitle;
+  state.staff.role = "All Staff Positions";
   state.staff.phone = verified.mobile;
 
   saveState();
@@ -1203,7 +1206,7 @@ function renderQueue() {
 
 function canMarkArrived(item, now = new Date()) {
   const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
-  return !!item && item.date === today && !item.arrivedAt && /^(approved|confirmed|waiting|pending|ongoing|in progress)$/i.test(item.status || '');
+  return !!item && item.date === today && !item.arrivedAt && (item.autoCancelled === true || /^(approved|confirmed|waiting|pending|ongoing|in progress)$/i.test(item.status || ''));
 }
 const pendingArrivals = new Set();
 async function markPatientArrived(id, silent = false) {
@@ -1215,6 +1218,10 @@ async function markPatientArrived(id, silent = false) {
     const response = await window.GmDentalApiFetch(`${window.GmDentalSupabaseSync?.apiBaseUrl || ""}/api/appointments/${encodeURIComponent(id)}/arrive`, { method: "POST" });
     const result = await response.json();
     if (!response.ok) throw new Error(result.message || "Could not mark patient arrived.");
+    if (result.late) {
+      await window.GmDentalSupabaseSync?.pull?.({force:true});withSyncSuspended(()=>pullFromClinicDb());renderAll();
+      openLateArrivalReinstatement(result.appointment,result.minutesLate);return false;
+    }
     await window.GmDentalSupabaseSync?.pull?.({ force: true });
     withSyncSuspended(() => pullFromClinicDb());
     renderAll();
@@ -1464,31 +1471,71 @@ function renderPatients() {
 }
 
 function openWalkInModal() {
+  const walkInId = uid();
+  const patientId = crypto.randomUUID();
   const today = todayISO();
   const clinic = window.GMDefaultAccounts.normalizeDb(getClinicDb());
   const catalog = (clinic.services || []).filter(s => !s.archived && s.active !== false).sort((a, b) => a.name.trim().localeCompare(b.name.trim(), 'en', { sensitivity: 'base', numeric: true }));
   const nameOf = row => row.serviceName || row.name || "";
   const selected = new Set();
   const lines = () => catalog.filter((_, index) => selected.has(index)).map(s => ({ serviceName: nameOf(s), price: Number(s.price || 0), totalPaid: 0 }));
-  const eligible = () => (window.GMDefaultAccounts.normalizeDb(getClinicDb()).dentists || []).filter(d => !d.archived && selected.size && lines().every(s => GMDentistServices.canPerform(d, s.serviceName)));
+  const timesFor = (dentist, latest) => {
+    const appointment = { id: walkInId, services: lines() };
+    return StaffAvailability.slots(today, [dentist], [...(latest.appointments || []), ...(latest.archivedAppointments || [])], appointment)
+      .filter(time => GMClinicHours.allows(today, BookingTime.minutes(time), BookingTime.duration(appointment), window.GMClinicSettings || {}));
+  };
+  const eligible = () => {
+    if (!selected.size) return [];
+    const latest = window.GMDefaultAccounts.normalizeDb(getClinicDb());
+    return (latest.dentists || []).filter(d => !d.archived && d.active !== false &&
+      lines().every(s => GMDentistServices.canPerform(d, s.serviceName)) && timesFor(d, latest).length > 0);
+  };
   const available = () => {
     const latest = window.GMDefaultAccounts.normalizeDb(getClinicDb());
     const dentist = eligible().find(d => String(d.id) === qs("#walkInDentist").value);
-    const appointment = { id: "new-walk-in", services: lines() };
-    return dentist ? StaffAvailability.slots(today, [dentist], [...(latest.appointments || []), ...(latest.archivedAppointments || [])], appointment)
-      .filter(time => GMClinicHours.allows(today, BookingTime.minutes(time), BookingTime.duration(appointment), window.GMClinicSettings || {})) : [];
+    return dentist ? timesFor(dentist, latest) : [];
   };
   openSharedModal("Add Walk-In Patient", `
     <div class="form-grid one">
-      <p>Walk-in for ${escapeHtml(today)}. Select services to find a qualified dentist and an available time.</p>
-      <div><label class="label" for="walkInPatient">Patient Name</label><input class="input" id="walkInPatient" type="text" placeholder="Enter patient name" maxlength="150" /></div>
+      <p>Walk-in for ${escapeHtml(today)}. Select services to find a qualified dentist and an available time.</p><p>New patient logins use the entered email and password patient123. Existing passwords stay unchanged.</p>
+      <div><label class="label" for="walkInPatient">Patient Name</label><input class="input" id="walkInPatient" type="text" placeholder="Enter patient name" maxlength="150" required /></div>
+      <div class="form-grid two">
+        <div><label class="label" for="walkInContact">Contact number</label><input class="input" id="walkInContact" type="tel" inputmode="numeric" pattern="(09[0-9]{9}|639[0-9]{9})" maxlength="12" placeholder="09123456789 or 639123456789" required></div>
+        <div><label class="label" for="walkInEmail">Email</label><input class="input" id="walkInEmail" type="email" maxlength="160" required></div>
+        <div><label class="label" for="walkInAge">Age</label><input class="input" id="walkInAge" type="text" inputmode="numeric" pattern="([0-9]|[1-9][0-9]|1[01][0-9]|120)" maxlength="3" title="Enter an age from 0 to 120" required></div>
+        <div><label class="label" for="walkInGender">Gender</label><select class="input" id="walkInGender" required><option value="">Select gender</option><option>Male</option><option>Female</option></select></div>
+      </div>
+      <div><label class="label" for="walkInAddress">Address</label><input class="input" id="walkInAddress" maxlength="400" required></div>
+      <div><label class="label" for="walkInCondition">Medical conditions / notes</label><textarea class="input" id="walkInCondition" maxlength="1000" placeholder="Enter relevant conditions, or None" required></textarea></div>
       <fieldset class="appointment-choices"><legend>Services</legend><div id="walkInServices">${catalog.map((s, index) => `<label class="appointment-check"><input type="checkbox" value="${index}"><span>${escapeHtml(nameOf(s))}<small>PHP ${Number(s.price || 0).toFixed(2)}</small></span></label>`).join("") || '<p>No services available.</p>'}</div></fieldset>
-      <div><label class="label" for="walkInDentist">Dentist</label><select class="input" id="walkInDentist" disabled><option value="">Select services first</option></select><p class="muted">Only dentists qualified for all selected services appear.</p></div>
+      <div><label class="label" for="walkInDentist">Dentist</label><select class="input" id="walkInDentist" disabled><option value="">Select services first</option></select><p class="muted">Only qualified dentists with an available time today appear.</p></div>
       <div><label class="label" for="walkInTime">Available Time</label><select class="input" id="walkInTime" disabled><option value="">Select a dentist first</option></select><p id="walkInAvailability" class="muted" aria-live="polite"></p></div>
       <p id="walkInTotal" aria-live="polite">Total: PHP 0.00</p>
       <div class="form-actions-inline"><button class="btn primary" type="button" id="saveWalkInBtn" disabled>Save Walk-In</button></div>
     </div>
   `);
+  // Apply on input as well as typing, so paste and mobile keyboards follow the same rules.
+  for (const [id, invalid] of [
+    ['walkInPatient', /[^\p{L}\p{M} .\u0027\u2019-]/gu],
+    ['walkInAge', /[^0-9]/g],
+    ['walkInContact', /[^0-9]/g]
+  ]) {
+    const field = qs('#' + id);
+    const clean = () => {
+      const before = field.value;
+      const cursor = field.selectionStart;
+      const cleaned = before.replace(invalid, '');
+      if (cleaned !== before) {
+        field.value = cleaned;
+        if (cursor != null && field.setSelectionRange) {
+          const position = before.slice(0, cursor).replace(invalid, '').length;
+          field.setSelectionRange(position, position);
+        }
+      }
+    };
+    field.oninput = event => { if (!event.isComposing) clean(); };
+    field.oncompositionend = clean;
+  }
   const renderTimes = () => {
     const input = qs("#walkInTime"), previous = input.value, times = available();
     input.innerHTML = '<option value="">Select an available time</option>' + times.map(time => `<option value="${time}" ${time === previous ? "selected" : ""}>${formatTime(time)}</option>`).join("");
@@ -1499,7 +1546,7 @@ function openWalkInModal() {
   qs("#walkInServices").querySelectorAll("input").forEach(input => input.onchange = () => {
     if (input.checked) selected.add(Number(input.value)); else selected.delete(Number(input.value));
     const select = qs("#walkInDentist"), previous = select.value, dentists = eligible();
-    select.innerHTML = `<option value="">${!selected.size ? "Select services first" : dentists.length ? "Select an eligible dentist" : "No eligible dentists"}</option>` + dentists.map(d => `<option value="${escapeAttr(d.id)}" ${String(d.id) === previous ? "selected" : ""}>${escapeHtml(d.name)}</option>`).join("");
+    select.innerHTML = `<option value="">${!selected.size ? "Select services first" : dentists.length ? "Select an available dentist" : "No qualified dentists available today"}</option>` + dentists.map(d => `<option value="${escapeAttr(d.id)}" ${String(d.id) === previous ? "selected" : ""}>${escapeHtml(d.name)}</option>`).join("");
     select.disabled = !dentists.length;
     qs("#walkInTotal").textContent = `Total: PHP ${lines().reduce((sum, s) => sum + s.price, 0).toFixed(2)}`;
     renderTimes();
@@ -1511,18 +1558,17 @@ function openWalkInModal() {
     const dentist = eligible().find(d => String(d.id) === qs("#walkInDentist").value);
     if (!patient || !dentist || !selected.size) return showToast("Enter a patient name and select services and a dentist.", "error");
     if (today !== todayISO() || !available().includes(time)) { renderTimes(); return showToast("That time is no longer available. Select another available time.", "error"); }
-    const button = qs("#saveWalkInBtn"); button.disabled = true;
-    const services = lines(), total = services.reduce((sum, s) => sum + s.price, 0);
-    const walkInId = uid();
-    state.appointments.push({ id: walkInId, patient, dentist: dentist.name, dentistId: dentist.id, dentistIds: [dentist.id], dentistName: dentist.name, dentistEmail: dentist.email || "", service: services.map(s => s.serviceName).join(" + "), services, serviceTotal: total, date: today, time, status: "Waiting", paymentStatus: "Unpaid", total, paid: 0, method: "-" });
-    saveState();
-    closeSharedModal();
-    renderAll();
-    const saved = await window.GmDentalSupabaseSync?.flushNow?.();
-    if (!saved) return showToast("Walk-in saved locally, but sync failed. Please reconnect before adding it again.", "error");
-    if (!await markPatientArrived(walkInId, true)) return showToast("Walk-in saved, but arrival could not be confirmed. Use Mark Arrived to retry.", "error");
-    addNotification("Walk-In Added", `${patient} was added to the queue.`);
-    showToast("Walk-in patient added.", "success");
+    const fieldIds=['walkInPatient','walkInContact','walkInEmail','walkInAge','walkInGender','walkInAddress','walkInCondition'];
+    for(const id of fieldIds) {const field=qs('#'+id);if(!field.reportValidity()) return;}
+    const patientRecord={id:patientId,name:patient,contact:qs('#walkInContact').value.trim(),email:qs('#walkInEmail').value.trim(),age:qs('#walkInAge').value,gender:qs('#walkInGender').value,address:qs('#walkInAddress').value.trim(),condition:qs('#walkInCondition').value.trim()};
+    const button=qs('#saveWalkInBtn');button.disabled=true;
+    try {
+      const response=await GmDentalApiFetch(`${window.GmDentalSupabaseSync?.apiBaseUrl || ""}/api/walk-ins`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patient:patientRecord,appointment:{id:walkInId,date:today,time,dentistId:dentist.id,services:catalog.filter((_,index)=>selected.has(index)).map(s=>({id:s.id}))}})});
+      const result=await response.json();if(!response.ok) throw new Error(result.message||'Could not save walk-in.');
+      await window.GmDentalSupabaseSync?.pull?.({force:true});withSyncSuspended(()=>pullFromClinicDb());
+      closeSharedModal();renderAll();showToast('Patient record and walk-in appointment created. Arrival recorded.','success');
+    } catch(error){showToast(error.message,'error');button.disabled=false;}
+
   };
 }
 
@@ -1603,7 +1649,7 @@ function openAppointmentModal(id = null) {
       </div>
       <div class="form-actions-inline">
         <button class="btn primary" type="button" id="saveAppointmentBtn">${item ? "Update" : "Save"} Appointment</button>
-        ${item ? '<button class="btn secondary" type="button" id="emergencyRescheduleBtn">Emergency Reschedule</button><div id="emergencyRescheduleFields" hidden><label class="label" for="emergencyReason">Emergency reason</label><input class="input" id="emergencyReason" maxlength="300" placeholder="Reason the dentist needs to reschedule"><p>Select an available date and time above, then save the reschedule.</p></div>' : ""}
+        ${item ? '<button class="btn secondary" type="button" id="emergencyRescheduleBtn">Reschedule Appointment</button><div id="emergencyRescheduleFields" hidden><label class="label" for="emergencyReason">Reschedule reason</label><input class="input" id="emergencyReason" maxlength="300" placeholder="Reason the appointment needs to be rescheduled"><p>Select an available date and time above, then save the reschedule.</p></div>' : ""}
       </div>
     </div>
   `);
@@ -1660,7 +1706,7 @@ function openAppointmentModal(id = null) {
   if (item) qs("#emergencyRescheduleBtn").onclick = () => {
     emergency = true;
     qs("#emergencyRescheduleFields").hidden = false;
-    qs("#saveAppointmentBtn").textContent = "Save Emergency Reschedule";
+    qs("#saveAppointmentBtn").textContent = "Save Reschedule Appointment";
     qs("#emergencyReason").focus();
   };
 
@@ -1687,9 +1733,9 @@ function openAppointmentModal(id = null) {
     if ((scheduleChanged || emergency) && !available(date).includes(time)) return showToast("This time is no longer available for the selected dentists. Choose another time.", "error");
     if (emergency) {
       const reason = qs("#emergencyReason").value.trim();
-      if (!reason) return showToast("Enter the emergency reason.", "error");
+      if (!reason) return showToast("Enter the reschedule reason.", "error");
       if (date === item.date && time === item.time) return showToast("Select a new appointment date or time.", "error");
-      item.rescheduleHistory = [...(original.rescheduleHistory || []), { previousDate: item.date, previousTime: item.time, date, time, reason, type: "dentist_emergency", recordedAt: new Date().toISOString() }];
+      item.rescheduleHistory = [...(original.rescheduleHistory || []), { previousDate: item.date, previousTime: item.time, date, time, reason, type: "staff_assisted", recordedAt: new Date().toISOString() }];
     }
 
     if (item) {
@@ -1801,6 +1847,7 @@ function openPaymentModal(id = null) {
 }
 
 function openPatientModal(id = null) {
+  if (!id) return window.GMPatientCreation.open();
   const item = id ? state.patients.find(x => x.id === id) : null;
 
   openSharedModal(item ? "Edit Patient" : "Add Patient", `
@@ -1812,7 +1859,7 @@ function openPatientModal(id = null) {
       <div class="form-grid two">
         <div>
           <label class="label" for="patientAgeInput">Age</label>
-          <input class="input" id="patientAgeInput" type="number" min="0" value="${escapeAttr(String(item?.age || ""))}" />
+          <input class="input" id="patientAgeInput" type="number" min="0" value="${escapeAttr(String(item?.age ?? ""))}" />
         </div>
         <div>
           <label class="label" for="patientGenderInput">Gender</label>
@@ -1821,10 +1868,6 @@ function openPatientModal(id = null) {
             <option ${item?.gender === "Female" ? "selected" : ""}>Female</option>
           </select>
         </div>
-      </div>
-      <div>
-        <label class="label" for="patientConditionInput">Condition</label>
-        <input class="input" id="patientConditionInput" type="text" value="${escapeAttr(item?.condition || "")}" />
       </div>
       <div>
         <label class="label" for="patientAddressInput">Address</label>
@@ -1844,19 +1887,18 @@ function openPatientModal(id = null) {
     const name = qs("#patientNameInput").value.trim();
     const age = Number(qs("#patientAgeInput").value || 0);
     const gender = qs("#patientGenderInput").value;
-    const condition = qs("#patientConditionInput").value.trim();
     const address = qs("#patientAddressInput").value.trim();
     const contact = qs("#patientContactInput").value.trim();
 
-    if (!name || !condition || !address || !contact) {
+    if (!name || !address || !contact) {
       showToast("Please fill all patient fields.", "error");
       return;
     }
 
     if (item) {
-      Object.assign(item, { name, age, gender, condition, address, contact });
+      Object.assign(item, { name, age, gender, address, contact });
     } else {
-      state.patients.push({ id: uid(), name, age, gender, condition, address, contact });
+      state.patients.push({ id: uid(), name, age, gender, address, contact });
     }
 
     saveState();
@@ -1897,18 +1939,19 @@ function deletePatient(id) {
 }
 
 function showPatientView(id) {
-  const p = state.patients.find(x => x.id === id);
-  if (!p) return;
+  const patient = state.patients.find(x => x.id === id);
+  if (!patient) return;
+  const db = getClinicDb();
+  const p = GMAdminPatientDetails.view(patient, db.patients || [], db.appointments || [], state.registeredPatientAccounts || state.accounts || []);
 
   openViewModal(
     p.name,
     `
       <div class="detail-list">
-        <div class="detail-box"><strong>Age</strong>${p.age} yrs old</div>
-        <div class="detail-box"><strong>Gender</strong>${escapeHtml(p.gender)}</div>
-        <div class="detail-box"><strong>Condition</strong>${escapeHtml(p.condition)}</div>
-        <div class="detail-box"><strong>Address</strong>${escapeHtml(p.address)}</div>
-        <div class="detail-box"><strong>Contact</strong>${escapeHtml(p.contact)}</div>
+        <div class="detail-box"><strong>Age</strong>${p.age !== '' && p.age != null ? escapeHtml(String(p.age)) + ' yrs old' : 'Not recorded'}</div>
+        <div class="detail-box"><strong>Gender</strong>${escapeHtml(p.gender || 'Not recorded')}</div>
+        <div class="detail-box"><strong>Address</strong>${escapeHtml(p.address || 'Not recorded')}</div>
+        <div class="detail-box"><strong>Contact</strong>${escapeHtml(p.contact || 'Not recorded')}</div>
       </div>
     `
   );
@@ -2070,7 +2113,7 @@ function renderQueue() {
       <td class="action-menu-cell">
         <button class="kebab-btn" type="button" aria-label="Open queue actions"><i class="bi bi-three-dots-vertical"></i></button>
         <div class="dropdown">
-          ${canMarkArrived(item) ? '<button type="button" data-action="arrive">Mark Arrived</button>' : ""}
+          ${canMarkArrived(item) ? `<button type="button" data-action="arrive">${item.autoCancelled ? 'Record Late Arrival' : 'Mark Arrived'}</button>` : ""}
           ${canConfirm ? `<button type="button" data-action="confirm">Mark Confirmed</button>` : ""}
           ${canProgress ? `<button type="button" data-action="progress">Start Service</button>` : ""}
           ${canComplete ? `<button type="button" data-action="complete">Mark Completed</button>` : ""}
@@ -2146,8 +2189,8 @@ function renderAppointments() {
       <td class="action-menu-cell">
         <button class="kebab-btn" type="button" aria-label="Open appointment actions"><i class="bi bi-three-dots-vertical"></i></button>
         <div class="dropdown">
-          ${closed ? "" : `<button type="button" data-action="edit">Edit</button>`}
-          ${!closed && canMarkArrived(item) ? '<button type="button" data-action="arrive">Mark Arrived</button>' : item.arrivedAt ? '<button type="button" disabled>Patient Arrived</button>' : !closed ? '<button type="button" disabled title="Available only on the appointment date">Arrival available on appointment date</button>' : ""}
+          ${closed ? "" : `<button type="button" data-action="edit">Edit</button><button type="button" data-action="reschedule">Reschedule</button>`}
+          ${canMarkArrived(item) ? `<button type="button" data-action="arrive">${item.autoCancelled ? 'Record Late Arrival' : 'Mark Arrived'}</button>` : item.arrivedAt ? '<button type="button" disabled>Patient Arrived</button>' : !closed ? '<button type="button" disabled title="Available only on the appointment date">Arrival available on appointment date</button>' : ""}
           ${paymentAllowed ? `<button type="button" data-action="payment">Record Payment</button>` : ""}
           <button type="button" data-action="view">View</button>
           ${closed ? "" : `<button type="button" class="danger-text" data-action="cancel">Cancel</button>`}
@@ -2163,6 +2206,7 @@ function renderAppointments() {
     });
     safeOn(menu?.querySelector('[data-action="arrive"]'), "click", () => markPatientArrived(item.id));
     safeOn(menu?.querySelector('[data-action="edit"]'), "click", () => openAppointmentModal(item.id));
+    safeOn(menu?.querySelector('[data-action="reschedule"]'), "click", () => GMAppointmentActions.reschedule(item.id));
     safeOn(menu?.querySelector('[data-action="payment"]'), "click", () => openPaymentModal(item.id));
     safeOn(menu?.querySelector('[data-action="view"]'), "click", () => showAppointmentView(item.id));
     safeOn(menu?.querySelector('[data-action="cancel"]'), "click", () => updateAppointmentStatus(item.id, "Cancelled"));
@@ -2883,6 +2927,8 @@ function openSharedModal(title, content) {
   modalTitle.textContent = title;
   modalBody.innerHTML = content;
   modalBackdrop.classList.remove("hidden");
+  modalBody.scrollTop = 0;
+  modalBackdrop.scrollTop = 0;
 }
 
 function closeSharedModal() {
@@ -3124,4 +3170,24 @@ async function readRefundProof(file) {
     if (result.length > 600000) throw new Error("Receipt is too large. Choose a smaller image.");
     return result;
   } finally { bitmap.close(); }
+}
+
+function openLateArrivalReinstatement(appointment, minutesLate) {
+  const db=getClinicDb();const ids=appointment.dentistIds?.length?appointment.dentistIds.map(String):[String(appointment.dentistId)];
+  const dentists=(db.dentists||[]).filter(d=>ids.includes(String(d.id)));
+  openSharedModal('Late arrival', `<p role="alert">Patient arrived ${Number(minutesLate)} minutes late ? appointment was auto-cancelled. Reinstate?</p>
+    <label class="label" for="reinstateDentist">Approving dentist</label><select class="input" id="reinstateDentist"><option value="">Select dentist</option>${dentists.map(d=>`<option value="${escapeAttr(d.id)}">${escapeHtml(d.name)}</option>`).join('')}</select>
+    <label class="label" for="reinstateReason">Reason</label><textarea class="input" id="reinstateReason" maxlength="500"></textarea>
+    <label><input type="checkbox" id="reinstateAgreed"> The selected dentist agrees to this reinstatement.</label>
+    <p>We will check that the full treatment duration fits from the next available minute without overlapping another booking.</p>
+    <div class="form-actions-inline"><button class="btn primary" id="reinstateSave">Reinstate</button><button class="btn secondary" id="reinstateKeep">Keep cancelled</button></div>`);
+  qs('#reinstateKeep').onclick=closeSharedModal;
+  qs('#reinstateSave').onclick=async()=>{
+    const button=qs('#reinstateSave');const reason=qs('#reinstateReason').value.trim(),approvedBy=qs('#reinstateDentist').value,dentistAgreed=qs('#reinstateAgreed').checked;
+    if(!reason||!approvedBy||!dentistAgreed)return showToast('Record the dentist approval and reason first.','error');
+    button.disabled=true;
+    try {const response=await GmDentalApiFetch(`${window.GmDentalSupabaseSync?.apiBaseUrl || ""}/api/appointments/${encodeURIComponent(appointment.id)}/reinstate`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reason,approvedBy,dentistAgreed})});const result=await response.json();if(!response.ok)throw new Error(result.message);
+      await window.GmDentalSupabaseSync?.pull?.({force:true});withSyncSuspended(()=>pullFromClinicDb());closeSharedModal();renderAll();showToast('Booking reinstated and arrival logged.','success');
+    }catch(error){showToast(error.message||'Could not reinstate.','error');button.disabled=false;}
+  };
 }

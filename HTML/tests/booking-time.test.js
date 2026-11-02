@@ -143,7 +143,7 @@ test('availability refresh bypasses blocked write sync and uses server reservati
       GmDentalSupabaseSync: { pull() { throw new Error('Write sync is blocked'); } },
       async GmDentalApiFetch(url, options) {
         calls++;
-        assert.equal(url, '/api/clinic-db');
+        assert.equal(url, '/api/booking-availability');
         assert.equal(options.cache, 'no-store');
         return { ok: !fail, json: async () => ({ db: { appointments: [stored] } }) };
       }

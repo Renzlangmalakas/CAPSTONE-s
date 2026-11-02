@@ -15,7 +15,10 @@ app.use(express.json({ limit: "50mb" }));
 // to happen inside app.listen() has to run once per instance before the first
 // route handler touches Supabase-derived state (see ensureBootstrapped below).
 app.use(async (_req, _res, next) => {
-  await ensureBootstrapped();
+  if (await ensureBootstrapped() === false) {
+    _res.set('Retry-After', '60');
+    return _res.status(503).json({ message: 'The database is temporarily unavailable. Please retry in a minute.' });
+  }
   next();
 });
 
@@ -48,14 +51,32 @@ const supabaseUrl = String(process.env.SUPABASE_URL || "").trim();
 const supabaseServiceRoleKey = String(process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
 const sessions = require("./_session").createSessions(process.env.SESSION_SECRET || supabaseServiceRoleKey || crypto.randomBytes(32));
 
-app.use("/api", (req, res, next) => {
+app.use((req,res,next)=>require('./_audit-v2').middleware(supabase, token=>sessions.verify(token))(req,res,next));
+
+app.use("/api", async (req, res, next) => {
   if (req.method === "GET" && ["/site-content", "/services"].includes(req.path)) return next();
   if (req.path === "/cron/appointment-reminders") return next();
   if (req.method === "POST" && req.path === "/dentist-invitations/accept") return next();
   const token = String(req.headers.authorization || "").replace(/^Bearer\s+/i, "") || req.body?.sessionToken;
   const user = sessions.verify(token);
   if (!user) return res.status(401).json({ message: "Please sign in again." });
+  req.user = user;
   if (req.path.startsWith("/admin/") && user.role !== "admin") return res.status(403).json({ message: "Administrator access is required." });
+  // Recheck revocation on every request, including tokens issued before a merge.
+  if (supabase) {
+    try {
+      const { data, error } = await require('./_account-access').readAccountAccess(supabase, user);
+      if (error) {
+        console.error('[account-access]', error.code || 'UNKNOWN', error.message);
+        return res.status(503).json({ message: 'Account access could not be verified. Please retry.' });
+      }
+      if (!data || data.archived || data.merged_into) return res.status(401).json({ message: 'This account is inactive. Please sign in with your replacement account.' });
+      user.id = data.id;
+    } catch (error) {
+      console.error('[account-access]', error.code || error.name || 'UNKNOWN', error.message);
+      return res.status(503).json({ message: 'Account access could not be verified. Please retry.' });
+    }
+  }
   req.user = user;
   next();
 });
@@ -89,12 +110,25 @@ const hasValidSupabaseServiceRoleKey = supabaseServiceRoleKeyRole === "service_r
 
 const supabase = supabaseUrl && supabaseServiceRoleKey
   ? createClient(supabaseUrl, supabaseServiceRoleKey, {
-      auth: { persistSession: false, autoRefreshToken: false }
+      auth: { persistSession: false, autoRefreshToken: false },
+      global: {fetch:require("./_audit-v2").contextualFetch}
     })
   : null;
 
-app.use(require('./_audit').middleware(supabase, findVerifiedUserByEmail));
-app.get('/api/admin/audit-log', require('./_audit').listHandler(supabase));
+
+require('./_patient-merge')(app, supabase);
+require('./_audit-events')(app, supabase, async (user, key) => {
+  const db = await readClinicDbFromSupabase(['dentists','appointments','archivedAppointments']);
+  const access = require('../Shared/dentist-access');
+  const scoped = access.scope(db,user);
+  const appointment = [...scoped.appointments,...scoped.archivedAppointments].find(row => String(row.patientKey||row.patientId||row.patientEmail||row.patientName||row.patient||'').trim().toLowerCase() === key.toLowerCase());
+  return appointment ? appointment.patientName||appointment.patient||key : null;
+});
+app.get('/api/admin/audit-log', require('./_audit-v2').listHandler(supabase));
+app.get('/api/admin/audit-alerts', async(req,res)=>{
+ try {const {data,error}=await supabase.from('clinic_audit_alerts').select('*').order('id',{ascending:false}).limit(50);if(error)throw error;res.set('Cache-Control','private, no-store');res.json({alerts:data});}
+ catch(error){res.status(503).json({message:'Audit alerts are unavailable.'});}
+});
 app.get('/api/admin/discounted-prices', async (req, res) => {
   if (req.user?.role !== 'admin') return res.status(403).json({ message: 'Administrator access is required.' });
   if (!supabase) return res.status(503).json({ message: 'Database unavailable.' });
@@ -188,7 +222,7 @@ const clinicTableMap = {
 };
 
 const rawTableColumns = {
-  patients: ["id", "name", "contact", "address", "age", "gender", "archived", "deleted_at", "created_at", "updated_at"],
+  patients: ["id", "name", "contact", "email", "condition", "address", "age", "gender", "archived", "deleted_at", "created_at", "updated_at"],
   dentists: ["id", "name", "specialty", "contact", "email", "archived", "created_at", "updated_at"],
   staffs: ["id", "position", "created_at"],
   dentist_schedules: ["id", "dentist_id", "day_of_week", "start_time", "end_time", "is_active", "created_at", "updated_at"],
@@ -408,6 +442,8 @@ function fromDbUser(row) {
     password: row.password || row.password_hash,
     role: row.role || encodedRole || seededRole || "patient",
     isVerified: row.is_verified,
+    archived: Boolean(row.archived),
+    mergedInto: row.merged_into || null,
     sex: row.sex || "",
     dob: row.dob || "",
     mobile: row.mobile || "",
@@ -447,8 +483,10 @@ async function seedSupabaseUsers() {
     if (usersHasRoleColumn) changes.role = user.role;
     else changes.condition = encodeConditionWithRole(keeper.condition, user.role);
     // Preserve existing credentials and profile information.
-    const { error: updateError } = await supabase.from("users").update(changes).eq("id", keeper.id);
-    if (updateError) throw updateError;
+    if (Object.entries(changes).some(([field, value]) => keeper[field] !== value)) {
+      const { error: updateError } = await supabase.from("users").update(changes).eq("id", keeper.id);
+      if (updateError) throw updateError;
+    }
     for (const duplicate of matches.filter(row => row.id !== keeper.id)) {
       const { error: deleteError } = await supabase.from("users").delete().eq("id", duplicate.id);
       if (deleteError) throw deleteError;
@@ -628,6 +666,7 @@ function isUsableAppointment(record = {}) {
   return Boolean(patient && (service || schedule || date) && service.toLowerCase() !== "no appointment yet" && record.record_type !== "profile" && record.recordType !== "profile");
 }
 
+const nativeClinicTables = new Set();
 async function readJsonTable(tableName, keyColumn = "sync_key", fallbackTable) {
   const attempt = async (table) => {
     try {
@@ -648,7 +687,7 @@ async function readJsonTable(tableName, keyColumn = "sync_key", fallbackTable) {
     }
   };
 
-  const result = await attempt(tableName);
+  const result = nativeClinicTables.has(tableName) ? { missing: true } : await attempt(tableName);
   if (result.missing && fallbackTable) {
     const fallbackResult = await attempt(fallbackTable);
     if (!fallbackResult.missing) {
@@ -683,6 +722,7 @@ async function readJsonTable(tableName, keyColumn = "sync_key", fallbackTable) {
       }
 
       if (!rawError && Array.isArray(rawData)) {
+        nativeClinicTables.add(tableName);
         return rawData.map((row) => {
           const normalized = normalizeRawRow(row);
           return {
@@ -778,6 +818,13 @@ async function replaceJsonTable(tableName, records, keyColumn = "sync_key", fall
     const rows = safeRecords.map(record => {
       const id = ensureId(record);
       const data = require("./_payment-state").preservePaymentState(preserveCompletion({ ...record, id }, byId.get(id)), byId.get(id));
+      const previousArrival = byId.get(id);
+      for (const key of ['autoCancelled','lateArrivalAt','reinstatementHistory']) {
+        if (previousArrival?.[key] !== undefined) data[key] = previousArrival[key]; else delete data[key];
+      }
+      if (previousArrival?.reinstatementHistory?.length && JSON.stringify(record.reinstatementHistory) !== JSON.stringify(previousArrival.reinstatementHistory)) {
+        for (const key of ['status','lifecycleStatus','visitStatus','date','time','schedule','durationMinutes','endTime','cancelledAt']) data[key] = previousArrival[key];
+      }
       // Arrival is written only by the staff check-in endpoint, never by snapshots.
       if (byId.get(id)?.arrivedAt) data.arrivedAt = byId.get(id).arrivedAt;
       else delete data.arrivedAt;
@@ -964,7 +1011,7 @@ function buildHistoryRecords(db = {}) {
   );
 }
 
-async function readClinicDbFromSupabase() {
+async function readClinicDbFromSupabase(collections = null) {
   const db = {
     appointments: [],
     archivedAppointments: [],
@@ -981,14 +1028,15 @@ async function readClinicDbFromSupabase() {
     payments: []
   };
 
-  await Promise.all(Object.entries(clinicTableMap).map(async ([key, config]) => {
+  const notificationRead = collections ? Promise.resolve([]) : readJsonTable("notifications", "sync_key");
+  await Promise.all(Object.entries(clinicTableMap).filter(([key]) => !collections || collections.includes(key)).map(async ([key, config]) => {
     db[key] = await readJsonTable(config.table, config.keyColumn, config.fallbackTable);
   }));
 
   db.appointments = db.appointments.filter(isUsableAppointment);
   db.archivedAppointments = db.archivedAppointments.filter(isUsableAppointment);
 
-  const notificationsRows = await readJsonTable("notifications", "sync_key");
+  const notificationsRows = await notificationRead;
 
   notificationTargets.forEach((target) => {
     db.notifications[target] = [];
@@ -999,10 +1047,11 @@ async function readClinicDbFromSupabase() {
     if (item) db.notifications[item.target].push(item);
   });
 
-  return defaultAccounts.normalizeDb(db);
+  return require("./_automatic-archive").applyAutomaticArchive(defaultAccounts.normalizeDb(db));
 }
 
 async function writeClinicDbToSupabase(db = {}, role = "") {
+  require("./_automatic-archive").applyAutomaticArchive(db);
   db = require("./_admin-read-only").writableSnapshot(db, role);
   defaultAccounts.normalizeDb(db);
   // Validate discount changes against persisted records before writing any tables.
@@ -1045,13 +1094,14 @@ async function writeClinicDbToSupabase(db = {}, role = "") {
   }
 
   for (const [key, config] of Object.entries(clinicTableMap)) {
+    if (role === "patient" && !["appointments","archivedAppointments","treatmentPlans","rescheduleRequests","history"].includes(key)) continue;
     if (role === "dentist" && !["appointments", "archivedAppointments", "patientClinicalNotes", "treatmentPlans", "rescheduleRequests", "history"].includes(key)) continue;
     if (key === "additionalFees" && role !== "admin") continue;
     if (key === "services" && role !== "admin") continue;
     if (!config.derived && !Object.prototype.hasOwnProperty.call(db, key)) continue;
     if (config.derived && (!Array.isArray(db.appointments) || !Array.isArray(db.archivedAppointments))) continue;
     const records = config.derived ? historyRecords : db[key];
-    await replaceJsonTable(config.table, records, config.keyColumn, config.fallbackTable, role === "dentist");
+    await replaceJsonTable(config.table, records, config.keyColumn, config.fallbackTable, ["dentist","patient"].includes(role));
   }
 
   if (!Object.prototype.hasOwnProperty.call(db, "notifications")) return;
@@ -1076,7 +1126,7 @@ async function writeClinicDbToSupabase(db = {}, role = "") {
     const rawRows = require('./_sync-records').uniqueRecords(rows.map((record) => buildRawRow(record, "notifications")).filter(Boolean));
     // Postgres rejects an unfiltered DELETE ("DELETE requires a WHERE clause"),
     // so match every row explicitly the same way the keyed tables above do.
-    const { error: deleteError } = role === "dentist" ? {} : await supabase
+    const { error: deleteError } = ["dentist","patient"].includes(role) ? {} : await supabase
       .from("notifications")
       .delete()
       .not("id", "is", null);
@@ -1094,7 +1144,7 @@ async function writeClinicDbToSupabase(db = {}, role = "") {
     return;
   }
 
-  const { error: deleteError } = role === "dentist" ? {} : await supabase
+  const { error: deleteError } = ["dentist","patient"].includes(role) ? {} : await supabase
     .from("notifications")
     .delete()
     .not("sync_key", "is", null);
@@ -2164,7 +2214,7 @@ app.post("/login", async (req, res) => {
 
     const user = await findVerifiedUserByEmail(email);
 
-    if (!user) {
+    if (!user || user.archived || user.mergedInto) {
       return res.status(401).json({ message: "Invalid email or password." });
     }
 
@@ -2217,6 +2267,11 @@ const account = require('./_account').createAccountHandlers({
     return fromDbUser(data);
   },
   sendCode(user, otp) {
+    if (!String(process.env.EMAIL_USER || '').trim() || !String(process.env.EMAIL_PASS || '').trim()) {
+      const error = new Error('Email delivery is not configured.');
+      error.code = 'EMAIL_NOT_CONFIGURED';
+      throw error;
+    }
     return mailer.sendMail({ from: `"Dental System" <${process.env.EMAIL_USER}>`, to: user.email,
       subject: 'Verify your password change',
       text: `Your G-M Dental password change code is ${otp}. It expires in 10 minutes. Enter it along with your current password in Account Settings. If you did not request this, do not share the code.` });
@@ -2394,22 +2449,29 @@ app.get("/api/admin/users", async (_req, res) => {
       });
     }
     const listCols = usersHasRoleColumn
-      ? "id,name,email,role,mobile,is_verified,condition,created_at"
-      : "id,name,email,mobile,is_verified,condition,created_at";
-    const { data, error } = await supabase
+      ? "id,name,email,role,mobile,sex,dob,address,is_verified,condition,created_at,archived,merged_into"
+      : "id,name,email,mobile,sex,dob,address,is_verified,condition,created_at,archived,merged_into";
+    let { data, error } = await supabase
       .from("users")
       .select(listCols)
       .order("created_at", { ascending: false });
+
+    if (error?.code === '42703' || error?.code === 'PGRST204') {
+      ({ data, error } = await supabase.from('users').select(listCols.replace(',archived,merged_into', '')).order('created_at', { ascending: false }));
+    }
 
     if (error) {
       console.error("[admin/users GET] Supabase error:", error);
       return res.status(500).json({ message: error.message, code: error.code });
     }
+    const { data: patientLinks, error: patientLinkError } = await supabase.from('patients').select('id,user_id,email');
+    if (patientLinkError) throw patientLinkError;
     const rows = (data || []).map((row) => {
       const { role: encodedRole, condition: cleanCondition } = decodeConditionRole(row.condition);
       const seededRole = seedUsers.find((u) => u.email.toLowerCase() === String(row.email).toLowerCase())?.role;
       return {
         ...row,
+        patientIds: (patientLinks || []).filter(p => p.user_id === row.id || String(p.email || '').toLowerCase() === String(row.email).toLowerCase()).map(p => p.id),
         role: row.role || encodedRole || seededRole || "patient",
         condition: cleanCondition
       };
@@ -2442,9 +2504,90 @@ app.delete("/api/admin/patients/:id", async (req, res) => {
   }
 });
 
+// Availability does not need profiles, clinical notes, billing or notifications.
+app.get('/api/booking-availability', async (req,res) => {
+  try {
+    const today = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Manila',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+    const [reservations,services] = await Promise.all([
+      supabase.from('clinic_appointments').select('id,data').gte('data->>date',today), readJsonTable('services','sync_key')
+    ]);
+    if (reservations.error) throw reservations.error;
+    const appointments = (reservations.data || []).map(row=>({...row.data,id:row.id}));
+    const fields = ['id','date','time','schedule','durationMinutes','endTime','status','lifecycleStatus','dentistId','dentistIds','dentist','dentistName','dentistEmail','services','service','archived'];
+    res.set('Cache-Control','private, no-store');
+    res.json({db:{appointments:appointments.map(a=>{
+      const safe=Object.fromEntries(fields.filter(k=>a[k]!==undefined).map(k=>[k,a[k]]));
+      safe.services=(a.services || []).map(service=>typeof service==='string'?service:Object.fromEntries(['serviceName','name','duration','durationMinutes','chairMinutes','quantity'].filter(k=>service[k]!==undefined).map(k=>[k,service[k]])));
+      if (String(a.patientEmail || '').toLowerCase() === String(req.user.email || '').toLowerCase()) { safe.patientEmail=a.patientEmail; safe.patientName=a.patientName || a.patient; }
+      return safe;
+    }),services}});
+  } catch(error) {res.status(503).json({message:'Could not refresh availability.'});}
+});
+
+app.post('/api/clinical-notes', async (req,res) => {
+  if(req.user?.role!=='dentist')return res.status(403).json({message:'Dentist access required.'});
+  try {
+    const input=req.body?.note;
+    if(!input || !String(input.id||'').match(/^[a-zA-Z0-9_-]{1,100}$/) || !input.patientKey || !String(input.condition||'').trim() || !String(input.treatment||'').trim())return res.status(400).json({message:'Enter a patient, condition and treatment.'});
+    const date=String(input.recordDate||'');
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isFinite(Date.parse(date+'T00:00:00Z'))||new Date(date+'T00:00:00Z').toISOString().slice(0,10)!==date)return res.status(400).json({message:'Choose a valid treatment date.'});
+    if(['condition','treatment'].some(key=>typeof input[key]!=='string'||input[key].trim().length>200)||['before','after'].some(key=>input[key]!=null&&(typeof input[key]!=='string'||input[key].length>4000)))return res.status(400).json({message:'Condition and treatment must be text up to 200 characters; before and after notes up to 4,000 characters.'});
+    const db={};
+    let old;
+    const readOld=async()=>{const result=await supabase.from('clinic_patient_clinical_notes').select('data').eq('id',input.id).maybeSingle();if(result.error)throw result.error;old=result.data;};
+    if(req.body.authorizationAppointmentId){
+      // Fetch only the appointment authorizing this patient and the actor's roster IDs.
+      const id=String(req.body.authorizationAppointmentId);
+      await Promise.all([readOld(),(async()=>{
+        const result=await supabase.from('dentists').select('id,name,email').eq('email',req.user.email);
+        if(result.error)throw result.error;db.dentists=result.data||[];
+      })(),...['appointments','archivedAppointments'].map(async key=>{
+        const result=await supabase.from(clinicTableMap[key].table).select('data').eq('id',id).maybeSingle();
+        if(result.error)throw result.error;db[key]=result.data?[result.data.data]:[];
+      })]);
+    }else{
+      // Compatibility for previously loaded browsers.
+      await Promise.all([readOld(),...['appointments','archivedAppointments','dentists'].map(async key=>{
+        const config=clinicTableMap[key];db[key]=await readJsonTable(config.table,config.keyColumn,config.fallbackTable);
+      })]);
+    }
+    db.patientClinicalNotes=old?[old.data]:[];
+    const access=require('../Shared/dentist-access');
+    const note=access.writable({patientClinicalNotes:[input]},db,req.user).patientClinicalNotes[0];
+    note.createdBy=req.user.name || req.user.email;
+    note.createdAt=old?.data?.createdAt || new Date().toISOString();
+    if(old && require('./_sync-records').sameAppointment(note,old.data))return res.status(304).end();
+    note.updatedAt=new Date().toISOString();
+    const {data,error}=await supabase.from('clinic_patient_clinical_notes').upsert({id:note.id,data:note,updated_at:note.updatedAt},{onConflict:'id'}).select('data').single();
+    if(error)throw error;
+    res.locals ||= {};
+    res.locals.auditChanged=true;
+    res.json({note:data.data});
+  }catch(error){res.status(error.status||500).json({message:error.status===403?error.message:'Could not save the tooth record. Please retry.'});}
+});
+
+app.get('/api/patient-db', async(req,res)=>{
+ if(req.user.role!=='patient')return res.status(403).json({message:'Patient account required.'});
+ try {res.set('Cache-Control','private, no-store');res.json({db:require('../Shared/patient-access').scope(await readClinicDbFromSupabase(),req.user)});}
+ catch(error){res.status(500).json({message:'Could not load patient records.'});}
+});
+async function handlePatientWrite(req,res){
+ if(req.user.role!=='patient')return res.status(403).json({message:'Patient account required.'});
+ try {
+  const access=require('../Shared/patient-access'), saved=await readClinicDbFromSupabase();
+  const permitted=access.writable(req.body.db||{},saved,req.user);
+  require('./_history-permissions').validateHistoryChanges(permitted,access.scope(saved,req.user),'patient');
+  await writeClinicDbToSupabase(permitted,'patient');
+  res.json({db:access.scope(await readClinicDbFromSupabase(),req.user)});
+ }catch(error){res.status(error.status||400).json({message:error.message||'Could not update patient records.'});}
+}
+app.put('/api/patient-db',handlePatientWrite);
+app.post('/api/patient-db',handlePatientWrite);
+
 app.get("/api/clinic-db", async (req, res) => {
   try {
     if (!requireSupabase(res)) return;
+    if(req.user.role==='patient')return res.status(403).json({message:"Patients cannot access the clinic database. Use your patient records endpoint."});
     const db = await readClinicDbFromSupabase();
     res.set("Cache-Control", "private, no-store");
     if (req.user.role === "dentist") {
@@ -2462,6 +2605,7 @@ app.get("/api/clinic-db", async (req, res) => {
 });
 
 async function handleClinicDbWrite(req, res) {
+  if(req.user.role==='patient')return res.status(403).json({message:"Patients cannot modify clinic-wide data."});
   try {
     const db = req.body?.db;
     if (!db || typeof db !== "object" || Array.isArray(db) || !Object.keys(db).length ||
@@ -2470,6 +2614,7 @@ async function handleClinicDbWrite(req, res) {
       return res.status(400).json({ message: "A valid clinic database snapshot is required." });
     }
     if (!requireSupabase(res) || !requireServiceRoleKey(res)) return;
+    require("./_automatic-archive").applyAutomaticArchive(db);
     // Database sync must never initiate email or depend on SMTP availability.
     if (req.user.role === "dentist") {
       const user = await findVerifiedUserByEmail(req.user.email);
@@ -2477,9 +2622,11 @@ async function handleClinicDbWrite(req, res) {
       const access = require('../Shared/dentist-access');
       const saved = await readClinicDbFromSupabase();
       const permitted = access.writable(db, saved, user);
+      require("./_history-permissions").validateHistoryChanges(permitted, access.scope(saved, user), "dentist");
       await writeClinicDbToSupabase(permitted, "dentist");
       return res.json({message:"Clinic tables synced.", db:access.scope(await readClinicDbFromSupabase(),user)});
     }
+    if (req.user.role !== "admin") require("./_history-permissions").validateHistoryChanges(db, await readClinicDbFromSupabase(), req.user.role);
     await writeClinicDbToSupabase(req.body?.db || {}, req.user?.role);
     return res.json({ message: "Clinic tables synced.", db: req.user.role === "admin" ? await readClinicDbFromSupabase() : req.body?.db || {} });
   } catch (error) {
@@ -2520,15 +2667,112 @@ async function handleClinicDbWrite(req, res) {
   }
 }
 
+app.post("/api/appointments/:id/manage", async (req, res) => {
+  if (!["admin", "staff"].includes(req.user.role)) return res.status(403).json({message:"Admin or staff access required."});
+  try {
+    const db = await readClinicDbFromSupabase();
+    const record = db.appointments.find(row => String(row.id) === req.params.id);
+    if (!record) return res.status(404).json({message:"Appointment not found."});
+    let updated;
+    if (req.body.action === "archive") {
+      if (req.user.role !== "admin") return res.status(403).json({message:"Only an administrator can archive appointments."});
+      if (!require('./_appointment-actions').terminal(record)) return res.status(400).json({message:"Only finished appointment history can be archived."});
+      updated = {...record, archived:true, archivedForPatient:true, archivedForDentist:true, archivedAt:new Date().toISOString(), archivedBy:req.user.email};
+    } else if (req.body.action === "reschedule") {
+      const {data, error} = await supabase.from('clinic_site_content').select('published').eq('id','website').maybeSingle();
+      if (error) throw error;
+      updated = require('./_appointment-actions').reschedule(record,req.body,db.dentists,db.appointments,data?.published || {},req.user);
+    } else return res.status(400).json({message:"Unknown appointment action."});
+    const {error} = await supabase.from('clinic_appointments').update({data:updated,updated_at:new Date().toISOString()}).eq('id',record.id);
+    if (error) throw error;
+    return res.json({appointment:updated});
+  } catch(error) { return res.status(error.code === '23P01' ? 409 : error.status || 500).json({message:error.code === '23P01' ? 'That time is no longer available.' : error.status ? error.message : 'Could not update appointment. Please retry.'}); }
+});
+
 app.put("/api/clinic-db", handleClinicDbWrite);
 app.post("/api/clinic-db", handleClinicDbWrite);
 app.post("/api/appointments/book", require("./_booking").createBookingHandler({ supabase, getClinicHours: async () => { const { data, error } = await supabase.from('clinic_site_content').select('published').eq('id','website').maybeSingle(); if (error) throw error; return require('../Shared/site-content').withDefaults(data?.published || {}); } }));
 app.post("/api/payments/cash-review", require("./_cash-payments").createCashReviewHandler({ supabase }));
 app.post("/api/appointments/:id/arrive", async (req, res) => {
-  if (req.user?.role !== "staff") return res.status(403).json({ message: "Only staff can mark a patient arrived." });
-  const { data, error } = await supabase.rpc("mark_appointment_arrived", { appointment_id: req.params.id });
-  if (error) return res.status(409).json({ message: "Arrival can only be recorded once, on the appointment date (Philippine time), before the late cancellation deadline. Refresh the schedule." });
-  return res.json({ appointment: data });
+  if (req.user?.role !== "staff") return res.status(403).json({message:"Only staff can mark a patient arrived."});
+  const {data,error} = await supabase.rpc("record_staff_arrival", {appointment_id:req.params.id});
+  if (error) return res.status(409).json({message:error.message || "Could not record arrival."});
+  return res.json(data);
+});
+app.post("/api/appointments/:id/reinstate", async (req,res) => {
+  if (req.user?.role !== "staff") return res.status(403).json({message:"Only staff can reinstate late arrivals."});
+  try {
+    const db=await readClinicDbFromSupabase();
+    const record=db.appointments.find(a=>String(a.id)===req.params.id);
+    if (!record?.autoCancelled || !req.body.dentistAgreed) return res.status(400).json({message:"Dentist agreement is required for an auto-cancelled appointment."});
+    const ids=record.dentistIds?.length ? record.dentistIds.map(String) : [String(record.dentistId)];
+    if (!ids.includes(String(req.body.approvedBy))) return res.status(400).json({message:"Approval must be from an assigned dentist."});
+    const now=new Date(Date.now()+60000);
+    const parts=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Manila',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(now).map(p=>[p.type,p.value]));
+    const date=`${parts.year}-${parts.month}-${parts.day}`, time=`${parts.hour}:${parts.minute}`;
+    if(date!==record.date) return res.status(400).json({message:"Reinstatement is available only on the appointment date."});
+    const {data:content,error:contentError}=await supabase.from('clinic_site_content').select('published').eq('id','website').maybeSingle();
+    if(contentError) throw contentError;
+    const proposed=require('./_appointment-actions').reschedule({...record,status:'Approved',lifecycleStatus:'Approved',archived:false}, {date,time,reason:req.body.reason},db.dentists,db.appointments,content?.published||{},req.user);
+    const {data,error}=await supabase.rpc('reinstate_late_appointment',{appointment_id:record.id,proposed,approved_by:String(req.body.approvedBy),reason:String(req.body.reason).trim(),staff_email:req.user.email});
+    if(error) throw error;
+    return res.json({appointment:data});
+  } catch(error) {return res.status(error.code==='23P01'?409:error.status||400).json({message:error.code==='23P01'?'Not enough free time remains for the complete treatment.':error.message||'Could not reinstate appointment.'});}
+});
+// Patient creation is atomic with the first appointment for all clinical roles.
+app.post('/api/patients-with-appointment', async (req, res) => {
+  if (!['admin','staff','dentist'].includes(req.user?.role)) return res.status(403).json({message:'Clinical account required.'});
+  try {
+    const db = await readClinicDbFromSupabase(['dentists','dentistSchedules','services','appointments','archivedAppointments']);
+    const {patientDetails, walkInAppointment} = require('./_walk-in');
+    const patient = patientDetails(req.body.patient);
+    const appointment = walkInAppointment(req.body.appointment || {}, patient, db);
+    if (!/^[0-9a-f-]{36}$/i.test(appointment.id)) throw new Error('Invalid booking reference.');
+    if (req.user.role === 'dentist') {
+      const access = require('../Shared/dentist-access');
+      if (!access.assigned(appointment, access.identity(db,req.user))) return res.status(403).json({message:'You can only create appointments assigned to your own dentist account.'});
+    }
+    const existing = db.appointments.find(a => a.id === appointment.id);
+    if (existing) {
+      if (existing.patientId !== patient.id || existing.createdBy !== req.user.email) return res.status(409).json({message:'Booking reference already used.'});
+      return res.json({appointment:existing});
+    }
+    const {data:content,error:contentError} = await supabase.from('clinic_site_content').select('published').eq('id','website').maybeSingle();
+    if (contentError) throw contentError;
+    const validated = require('./_appointment-actions').validateSchedule(appointment,
+      {date:appointment.date,time:appointment.time,reason:'Initial patient appointment'},db.dentists,
+      [...db.appointments,...db.archivedAppointments],content?.published || {},req.user);
+    delete validated.rescheduleHistory;
+    delete validated.walkIn;
+    validated.createdBy = req.user.email;
+    const {data,error} = await supabase.rpc('create_patient_with_login',{patient_record:patient,appointment_record:validated,password_hash:await bcrypt.hash('patient123',10),is_walk_in:false});
+    if (error) throw error;
+    return res.status(201).json({appointment:data});
+  } catch(error) {
+    return res.status(error.code === '23P01' ? 409 : 400).json({message:error.code === '23P01' ? 'That time was just booked. Choose another time.' : error.message || 'Could not create patient and appointment.'});
+  }
+});
+
+app.post("/api/walk-ins", async (req,res) => {
+  if(req.user?.role!=="staff") return res.status(403).json({message:"Staff access required."});
+  try {
+    const db=await readClinicDbFromSupabase(['dentists','dentistSchedules','services','appointments','archivedAppointments']);
+    const {patientDetails,walkInAppointment}=require('./_walk-in');
+    const patient=patientDetails(req.body.patient);
+    const appointment=walkInAppointment(req.body.appointment||{},patient,db);
+    if(!appointment.id || appointment.id.length>100) throw new Error('Invalid booking reference.');
+    const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Manila',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+    if(appointment.date!==today) throw new Error('Walk-ins must be booked for today.');
+    const existing=db.appointments.find(a=>a.id===appointment.id);
+    if(existing?.walkIn && existing.patientId===patient.id) return res.json({appointment:existing});
+    const {data:content,error:contentError}=await supabase.from('clinic_site_content').select('published').eq('id','website').maybeSingle();
+    if(contentError) throw contentError;
+    const validated=require('./_appointment-actions').reschedule(appointment,{date:appointment.date,time:appointment.time,reason:'Walk-in booking'},db.dentists,db.appointments,content?.published||{},req.user);
+    delete validated.rescheduleHistory;
+    const {data,error}=await supabase.rpc('create_patient_with_login',{patient_record:patient,appointment_record:validated,password_hash:await bcrypt.hash('patient123',10),is_walk_in:true});
+    if(error) throw error;
+    return res.status(201).json({appointment:data});
+  } catch(error){return res.status(error.code==='23P01'?409:400).json({message:error.code==='23P01'?'That time was just reserved. Choose another slot.':error.message||'Could not save walk-in.'});}
 });
 
 app.post("/api/appointments/:id/complete", require("./_appointments").createCompleteAppointmentHandler({ supabase, findUser: async email => { const user = await findVerifiedUserByEmail(email); return user ? require("../Shared/dentist-access").identity(await readClinicDbFromSupabase(), user) : null; } }));
@@ -2700,7 +2944,17 @@ app.get("/api/cron/appointment-reminders", async (req, res) => {
 // ==============================
 // STARTUP
 // ==============================
+// API errors must remain JSON, including missing routes and parser failures.
+app.use('/api', (_req, res) => res.status(404).json({ message: 'This API endpoint is unavailable. Restart the local preview or update the deployment, then retry.' }));
+app.use((error, req, res, next) => {
+  if (!req.path.startsWith('/api/')) return next(error);
+  if (res.headersSent) return next(error);
+  const status = error.type === 'entity.too.large' ? 413 : error.type === 'entity.parse.failed' ? 400 : 500;
+  res.status(status).json({ message: status === 413 ? 'The submitted record is too large.' : status === 400 ? 'The submitted record could not be read. Please refresh and retry.' : 'The server could not complete this request. Please retry.' });
+});
+
 let bootstrapPromise = null;
+let bootstrapRetryAt = 0;
 
 async function bootstrap() {
   if (supabase) {
@@ -2713,11 +2967,14 @@ async function bootstrap() {
 }
 
 function ensureBootstrapped() {
+  if (!bootstrapPromise && Date.now() < bootstrapRetryAt) return Promise.resolve(false);
   if (!bootstrapPromise) {
     bootstrapPromise = bootstrap().catch((error) => {
       // Retry on the next request instead of poisoning the instance.
       bootstrapPromise = null;
+      bootstrapRetryAt = Date.now() + 60000;
       console.error("Startup error:", error.message || error);
+      return false;
     });
   }
   return bootstrapPromise;

@@ -1,0 +1,37 @@
+﻿/* One control palette shared by every portal and the public pages. */
+body {
+  --gm-control-bg: #fff; --gm-control-text: #20334f; --gm-control-muted: #586b85;
+  --gm-control-border: #c6d2e2; --gm-control-disabled: #edf1f7;
+  --gm-dialog-bg: #fff; --gm-secondary-bg: #edf2fa; --gm-control-scheme: light;
+}
+body.dark, body.dark-mode, html[data-theme="dark"] body {
+  --gm-control-bg: #0b1729; --gm-control-text: #e6edf8; --gm-control-muted: #adbed6;
+  --gm-control-border: #3b506c; --gm-control-disabled: #19283d;
+  --gm-dialog-bg: #101e33; --gm-secondary-bg: #1d304d; --gm-control-scheme: dark;
+}
+body :is(input,select,textarea):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="image"]) {
+  background-color: var(--gm-control-bg) !important;
+  color: var(--gm-control-text) !important;
+  -webkit-text-fill-color: var(--gm-control-text);
+  border-color: var(--gm-control-border);
+  color-scheme: var(--gm-control-scheme);
+  caret-color: var(--gm-control-text);
+}
+body :is(input,textarea)::placeholder {color:var(--gm-control-muted) !important;opacity:1;}
+body select :is(option,optgroup) {background:var(--gm-control-bg);color:var(--gm-control-text);}
+body :is(input,select,textarea):disabled:not([type="checkbox"]):not([type="radio"]) {
+  background-color: var(--gm-control-disabled) !important;
+  color:var(--gm-control-muted) !important;-webkit-text-fill-color:var(--gm-control-muted);opacity:1;
+}
+body input:-webkit-autofill { -webkit-box-shadow:0 0 0 1000px var(--gm-control-bg) inset !important; -webkit-text-fill-color:var(--gm-control-text) !important; }
+body :is(input,select,textarea):focus-visible {outline:2px solid #729eff;outline-offset:2px;}
+body :is(.gm-assist-dialog,.gm-patient-create) {
+  background:var(--gm-dialog-bg) !important;color:var(--gm-control-text) !important;border-color:var(--gm-control-border);
+  max-height:calc(100dvh - 24px);overflow:auto;
+}
+body .gm-assist-dialog :is(h2,h3,label,p) {color:var(--gm-control-text);}
+body .gm-assist-dialog button {background:var(--gm-secondary-bg);color:var(--gm-control-text);border:1px solid var(--gm-control-border);font-weight:600;cursor:pointer;}
+body .gm-assist-dialog button[type="submit"] {background:#285be5;color:#fff;border-color:#285be5;}
+body .gm-assist-dialog button:disabled {opacity:.6;cursor:wait;}
+body :is(.gm-assist-dialog,.gm-patient-create) [role="alert"] {color:#c52232;}
+body:is(.dark,.dark-mode) :is(.gm-assist-dialog,.gm-patient-create) [role="alert"], html[data-theme="dark"] :is(.gm-assist-dialog,.gm-patient-create) [role="alert"] {color:#ff8c98;}

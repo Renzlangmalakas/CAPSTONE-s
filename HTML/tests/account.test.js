@@ -31,7 +31,7 @@ async function fixture(role = 'staff') {
       if (entry) code = null;
       writes++; return user;
     },
-    sendCode: async (target, otp) => { if (mailFails) throw new Error('SMTP unavailable'); emailed = { email: target.email, otp }; },
+    sendCode: async (target, otp) => { if (mailFails) throw Object.assign(new Error('SMTP unavailable'), {code: typeof mailFails === 'string' ? mailFails : undefined}); emailed = { email: target.email, otp }; },
     publicUser: ({ password, verification_token, ...safe }) => safe,
     sessions: { issue: () => 'signed-session' }, strongPassword: value => value.length >= 8 && /[A-Z]/.test(value) && /[a-z]/.test(value) && /\d/.test(value) && /[^A-Za-z0-9]/.test(value),
     now: () => time
@@ -43,9 +43,23 @@ async function fixture(role = 'staff') {
       return res;
     },
     get user() { return user; }, get code() { return code; }, get emailed() { return emailed; }, get writes() { return writes; },
-    advance(ms) { time += ms; }, failMail() { mailFails = true; }
+    advance(ms) { time += ms; }, failMail(code = true) { mailFails = code; }
   };
 }
+
+test('email setup and provider failures explain the problem without changing the password', async () => {
+  for (const [code, message] of [['EMAIL_NOT_CONFIGURED', /not configured/], ['EAUTH', /provider rejected/], ['EMAIL_COOLDOWN', /temporarily paused/]]) {
+    const f = await fixture();
+    const oldPassword = f.user.password;
+    f.failMail(code);
+    const result = await f.call('requestCode', {currentPassword:'OldPassword1!'});
+    assert.equal(result.statusCode, 503);
+    assert.match(result.body.message, message);
+    assert.equal(f.user.password, oldPassword);
+    assert.equal(f.code, null);
+    assert.equal(f.emailed, undefined);
+  }
+});
 
 test('all account types require the current password before saving details', async () => {
   for (const role of ['admin', 'staff', 'dentist', 'patient']) {
