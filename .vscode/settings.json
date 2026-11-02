@@ -1,0 +1,29 @@
+{
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/.vercel": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "**/supabase/.temp": true,
+    ".responsive-check": true,
+    ".verification": true,
+    ".env.capstone-accounts.json": true,
+    "**/*.log": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/.vercel/**": true,
+    "**/.verification/**": true
+  },
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.expand": false,
+  "explorer.fileNesting.patterns": {
+    "*.html": "${capture}.css, ${capture}.js",
+    "*.js": "${capture}.css",
+    "package.json": "package-lock.json, .gitignore, .vercelignore",
+    "vercel.json": ".vercelignore",
+    "landing.template.html": "landing.html, services.html, about.html, contact.html",
+    "README.md": "REVIEW.md"
+  },
+  "explorer.sortOrder": "foldersNestsFiles"
+}

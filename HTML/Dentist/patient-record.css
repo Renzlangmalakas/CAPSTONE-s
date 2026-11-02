@@ -1,0 +1,116 @@
+.dental-record-overlay { position:fixed; inset:0; z-index:2200; background:#081225aa; padding:24px; display:grid; place-items:center; backdrop-filter:blur(5px); }
+.dental-record-panel { --record-bg:#fff; --record-soft:#f6f8fc; --record-border:#e0e6f0; --record-text:#1e293b; --record-muted:#64748b; background:var(--record-bg); color:var(--record-text); width:min(1120px,100%); max-height:calc(100dvh - 48px); overflow:auto; border-radius:22px; box-shadow:0 24px 90px #0004; }
+body.dark .dental-record-panel, body.dark-mode .dental-record-panel { --record-bg:#0f1c30; --record-soft:#14243b; --record-border:#2a3d57; --record-text:#e2e8f0; --record-muted:#a5b5ca; }
+.dental-record-panel header { display:flex; justify-content:space-between; align-items:center; padding:24px 28px; border-bottom:1px solid var(--record-border); }
+.dental-record-panel header small { color:#6578ed; font-weight:700; letter-spacing:.12em; }
+.dental-record-panel h2 { margin:6px 0 0; font-size:1.5rem; }
+.dental-record-panel h3 { font-size:1.05rem; margin:0; }
+.dental-record-panel h4 { font-size:1rem; }
+.dental-record-panel header button { background:var(--record-soft); border:1px solid var(--record-border); color:inherit; border-radius:12px; width:40px; height:40px; font-size:24px; }
+.dental-record-info { display:flex; flex-wrap:wrap; gap:24px; padding:20px 28px; border-bottom:1px solid var(--record-border); }
+.dental-record-info div { flex:1 1 140px; overflow-wrap:anywhere; }
+.dental-record-info small,.dental-record-info strong { display:block; }
+.dental-record-panel small, .dental-record-layout aside>p { color:var(--record-muted); font-size:.8rem; }
+.dental-record-info strong { font-size:.88rem; margin-top:6px; }
+.dental-record-layout { display:grid; grid-template-columns:360px minmax(0,1fr); }
+.dental-record-layout aside { padding:24px; background:var(--record-soft); border-right:1px solid var(--record-border); }
+.dental-record-layout main { padding:24px; min-width:0; }
+.dental-record-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+.dental-record-panel select,.dental-record-panel input,.dental-record-panel textarea { width:100%; border:1px solid var(--record-border); background:var(--record-bg); color:var(--record-text); border-radius:9px; padding:9px; font:inherit; }
+.dental-record-toolbar select { width:auto; font-size:.75rem; }
+.dental-chart { position:relative; width:100%; aspect-ratio:300/460; }
+.dental-tooth { position:absolute; transform:translate(-50%,-50%); width:24px; height:28px; padding:0; background:transparent; border:0; color:var(--record-text); cursor:pointer; }
+.dental-tooth span { position:absolute; left:50%; top:50%; transform:translate(calc(-50% + var(--number-x)),calc(-50% + var(--number-y))); font-size:12px; font-weight:700; line-height:18px; min-width:20px; text-align:center; background:var(--record-soft); border-radius:4px; pointer-events:none; }
+.dental-tooth svg { width:24px; height:28px; display:block; fill:var(--record-bg); stroke:#9aabc1; stroke-width:1.2; }
+.dental-tooth.done svg { fill:#b2b6ff; stroke:#6969d7; }
+.dental-tooth.pending svg { fill:#ffe59a; stroke:#b48824; }
+.dental-tooth[aria-pressed=true] { outline:2px solid #6366f1; border-radius:7px; background:var(--record-bg); }
+.dental-chart-label { position:absolute; left:50%; top:28%; transform:translateX(-50%); font-size:.75rem; color:var(--record-muted); }
+.dental-chart-label.lower { top:66%; }
+.dental-legend { display:flex; justify-content:center; gap:16px; font-size:.75rem; margin:10px 0 22px; }
+.dental-legend span:first-child { color:#8183e8; }.dental-legend span:last-child { color:#b88b18; }
+.dental-entry { padding:18px; border:1px solid var(--record-border); border-left:3px solid #8183e8; border-radius:12px; margin:14px 0; }
+.dental-entry p { font-size:.85rem; white-space:pre-wrap; overflow-wrap:anywhere; margin:12px 0 0; }
+.dental-entry .dental-record-toolbar { margin-bottom:8px; }
+.dental-status { font-size:.72rem; padding:4px 9px; border-radius:6px; background:#fff1ce; color:#855d0f; }
+.dental-status.done { background:#dbf5e9; color:#137750; }
+.dental-empty { padding:36px 20px; text-align:center; color:var(--record-muted); background:var(--record-soft); border-radius:12px; font-size:.9rem; margin:16px 0; }
+#dentalRecordForm { background:var(--record-soft); border:1px solid var(--record-border); border-radius:12px; padding:18px; margin-bottom:20px; }
+.dental-fields { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.dental-fields label { font-size:.8rem; display:grid; gap:6px; }
+.dental-form-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:16px; }
+.dental-appointments { margin-top:24px; font-size:.85rem; }.dental-appointments article { padding:12px 0; border-bottom:1px solid var(--record-border); }
+.dental-record-panel button:focus-visible { outline:3px solid #818cf8; outline-offset:3px; }
+@media(max-width:760px) { .dental-record-overlay { padding:8px; }.dental-record-panel { max-height:calc(100dvh - 16px); border-radius:16px; }.dental-record-layout { grid-template-columns:1fr; }.dental-record-layout aside { border-right:0; border-bottom:1px solid var(--record-border); }.dental-chart { max-width:310px; margin:auto; }.dental-record-panel header,.dental-record-info,.dental-record-layout main { padding:18px; }.dental-fields { grid-template-columns:1fr; } }
+
+body.dark .dental-record-panel .dental-status:not(.done),
+body.dark-mode .dental-record-panel .dental-status:not(.done) {
+  background: #3b2c13;
+  color: #ffd578 !important;
+  border: 1px solid #80602b;
+}
+
+/* Fit the patient record to the viewport; keep controls available while reading. */
+.dental-record-overlay { padding:16px;overscroll-behavior:contain; }
+.dental-record-panel { width:min(1180px,100%);max-height:calc(100dvh - 32px);display:grid;grid-template-rows:auto auto minmax(0,1fr);overflow:hidden;font-size:14px; }
+.dental-record-panel header { padding:16px 22px;gap:16px; }
+.dental-record-panel h2 { font-size:22px;overflow-wrap:anywhere; }
+.dental-record-panel header button { flex:0 0 44px;width:44px;height:44px; }
+.dental-record-info { display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px;padding:14px 22px; }
+.dental-record-info strong { font-size:13px;line-height:1.5;margin-top:4px; }
+.dental-record-layout { grid-template-columns:minmax(270px,330px) minmax(0,1fr);min-height:0;overflow:hidden; }
+.dental-record-layout aside,.dental-record-layout main { min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:18px;margin:0;scrollbar-width:thin; }
+.dental-record-layout aside { min-width:0; }
+.dental-record-toolbar { gap:10px;margin-bottom:10px; }
+.dental-record-panel h3 { font-size:16px;line-height:1.4; }
+.dental-record-layout aside > p { margin-bottom:8px; }
+.dental-chart { width:min(100%,clamp(220px,calc((100dvh - 340px) * .652),290px));margin:0 auto; }
+.dental-legend { margin:8px 0 12px; }
+.dental-record-panel :is(.btn-gradient,.btn-glass) { min-height:42px;padding:10px 14px;font-size:13px;line-height:1.4; }
+.dental-record-panel select { min-height:40px; }
+.dental-empty { padding:24px 16px;font-size:14px;line-height:1.6; }
+.dental-entry { padding:14px; }
+@media(max-width:760px) {
+ .dental-record-overlay { padding:8px; }
+ .dental-record-panel { max-height:calc(100dvh - 16px);grid-template-rows:auto minmax(0,1fr);display:block;overflow-y:auto;scrollbar-width:thin; }
+ .dental-record-panel header { position:sticky;top:0;z-index:3;background:var(--record-bg);padding:14px 16px; }
+ .dental-record-info { grid-template-columns:repeat(2,minmax(0,1fr));padding:14px 16px;gap:12px; }
+ .dental-record-info > div:last-child { grid-column:1/-1; }
+ .dental-record-layout { display:block;overflow:visible; }
+ .dental-record-layout aside,.dental-record-layout main { overflow:visible;padding:16px; }
+ .dental-chart { width:min(100%,270px); }
+ .dental-fields { grid-template-columns:minmax(0,1fr); }
+ .dental-record-panel h2 { font-size:20px; }
+ .dental-record-panel .dental-record-toolbar select { max-width:160px; }
+ .dental-form-actions { flex-wrap:wrap; }
+}
+
+.record-date-picker { min-width:0; }
+.dental-record-panel .record-date-trigger { width:100%;text-align:left;min-height:44px;padding:10px 12px;background:var(--record-bg);color:var(--record-text);border:1px solid var(--record-border);border-radius:9px;font:inherit; }
+.record-calendar { margin-top:8px;padding:12px;border:1px solid var(--record-border);border-radius:14px;background:var(--record-bg);width:100%;max-width:340px;box-sizing:border-box;box-shadow:0 8px 24px #0002; }
+.record-calendar[hidden] { display:none; }
+.record-calendar-header { display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:10px;font-size:14px; }
+.record-calendar button { color:var(--record-text);background:transparent;border:1px solid transparent;border-radius:8px;min-height:36px;font:inherit;cursor:pointer; }
+.record-calendar-header button { width:36px;font-size:24px; }
+.record-calendar-grid { display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;text-align:center;font-size:13px; }
+.record-calendar-grid > span { color:var(--record-muted);font-size:11px;line-height:28px; }
+.record-calendar-grid button { padding:0; }
+.record-calendar button:hover { background:var(--record-soft);border-color:var(--record-border); }
+.record-calendar-grid button[aria-current=date] { border-color:#818cf8; }
+.record-calendar-grid button[aria-pressed=true] { color:white;background:#4f46e5; }
+.record-calendar-today { margin-top:10px;width:100%;color:#818cf8 !important;border-top:1px solid var(--record-border) !important; }
+/* Keep an expanded calendar from stretching neighboring treatment fields. */
+#dentalRecordForm .dental-fields { align-items:start; }
+#dentalRecordForm .dental-fields > label { align-self:start;align-content:start;grid-auto-rows:max-content;min-width:0; }
+#dentalRecordForm .dental-fields > label > :is(select,input:not([type="hidden"])) { height:44px;min-height:44px;max-height:44px;box-sizing:border-box; }
+#dentalRecordForm .record-calendar { max-width:320px; }
+#dentalRecordForm .record-calendar-header { padding:0; }
+#dentalRecordForm .record-calendar-header button { height:36px;width:36px;min-height:36px;display:grid;place-items:center; }
+#dentalRecordForm .record-calendar-header button svg { width:18px;height:18px; }
+
+/* The date picker floats above the form without enlarging its grid row. */
+#dentalRecordForm .record-calendar {
+  position:fixed; inset:auto; margin:0; z-index:11000;
+  overflow-y:auto; overscroll-behavior:contain;
+  box-shadow:0 12px 36px #0005;
+}

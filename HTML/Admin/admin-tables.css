@@ -1,0 +1,111 @@
+/* Shared admin table presentation, aligned with the patient record tables. */
+body { --admin-row: #ffffff; --admin-row-hover: #f0f6ff; --admin-head: #eaf2ff; --admin-line: #dbe6f4; --admin-ink: #20334d; --admin-muted: #61758e; --admin-head-ink: #285b9c; }
+body.dark { --admin-row: #0e1d34; --admin-row-hover: #142944; --admin-head: #142b4d; --admin-line: #203650; --admin-ink: #e6efff; --admin-muted: #9cb2cd; --admin-head-ink: #93c5fd; }
+body .table-wrap {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0;
+    min-width: 0;
+    scrollbar-width: thin;
+    scrollbar-color: #6686ae transparent;
+}
+body .recent-scroll.table-wrap { max-height: none; overflow-y: visible; }
+body .table-wrap table .status-badge,
+body .table-wrap table .badge,
+body .table-wrap table [class*="status-pill"] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: max-content;
+    max-width: none;
+    min-height: 28px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: .75rem;
+    line-height: 1.4;
+    white-space: nowrap !important;
+    word-break: normal !important;
+    overflow-wrap: normal !important;
+}
+body .table-wrap .inline-actions,
+body .table-wrap .action-buttons { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; }
+body .table-wrap .action-btn,
+body .table-wrap .kebab-btn { width: 36px; height: 36px; min-width: 36px; padding: 0; border-radius: 9px; font-size: 1rem; flex-shrink: 0; }
+body .table-wrap .table-cell-muted { font-size: .8125rem; line-height: 1.5; color: var(--admin-muted) !important; }
+@media (min-width: 721px) {
+    body .table-wrap { overflow-x: auto; }
+    body .table-wrap table {
+        width: 100%;
+        min-width: 680px;
+        table-layout: auto !important;
+        border-collapse: separate !important;
+        border-spacing: 0 12px !important;
+    }
+    body .table-wrap table.billing-records-table { min-width: 1050px; }
+    body .table-wrap table th {
+        width: auto !important;
+        padding: 15px 16px !important;
+        background: var(--admin-head) !important;
+        color: var(--admin-head-ink) !important;
+        font-size: .8125rem;
+        line-height: 1.4;
+        font-weight: 800;
+        letter-spacing: 0;
+        text-transform: none;
+        white-space: nowrap !important;
+        word-break: normal;
+        border: 0 !important;
+    }
+    body .table-wrap table th:first-child { border-radius: 14px 0 0 14px; }
+    body .table-wrap table th:last-child { border-radius: 0 14px 14px 0; }
+    body .table-wrap table tbody tr { background: transparent !important; box-shadow: none !important; }
+    body .table-wrap table td {
+        width: auto !important;
+        padding: 18px 16px !important;
+        background: var(--admin-row) !important;
+        color: var(--admin-ink);
+        border-top: 1px solid var(--admin-line) !important;
+        border-bottom: 1px solid var(--admin-line) !important;
+        font-size: .875rem;
+        line-height: 1.55;
+        vertical-align: middle;
+        word-break: normal !important;
+        overflow-wrap: normal !important;
+    }
+    body .table-wrap table td:first-child { border-left: 1px solid var(--admin-line) !important; border-radius: 18px 0 0 18px !important; }
+    body .table-wrap table td:last-child { border-right: 1px solid var(--admin-line) !important; border-radius: 0 18px 18px 0 !important; }
+    body .table-wrap table td:only-child { border-radius: 18px !important; }
+    body .table-wrap table tbody tr:hover td { background: var(--admin-row-hover) !important; }
+    body .table-wrap table .service-mark,
+    body .table-wrap table .patient-avatar { width: 32px; height: 32px; min-width: 32px; border-radius: 9px; font-size: .9rem; }
+}
+@media (max-width: 720px) {
+    body .table-wrap table.mobile-card-table tbody tr { background: var(--admin-row) !important; border: 1px solid var(--admin-line) !important; border-radius: 18px; box-shadow: none; }
+    body .table-wrap table.mobile-card-table td { font-size: .875rem; line-height: 1.55; }
+    body .table-wrap .inline-actions,
+    body .table-wrap .action-buttons { flex-wrap: wrap; }
+    body .table-wrap .action-btn,
+    body .table-wrap .kebab-btn { width: 44px; height: 44px; }
+}
+@media (min-width: 721px) {
+    body .recent-scroll table { min-width: 600px; }
+    body .table-wrap td:is([data-label="Price"], [data-label="Total"], [data-label="Paid"], [data-label="Refunded"], [data-label="Balance"]) { white-space: nowrap; }
+}
+@media (min-width: 721px) and (max-width: 1600px) {
+    #home .dashboard-grid { grid-template-columns: minmax(0, 1fr); }
+}
+/* Wide discount reports retain readable columns and scroll within the panel. */
+#discountReportControls { margin-bottom: 16px; }
+@media (min-width: 721px) {
+    body .table-wrap.discount-report-wrap { overflow-x: auto !important; max-width: 100%; padding-bottom: 10px; }
+    body .table-wrap table.discount-report-table { min-width: 1800px; }
+    body .table-wrap .discount-report-table td:nth-child(1) { min-width: 140px; }
+    body .table-wrap .discount-report-table td:nth-child(2) { min-width: 240px; max-width: 300px; }
+    body .table-wrap .discount-report-table td:nth-child(3),
+    body .table-wrap .discount-report-table td:nth-child(12) { min-width: 150px; white-space: nowrap; }
+    body .table-wrap .discount-report-table td:nth-child(10),
+    body .table-wrap .discount-report-table td:nth-child(11) { min-width: 180px; max-width: 280px; overflow-wrap: anywhere !important; }
+    body .table-wrap .discount-report-table td.discount-money { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    body .table-wrap .discount-report-table th:nth-child(n+5):nth-child(-n+9) { text-align: right; }
+}

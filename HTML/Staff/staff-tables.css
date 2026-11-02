@@ -1,0 +1,55 @@
+/* Readable staff tables: keep short values intact and let names wrap at words. */
+.table-wrap table { font-size: 14px; line-height: 1.5; }
+.table-wrap th { font-size: 12px; letter-spacing: .06em; white-space: nowrap; overflow-wrap: normal; }
+.table-wrap td { font-size: 14px; overflow-wrap: break-word; word-break: normal; }
+.table-wrap .table-identity strong,
+.table-wrap .table-service > span:last-child { font-size: 14px; line-height: 1.5; overflow-wrap: break-word; word-break: normal; }
+.table-wrap .table-identity > span,
+.table-wrap .table-muted { font-size: 13px; line-height: 1.5; }
+.table-wrap .status-pill { display: inline-flex; align-items: center; justify-content: center; width: max-content; max-width: none; white-space: nowrap; overflow-wrap: normal; word-break: normal; font-size: 12px; padding: 6px 12px; line-height: 1.4; }
+@media (min-width: 721px) {
+  #appointments .panel { min-width: 0; padding: clamp(16px, 2vw, 28px); }
+  #appointments .table-wrap { max-width: 100%; overflow-x: auto; }
+  #appointments table { width: 100%; min-width: 1100px; table-layout: auto; }
+  #appointments th, #appointments td { padding: 16px 14px; }
+  #appointments :is(th, td):nth-child(1) { min-width: 160px; }
+  #appointments :is(th, td):nth-child(2) { min-width: 180px; }
+  #appointments :is(th, td):nth-child(3) { min-width: 205px; }
+  #appointments :is(th, td):nth-child(4) { min-width: 145px; white-space: nowrap; }
+  #appointments :is(th, td):nth-child(5) { min-width: 90px; white-space: nowrap; }
+  #appointments :is(th, td):nth-child(6) { min-width: 120px; white-space: nowrap; }
+  #appointments :is(th, td):nth-child(7) { min-width: 80px; white-space: nowrap; text-align: center; }
+}
+@media (max-width: 720px) {
+  #appointments .table-wrap table.mobile-card-table { min-width: 0; }
+  .table-wrap table.mobile-card-table td { font-size: 14px; }
+  .table-wrap .table-service { gap: 8px; }
+}
+
+/* Billing controls have their own layout instead of the generic toolbar grid. */
+.billing-sync-row { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin: 0 0 16px; }
+.billing-sync-row #syncStaffBillingBtn { width: auto; flex: 0 0 auto; min-height: 44px; padding: 10px 20px; font-size: 14px; }
+.billing-sync-row [role="status"] { font-size: 13px; overflow-wrap: anywhere; }
+.billing-sync-row [role="status"]:empty { display: none; }
+.billing-filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); align-items: end; gap: 16px; margin-bottom: 20px; }
+.billing-filter { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.billing-filter > label { font-size: 13px; font-weight: 600; line-height: 1.5; margin: 0; }
+.billing-filter > .input { width: 100%; min-width: 0; max-width: 100%; min-height: 44px; font-size: 14px; padding: 10px 12px; }
+.billing-specific-date:has(input[hidden]) { display: none; }
+.billing-filter [hidden] { display: none; }
+
+.patient-record-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 16px; }
+.patient-record-actions > .btn { flex: 0 0 auto; width: auto; min-height: 44px; font-size: 14px; padding: 10px 16px; white-space: nowrap; }
+.patient-report-filters { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+.patient-report-filters > .input { flex: 1 1 220px; min-width: 0; }
+
+.staff-settings-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.staff-settings-grid > .panel { min-width: 0; margin: 0; }
+.staff-settings-grid .staff-account-panel { grid-row: span 2; }
+.staff-account-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.staff-account-fields > * { min-width: 0; }
+.staff-account-fields > :is(button, .gm-account-hint) { grid-column: 1 / -1; }
+.staff-account-fields > button { width: auto; justify-self: start; min-height: 44px; }
+.staff-account-fields .input { width: 100%; }
+@media (max-width: 1100px) { .staff-settings-grid { grid-template-columns: minmax(0, 1fr); } .staff-settings-grid .staff-account-panel { grid-row: auto; } }
+@media (max-width: 540px) { .staff-account-fields { grid-template-columns: minmax(0, 1fr); } }

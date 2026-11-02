@@ -1,0 +1,77 @@
+﻿/* Reference dashboard treatment shared by Admin and Staff. */
+body[data-portal-role=admin] :is(#home,#revenue) .stats-grid .stat-card {
+ position:relative; isolation:isolate; overflow:hidden; border:0; border-radius:18px;
+ background:linear-gradient(115deg,#307bf2,#6849f4); color:#fff;
+ flex-direction:row; align-items:center; justify-content:flex-start; gap:14px;
+ padding:22px; min-height:140px; box-shadow:0 8px 24px #2463c112;
+}
+body[data-portal-role=admin] :is(#home,#revenue) .stats-grid .stat-card.green { background:linear-gradient(115deg,#16bf6b,#1ebba7); }
+body[data-portal-role=admin] :is(#home,#revenue) .stats-grid .stat-card:last-child { background:linear-gradient(115deg,#824bec,#307df5); }
+body[data-portal-role=admin] :is(#home,#revenue) .stats-grid .stat-card::after { content:""; display:block; position:absolute; width:150px; height:150px; border-radius:50%; background:#ffffff12; right:-45px; bottom:-65px; z-index:-1; pointer-events:none; }
+body[data-portal-role=admin] :is(#home,#revenue) .stats-grid .stat-icon { display:grid; place-items:center; width:48px; height:48px; min-width:48px; border-radius:14px; background:#ffffff26; color:white; font-size:24px; }
+body[data-portal-role=admin] :is(#home,#revenue) .stats-grid .stat-card h3 { color:white !important; -webkit-text-fill-color:white; margin:0 0 5px; font-size:clamp(22px,2vw,30px); line-height:1.2; }
+body[data-portal-role=admin] :is(#home,#revenue) .stats-grid .stat-card p { color:#ffffffed !important; font-size:13px; line-height:1.4; }
+@media(max-width:1024px) {
+ body[data-portal-role=admin]:has(:is(#home,#revenue).active) .topbar { display:grid; grid-template-columns:44px minmax(0,1fr); gap:0 12px; padding:12px 14px 0; position:relative; background:transparent; border:0; box-shadow:none; margin-bottom:24px; }
+ body[data-portal-role=admin]:has(:is(#home,#revenue).active) .topbar::before { content:""; position:absolute; inset:0 0 auto; height:68px; border-radius:20px; background:#fff; box-shadow:0 8px 24px #20396008; z-index:0; }
+ body[data-portal-role=admin].dark:has(:is(#home,#revenue).active) .topbar::before { background:#102139; }
+ body[data-portal-role=admin]:has(:is(#home,#revenue).active) .topbar-title-row { display:contents; }
+ body[data-portal-role=admin]:has(:is(#home,#revenue).active) .mobile-sidebar-toggle { grid-column:1; grid-row:1; z-index:1; }
+ body[data-portal-role=admin]:has(:is(#home,#revenue).active) .topbar-title-row > div { grid-column:1/-1; grid-row:2; margin-top:34px; }
+ body[data-portal-role=admin]:has(:is(#home,#revenue).active) .topbar-actions { grid-column:2; grid-row:1; justify-self:end; flex-wrap:nowrap; gap:14px; position:relative; }
+ body[data-portal-role=admin]:has(:is(#home,#revenue).active) .profile-btn { padding:0; border:0; background:transparent; box-shadow:none; min-height:44px; }
+ body[data-portal-role=admin]:has(:is(#home,#revenue).active) .profile-btn > div { display:none; }
+ body[data-portal-role=admin]:has(:is(#home,#revenue).active) .profile-btn img { width:40px; height:40px; }
+ body[data-portal-role=admin]:has(:is(#home,#revenue).active) .icon-btn { width:44px; height:44px; min-height:44px; }
+ body[data-portal-role=admin]:has(:is(#home,#revenue).active) #pageTitle { font-size:clamp(28px,6vw,36px); }
+ body[data-portal-role=admin]:has(:is(#home,#revenue).active) #pageSubtitle { font-size:16px; margin-top:6px; }
+ body[data-portal-role=admin] :is(#home,#revenue) > .stats-grid { grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:12px; }
+ body[data-portal-role=admin] :is(#home,#revenue) > .stats-grid > .stat-card:nth-child(n) { grid-column:auto; }
+ body[data-portal-role=admin] :is(#home,#revenue) > .stats-grid > .stat-card:last-child { grid-column:1/-1; }
+}
+@media(max-width:540px) {
+ body[data-portal-role=admin] :is(#home,#revenue) .stats-grid .stat-card { padding:16px 12px; min-height:108px; gap:10px; border-radius:16px; }
+ body[data-portal-role=admin] :is(#home,#revenue) .stats-grid .stat-icon { width:36px; min-width:36px; height:40px; font-size:21px; border-radius:11px; }
+ body[data-portal-role=admin] :is(#home,#revenue) .stats-grid .stat-card h3 { font-size:22px; }
+ body[data-portal-role=admin] :is(#home,#revenue) .stats-grid .stat-card p { font-size:11px; }
+ body[data-portal-role=admin] :is(#home,#revenue) .stats-grid .stat-card:last-child { min-height:100px; }
+ body[data-portal-role=admin] :is(#home,#revenue) .stats-grid .stat-card:last-child h3 { font-size:26px; }
+}
+body[data-portal-role=admin] :is(#home,#revenue) .stats-grid .stat-card > div:last-child { flex:1 1 0; width:auto; min-width:0; }
+body[data-portal-role=admin] :is(#home,#revenue) .stats-grid .stat-card p { word-break:normal; overflow-wrap:normal; }
+@media(max-width:1024px) {
+ body[data-portal-role=admin]:has(:is(#home,#revenue).active) .topbar-actions { width:auto !important; }
+}
+@media(max-width:540px) {
+ body[data-portal-role=admin] :is(#home,#revenue) .stats-grid .stat-card { padding:16px 12px !important; gap:10px !important; }
+ body[data-portal-role=admin] :is(#home,#revenue) .stats-grid .stat-icon { width:36px !important; min-width:36px !important; height:40px !important; flex:0 0 36px; }
+ body[data-portal-role=admin] :is(#home,#revenue) .stats-grid .stat-card h3 { font-size:22px !important; }
+ body[data-portal-role=admin] :is(#home,#revenue) .stats-grid .stat-card:last-child h3 { font-size:26px !important; }
+}
+
+/* Revenue keeps three monetary metrics and the existing reporting controls. */
+body[data-portal-role=admin] #revenue > .stats-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)) !important; gap:16px; margin-bottom:24px; }
+body[data-portal-role=admin] #revenue > .stats-grid > .stat-card:nth-child(n) { grid-column:auto; }
+body[data-portal-role=admin] #revenue .stats-grid .stat-card.purple { background:linear-gradient(115deg,#824bec,#307df5); }
+body[data-portal-role=admin] #revenue .stats-grid .stat-card.blue { background:linear-gradient(115deg,#307bf2,#6849f4); }
+body[data-portal-role=admin] #revenue .stat-card::before { display:none; }
+body[data-portal-role=admin] #revenue .stat-card h3 { overflow-wrap:anywhere; font-variant-numeric:tabular-nums; }
+body[data-portal-role=admin] #revenue .stat-card p { margin:0; }
+body[data-portal-role=admin] #revenue .toolbar { justify-content:flex-start; gap:12px; margin-bottom:20px; }
+body[data-portal-role=admin] #revenue .toolbar > .input { flex:0 1 260px; width:260px; min-height:44px; }
+body[data-portal-role=admin] #revenue .panel { padding:22px; border-radius:20px; box-shadow:none; }
+body[data-portal-role=admin] #revenue .panel-header { padding-bottom:16px; margin-bottom:16px; }
+body[data-portal-role=admin] #revenue .panel-header h2 { font-size:18px; line-height:1.4; }
+body[data-portal-role=admin]:has(#revenue.active) #pageTitle { font-size:clamp(26px,3vw,36px); line-height:1.2; letter-spacing:-.035em; }
+body[data-portal-role=admin]:has(#revenue.active) #pageSubtitle { font-size:14px; margin-top:8px; }
+@media(max-width:1024px) {
+ body[data-portal-role=admin] #revenue > .stats-grid { grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:12px; }
+ body[data-portal-role=admin] #revenue > .stats-grid > .stat-card:first-child { grid-column:1/-1; }
+ body[data-portal-role=admin] #revenue > .stats-grid > .stat-card:last-child { grid-column:auto; }
+}
+@media(max-width:540px) {
+ body[data-portal-role=admin] #revenue .stats-grid .stat-card h3 { font-size:clamp(16px,4.5vw,22px) !important; }
+ body[data-portal-role=admin] #revenue .stats-grid .stat-card:first-child h3 { font-size:26px !important; }
+ body[data-portal-role=admin] #revenue .toolbar > .input { flex-basis:100%; width:100% !important; }
+ body[data-portal-role=admin] #revenue .panel { padding:16px; }
+}

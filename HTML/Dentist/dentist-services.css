@@ -1,0 +1,20 @@
+/* Dentist-only service overview cards and treatment log controls. */
+#serviceGrid.services-wrapper { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr)); gap:20px; }
+#serviceGrid .service-card { min-width:0; padding:30px 24px; border:1px solid var(--border-color, #dbe4f0); border-radius:22px; text-align:center; gap:24px; }
+#serviceGrid .service-card > div:first-child { display:flex; flex-direction:column; align-items:center; gap:16px; }
+#serviceGrid .service-icon { margin:0; width:64px; height:64px; background:transparent; font-size:2.5rem; color:var(--accent, #4e73df); }
+#serviceGrid .service-card h4 { margin:0; font-size:clamp(1.05rem,1.4vw,1.25rem); line-height:1.4; overflow-wrap:break-word; }
+#serviceGrid .price-tag { font-size:1.1rem; color:var(--text-main, inherit); }
+#serviceGrid .service-actions { width:100%; margin-top:auto; }
+#serviceGrid .service-actions button { min-height:44px; width:100%; }
+body.dark #serviceGrid .service-card { border-color:#263850; }
+.treatment-log-toolbar { display:flex; align-items:center; justify-content:flex-end; gap:12px; margin:0 0 20px; }
+.treatment-log-toolbar label { white-space:nowrap; }
+.treatment-log-toolbar select { width:min(100%,280px); min-height:44px; }
+@media(max-width:600px) { .treatment-log-toolbar { align-items:stretch; flex-direction:column; gap:6px; } .treatment-log-toolbar select { width:100%; } #serviceGrid .service-card { padding:24px 20px; } }
+
+#serviceGrid .dentist-service-photo { width:100%; height:clamp(140px,15vw,200px); object-fit:cover; border-radius:14px; }
+#serviceGrid .dentist-service-photo[hidden] { display:none; }
+#serviceGrid .service-card:has(.dentist-service-photo:not([hidden])) .service-icon { display:none; }
+#serviceGrid .service-card { padding:16px; }
+#serviceGrid .service-card > div:first-child { width:100%; }

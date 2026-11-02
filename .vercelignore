@@ -1,0 +1,16 @@
+node_modules
+.env
+.env.*
+!.env.example
+*.log
+HTML/Landing/supabase/.temp
+HTML/Landing/apply-users-migration.ps1
+HTML/tests
+HTML/Patient/debug.html
+HTML/Patient/test.html
+HTML/Patient/create_session.js
+
+.responsive-check
+
+.vscode
+.verification

@@ -1,0 +1,199 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="../Staff/staff.css"><body class="dark"><div class="modal" style="display:flex"><div class="modal-card"><div class="modal-header"><h2 id="title"></h2></div><div class="modal-body" id="body"></div></div></div><script src="../Shared/default-accounts.js"></script><script src="../Shared/booking-time.js"></script><script src="../Staff/staff-availability.js"></script><script src="../Shared/dentist-services.js"></script><script>
+const qs=s=>document.querySelector(s); const escapeHtml=s=>String(s??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;');const escapeAttr=escapeHtml;
+const state={appointments:[{id:'a1',patient:'Preview Patient',service:'Oral Prophylaxis',dentist:'Dr. General',dentistId:'d1',services:[{serviceName:'Oral Prophylaxis',price:1000,totalPaid:50}],serviceTotal:1000,total:1000,paid:50,date:'2026-10-10',time:'09:00',status:'Waiting'}]};
+const getClinicDb=()=>({appointments:state.appointments,dentists:[{id:'d1',name:'Dr. General',specialty:'General Dentist',schedules:[{day:'Sunday',start:'09:00',end:'17:00'}]},{id:'d2',name:'Dr. Endo',specialty:'Endodontist'},{id:'d3',name:'Dr. Ortho',specialty:'Orthodontist'}],services:[{name:'Oral Prophylaxis',price:1000},{name:'Root Canal Treatment',price:5000}]});
+function openSharedModal(title,html){qs('#title').textContent=title;qs('#body').innerHTML=html;}function saveState(){window.didSave=true;}function closeSharedModal(){}function renderAll(){}function addNotification(){}function showToast(message){window.lastToast=message;}function todayISO(){return '2026-10-10';}
+function bindStaffAppointmentCalendar(available) {
+  const input = qs("#appointmentDate");
+  const parse = value => {
+    const [year, month, day] = String(value).split("-").map(Number);
+    return year && month && day ? new Date(year, month - 1, day) : new Date();
+  };
+  const selected = parse(input.value);
+  let month = new Date(selected.getFullYear(), selected.getMonth(), 1);
+  const iso = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  const render = () => {
+    qs("#staffCalendarMonth").textContent = month.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+    const cells = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => `<span class="staff-calendar-weekday">${day}</span>`);
+    for (let index = 0; index < month.getDay(); index++) cells.push('<span aria-hidden="true"></span>');
+    const count = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+    for (let day = 1; day <= count; day++) {
+      const date = new Date(month.getFullYear(), month.getMonth(), day);
+      const value = iso(date);
+      const open = available(value).length;
+      cells.push(`<button type="button" ${!open ? "disabled" : ""} title="${open ? open + " available start times" : "No shared availability"}" class="staff-calendar-day ${open ? "available" : "unavailable"}${value === input.value ? " active" : ""}" data-date="${value}" aria-pressed="${value === input.value}" aria-label="${date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}"${value === iso(new Date()) ? ' aria-current="date"' : ''}>${day}</button>`);
+    }
+    qs("#staffCalendarDays").innerHTML = cells.join("");
+    qs("#staffCalendarSelected").textContent = `Selected: ${parse(input.value).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+    qs("#staffCalendarDays").querySelectorAll("button").forEach(button => button.addEventListener("click", () => {
+      input.value = button.dataset.date;
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+      render();
+      qs(`#staffCalendarDays [data-date="${input.value}"]`).focus();
+    }));
+  };
+  qs("#staffCalendarPrevious").onclick = () => { month = new Date(month.getFullYear(), month.getMonth() - 1, 1); render(); };
+  qs("#staffCalendarNext").onclick = () => { month = new Date(month.getFullYear(), month.getMonth() + 1, 1); render(); };
+  render();
+  return render;
+}
+
+function openAppointmentModal(id = null) {
+  const item = id ? state.appointments.find(x => x.id === id) : null;
+
+  openSharedModal(item ? "Edit Appointment" : "Add Appointment", `
+    <div class="form-grid one">
+      <div>
+        <label class="label" for="appointmentPatient">Patient</label>
+        <input class="input" id="appointmentPatient" type="text" value="${escapeAttr(item?.patient || "")}" ${item ? "readonly aria-readonly=\"true\"" : ""} />
+      </div>
+      <fieldset class="appointment-choices"><legend>Services</legend><div id="appointmentServices"></div></fieldset>
+      <fieldset class="appointment-choices"><legend>Dentists with access</legend><p>Select the dentists treating this appointment. Only dentists qualified for all selected services appear here.</p><div id="appointmentDentists"></div></fieldset>
+      <div class="form-grid two">
+        <div>
+          <label class="label" for="appointmentDate">Date</label>
+          <input id="appointmentDate" type="hidden" value="${escapeAttr(item?.date || todayISO())}" />
+          <div class="staff-booking-calendar" aria-label="Appointment date">
+            <div class="staff-calendar-header"><button type="button" id="staffCalendarPrevious" aria-label="Previous month">&lsaquo;</button><strong id="staffCalendarMonth" aria-live="polite"></strong><button type="button" id="staffCalendarNext" aria-label="Next month">&rsaquo;</button></div>
+            <div class="staff-calendar-grid" id="staffCalendarDays"></div>
+            <p class="staff-calendar-legend">Green: available &middot; Dimmed: unavailable / off duty</p><p id="staffCalendarSelected" aria-live="polite"></p>
+          </div>
+        </div>
+        <div>
+          <label class="label" for="appointmentTime">Time</label>
+          <select class="input" id="appointmentTime" aria-label="Available appointment times"></select><p class="muted">Available times shared by all selected dentists.</p>
+        </div>
+      </div>
+      <div>
+        <label class="label" for="appointmentStatus">Status</label>
+        <select class="input select" id="appointmentStatus">
+          <option ${item?.status === "Waiting" ? "selected" : ""}>Waiting</option>
+          <option ${item?.status === "Confirmed" ? "selected" : ""}>Confirmed</option>
+          <option ${item?.status === "In Progress" ? "selected" : ""}>In Progress</option>
+          <option ${item?.status === "Completed" ? "selected" : ""}>Completed</option>
+          <option ${item?.status === "Cancelled" ? "selected" : ""}>Cancelled</option>
+        </select>
+      </div>
+      <div>
+        <label class="label" for="appointmentTotal">Total Fee</label>
+        <input class="input" id="appointmentTotal" type="number" min="0" value="${escapeAttr(String(item?.total ?? 500))}" />
+      </div>
+      <div class="form-actions-inline">
+        <button class="btn primary" type="button" id="saveAppointmentBtn">${item ? "Update" : "Save"} Appointment</button>
+        ${item ? '<button class="btn secondary" type="button" id="emergencyRescheduleBtn">Emergency Reschedule</button><div id="emergencyRescheduleFields" hidden><label class="label" for="emergencyReason">Emergency reason</label><input class="input" id="emergencyReason" maxlength="300" placeholder="Reason the dentist needs to reschedule"><p>Select an available date and time above, then save the reschedule.</p></div>' : ""}
+      </div>
+    </div>
+  `);
+
+  const clinic = getClinicDb();
+  const original = clinic.appointments.find(a => String(a.id) === String(item?.id)) || item || {};
+  const originalLines = Array.isArray(original.services) && original.services.length ? original.services : String(item?.service || "").split(/\s*\+\s*/).filter(Boolean).map(name => ({ serviceName: name, price: Number(item?.serviceTotal ?? item?.total ?? 0) / String(item?.service || "").split("+").length }));
+  const nameOf = row => row.serviceName || row.name || "";
+  const catalog = (clinic.services || []).filter(s => !s.archived && s.active !== false);
+  const names = [...new Set([...catalog.map(nameOf), ...originalLines.map(nameOf)])];
+  const selectedNames = new Set(originalLines.map(nameOf));
+  const dentists = window.GMDefaultAccounts.merge(clinic.dentists || [], "dentist", false).filter(d => !d.archived);
+  const selectedDentists = new Set((original.dentistIds || []).map(String));
+  if (original.dentistId) selectedDentists.add(String(original.dentistId));
+  if (!selectedDentists.size) dentists.filter(d => d.name === original.dentist || d.name === original.dentistName).forEach(d => selectedDentists.add(String(d.id)));
+  let refreshCalendar = () => {};
+  const renderDentists = () => {
+    const eligible = dentists.filter(d => selectedNames.size > 0 && [...selectedNames].every(name => GMDentistServices.canPerform(d, name)));
+    for (const id of selectedDentists) if (!eligible.some(d => String(d.id) === id)) selectedDentists.delete(id);
+    qs("#appointmentDentists").innerHTML = eligible.map(d => `<label class="appointment-check"><input type="checkbox" value="${escapeAttr(d.id)}" ${selectedDentists.has(String(d.id)) ? "checked" : ""}><span><strong>${escapeHtml(d.name)}</strong><small>${escapeHtml(d.specialty || d.specialization || "")}</small></span></label>`).join("") || '<p>No eligible dentists for the selected services.</p>';
+    qs("#appointmentDentists").querySelectorAll("input").forEach(input => input.onchange = () => { if (input.checked) selectedDentists.add(input.value); else selectedDentists.delete(input.value); refreshCalendar(); });
+  };
+  qs("#appointmentServices").innerHTML = names.map((name, index) => `<label class="appointment-check"><input type="checkbox" value="${index}" ${selectedNames.has(name) ? "checked" : ""}><span>${escapeHtml(name)}</span></label>`).join("");
+  const chosenLines = () => [...selectedNames].flatMap(name => {
+    const existing = originalLines.filter(row => nameOf(row) === name);
+    return existing.length ? existing : [{ serviceName: name, price: Number(catalog.find(row => nameOf(row) === name)?.price || 0), totalPaid: 0 }];
+  });
+  qs("#appointmentServices").querySelectorAll("input").forEach(input => input.onchange = () => {
+    const name = names[Number(input.value)];
+    if (!input.checked && originalLines.some(row => nameOf(row) === name && Number(row.totalPaid || row.amountPaid || row.paidDownpayment || row.downpaymentPaid || 0) > 0)) { input.checked = true; return showToast("A paid service cannot be removed.", "error"); }
+    if (input.checked) selectedNames.add(name); else selectedNames.delete(name);
+    const serviceTotal = chosenLines().reduce((sum, row) => sum + Number(row.price || 0), 0);
+    qs("#appointmentTotal").value = Math.max(0, serviceTotal + Number(original.additionalFeesTotal || 0) - Number(original.discount?.amount || 0));
+    renderDentists();
+    refreshCalendar();
+  });
+  qs("#appointmentTotal").readOnly = true;
+  renderDentists();
+  const available = date => {
+    const latest = window.GMDefaultAccounts.normalizeDb(getClinicDb());
+    const selected = (latest.dentists || []).filter(d => selectedDentists.has(String(d.id)) && !d.archived);
+    return StaffAvailability.slots(date, selected.length === selectedDentists.size ? selected : [], [...(latest.appointments || []), ...(latest.archivedAppointments || [])], { ...original, services: chosenLines(), durationMinutes: 0 });
+  };
+  const renderCalendar = bindStaffAppointmentCalendar(available);
+  const renderTimes = () => {
+    const previous = qs("#appointmentTime").value || item?.time;
+    const times = available(qs("#appointmentDate").value);
+    qs("#appointmentTime").innerHTML = '<option value="">Select an available time</option>' + times.map(time => `<option value="${time}" ${time === previous ? "selected" : ""}>${time}</option>`).join("");
+  };
+  refreshCalendar = () => { renderCalendar(); renderTimes(); };
+  qs("#appointmentDate").addEventListener("change", renderTimes);
+  renderTimes();
+  let emergency = false;
+  if (item) qs("#emergencyRescheduleBtn").onclick = () => {
+    emergency = true;
+    qs("#emergencyRescheduleFields").hidden = false;
+    qs("#saveAppointmentBtn").textContent = "Save Emergency Reschedule";
+    qs("#emergencyReason").focus();
+  };
+
+  qs("#saveAppointmentBtn").addEventListener("click", () => {
+    const patient = item ? item.patient : qs("#appointmentPatient").value.trim();
+    const chosen = dentists.filter(d => selectedDentists.has(String(d.id)));
+    if (!selectedNames.size || !chosen.length || !chosen.every(d => [...selectedNames].every(name => GMDentistServices.canPerform(d, name)))) return showToast("Select dentists qualified for all selected services.", "error");
+    const dentist = chosen.map(d => d.name).join(" / ");
+    const service = [...selectedNames].join(" + ");
+    const assignment = { dentistIds: chosen.map(d => d.id), dentistId: chosen[0].id, dentistName: chosen[0].name, dentistEmail: chosen[0].email || "", services: chosenLines() };
+    assignment.serviceTotal = assignment.services.reduce((sum, row) => sum + Number(row.price || 0), 0);
+    const date = qs("#appointmentDate").value;
+    const time = qs("#appointmentTime").value;
+    const status = qs("#appointmentStatus").value;
+    const total = Number(qs("#appointmentTotal").value || 0);
+    if (!Number.isFinite(total) || total < Number(item?.paid || 0)) return showToast("The total cannot be lower than payments already received.", "error");
+
+    if (!patient || !dentist || !service || !date || !time) {
+      showToast("Please fill all appointment fields.", "error");
+      return;
+    }
+
+    const scheduleChanged = !item || date !== item.date || time !== item.time || JSON.stringify(assignment.dentistIds) !== JSON.stringify(original.dentistIds || [original.dentistId]) || service !== item.service;
+    if ((scheduleChanged || emergency) && !available(date).includes(time)) return showToast("This time is no longer available for the selected dentists. Choose another time.", "error");
+    if (emergency) {
+      const reason = qs("#emergencyReason").value.trim();
+      if (!reason) return showToast("Enter the emergency reason.", "error");
+      if (date === item.date && time === item.time) return showToast("Select a new appointment date or time.", "error");
+      item.rescheduleHistory = [...(original.rescheduleHistory || []), { previousDate: item.date, previousTime: item.time, date, time, reason, type: "dentist_emergency", recordedAt: new Date().toISOString() }];
+    }
+
+    if (item) {
+      Object.assign(item, { ...assignment, patient, dentist, service, date, time, status, total, grandTotal: total });
+    } else {
+      state.appointments.push({
+        ...assignment,
+        id: uid(),
+        patient,
+        dentist,
+        service,
+        date,
+        time,
+        status,
+        paymentStatus: "Unpaid",
+        total,
+        paid: 0,
+        method: "-"
+      });
+    }
+
+    saveState();
+    closeSharedModal();
+    addNotification(item ? "Appointment Updated" : "Appointment Added", `${patient} appointment was saved.`);
+    showToast(item ? "Appointment updated." : "Appointment added.", "success");
+    renderAll();
+  });
+}
+
+openAppointmentModal('a1');</script>

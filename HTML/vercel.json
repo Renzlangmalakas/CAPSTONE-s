@@ -1,0 +1,136 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "outputDirectory": ".",
+  "functions": {
+    "api/[...path].js": {
+      "maxDuration": 60
+    }
+  },
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/Landing/landing.html",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/account-security.js",
+      "destination": "/Shared/account-security.js"
+    },
+    {
+      "source": "/additional-fees.js",
+      "destination": "/Shared/additional-fees.js"
+    },
+    {
+      "source": "/booking-time.js",
+      "destination": "/Shared/booking-time.js"
+    },
+    {
+      "source": "/clinic-hours.js",
+      "destination": "/Shared/clinic-hours.js"
+    },
+    {
+      "source": "/default-accounts.js",
+      "destination": "/Shared/default-accounts.js"
+    },
+    {
+      "source": "/dentist-access.js",
+      "destination": "/Shared/dentist-access.js"
+    },
+    {
+      "source": "/dentist-services.js",
+      "destination": "/Shared/dentist-services.js"
+    },
+    {
+      "source": "/payment-receipts.js",
+      "destination": "/Shared/payment-receipts.js"
+    },
+    {
+      "source": "/published-content.js",
+      "destination": "/Shared/published-content.js"
+    },
+    {
+      "source": "/receipt-recheck.js",
+      "destination": "/Staff/receipt-recheck.js"
+    },
+    {
+      "source": "/receipt-review.js",
+      "destination": "/Shared/receipt-review.js"
+    },
+    {
+      "source": "/service-catalog.js",
+      "destination": "/Shared/service-catalog.js"
+    },
+    {
+      "source": "/shared-supabase-sync.js",
+      "destination": "/Shared/shared-supabase-sync.js"
+    },
+    {
+      "source": "/site-content.js",
+      "destination": "/Shared/site-content.js"
+    },
+    {
+      "source": "/staff-availability.js",
+      "destination": "/Staff/staff-availability.js"
+    },
+    {
+      "source": "/account-security.css",
+      "destination": "/Shared/account-security.css"
+    },
+    {
+      "source": "/receipt-review.css",
+      "destination": "/Shared/receipt-review.css"
+    },
+    {
+      "source": "/responsive.css",
+      "destination": "/Shared/responsive.css"
+    },
+    {
+      "source": "/favicon.ico",
+      "destination": "/Images/logo.jpg"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "/api/[...path]?path=:path*"
+    },
+    {
+      "source": "/register",
+      "destination": "/api/register"
+    },
+    {
+      "source": "/login",
+      "destination": "/api/login"
+    },
+    {
+      "source": "/verify-otp",
+      "destination": "/api/verify-otp"
+    },
+    {
+      "source": "/forgot-password",
+      "destination": "/api/forgot-password"
+    },
+    {
+      "source": "/reset-password",
+      "destination": "/api/reset-password"
+    },
+    {
+      "source": "/verification-status",
+      "destination": "/api/verification-status"
+    },
+    {
+      "source": "/verify-email",
+      "destination": "/api/verify-email"
+    },
+    {
+      "source": "/verify-email/:token",
+      "destination": "/api/verify-email/:token"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/appointment-reminders",
+      "schedule": "0 1 * * *"
+    }
+  ]
+}

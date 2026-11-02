@@ -1,0 +1,57 @@
+.gm-account-security { border: 1px solid #cbd5e1; border-radius: 16px; padding: 24px; width: min(440px, calc(100vw - 32px)); max-height: 90vh; overflow: auto; background: #fff; color: #172033; box-shadow: 0 20px 70px #0005; font: 15px/1.5 system-ui, sans-serif; }
+.gm-account-security::backdrop { background: #0f172ab3; }
+.gm-account-security h2 { margin: 0 0 12px; font-size: 22px; }
+.gm-account-security label { display: block; margin: 14px 0 6px; font-weight: 600; }
+.gm-account-security input { box-sizing: border-box; width: 100%; padding: 11px; border: 1px solid #64748b; border-radius: 8px; background: #fff; color: #172033; font: inherit; }
+.gm-account-security button { border: 1px solid #64748b; border-radius: 8px; padding: 10px 14px; background: #fff; color: #172033; cursor: pointer; font: inherit; }
+.gm-account-security button:disabled { opacity: .6; cursor: wait; }
+.gm-account-security .gm-submit { background: #1d4ed8; color: #fff; border-color: #1d4ed8; }
+.gm-security-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+.gm-security-status { min-height: 24px; overflow-wrap: anywhere; }
+.gm-account-security .gm-resend { margin-top: 10px; }
+.gm-account-hint { font-size: 12px; line-height: 1.5; opacity: .85; margin-top: 8px; }
+.gm-password-field[hidden] { display: none !important; }
+.gm-change-password { display: inline-block; justify-self: start; align-self: start; width: fit-content; border: 1px solid #3b82f6; border-radius: 8px; padding: 10px 16px; background: transparent; color: #3b82f6; font: inherit; font-weight: 600; cursor: pointer; }
+.gm-change-password:hover { background: #3b82f61a; }
+.gm-change-password:focus-visible { outline: 2px solid #3b82f6; outline-offset: 3px; }
+
+/* Keep the verification dialog readable alongside each portal's theme. */
+.gm-account-security {
+  --gm-security-surface: #fff;
+  --gm-security-input: #fff;
+  --gm-security-text: #172033;
+  --gm-security-muted: #475569;
+  --gm-security-border: #64748b;
+  background: var(--gm-security-surface);
+  color: var(--gm-security-text);
+  border-color: var(--gm-security-border);
+  color-scheme: light;
+}
+:is(body.dark, body.dark-mode, [data-bs-theme="dark"], [data-theme="dark"]) .gm-account-security {
+  --gm-security-surface: #0e1b30;
+  --gm-security-input: #14243e;
+  --gm-security-text: #e5efff;
+  --gm-security-muted: #b8c9e0;
+  --gm-security-border: #405777;
+  color-scheme: dark;
+}
+.gm-account-security h2,
+.gm-account-security label {
+  color: var(--gm-security-text) !important;
+}
+.gm-account-security .gm-security-description,
+.gm-account-security .gm-security-status {
+  color: var(--gm-security-muted) !important;
+}
+.gm-account-security input,
+.gm-account-security button:not(.gm-submit) {
+  background: var(--gm-security-input) !important;
+  color: var(--gm-security-text) !important;
+  border-color: var(--gm-security-border);
+}
+.gm-account-security input:focus-visible,
+.gm-account-security button:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: 3px;
+}
+.gm-security-actions { flex-wrap: wrap; }

@@ -1,0 +1,551 @@
+/* Shared responsive finishing rules. Loaded after each portal's own styles. */
+:root { --screen-gutter: clamp(12px, 2vw, 28px); }
+*, *::before, *::after { box-sizing: border-box; }
+img, video { max-width: 100%; }
+.main, .main-content, .scroll-area, .panel, .card,
+.dashboard-grid > *, .form-grid > *, .toolbar > *, .topbar > *,
+.main-header > *, .hero-grid > *, .contact-grid > * { min-width: 0; }
+input, select, textarea { max-width: 100%; }
+textarea { resize: vertical; }
+.toolbar, .schedule-toolbar, .section-actions, .form-actions-inline,
+.modal-actions, .appointments-top-actions { flex-wrap: wrap; gap: 12px; }
+.table-wrap, .table-responsive, .table-modern, .dentist-schedule-scroll {
+  max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.sidebar { overscroll-behavior: contain; padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+.modal-card, .service-modal-content, .gmd-modal-content, .next-adjustment-modal__dialog {
+  max-width: calc(100vw - 24px); max-height: calc(100dvh - 24px);
+  overflow-y: auto; overscroll-behavior: contain;
+}
+.modal-header, .modal-actions { flex-shrink: 0; }
+.modal-body { min-width: 0; min-height: 0; }
+:focus-visible { outline: 3px solid #60a5fa; outline-offset: 3px; }
+@media (max-width: 1024px) {
+  .topbar, .main-header { gap: 12px; flex-wrap: wrap; }
+  .toolbar > input, .toolbar > select, .toolbar > .search-box { flex: 1 1 220px; min-width: 0; }
+  .schedule-toolbar label { flex: 1 1 180px; min-width: 0; }
+  .schedule-toolbar .input { width: 100%; min-width: 0; }
+  .modal-card, .service-modal-content, .gmd-modal-content { margin-inline: auto; }
+}
+@media (max-width: 640px) {
+  .main, .scroll-area { padding-inline: var(--screen-gutter) !important; }
+  .topbar, .main-header { padding-inline: var(--screen-gutter); }
+  .toolbar { align-items: stretch; }
+  .toolbar > input, .toolbar > select, .toolbar > .search-box,
+  #staffBillingSort { width: 100% !important; flex-basis: 100%; }
+  .toolbar > label { flex-basis: 100%; }
+  .form-grid.two, .form-grid.three, .form-grid.four,
+  .modal-btn-grid, .staff-fee-editor .form-grid.two { grid-template-columns: minmax(0, 1fr) !important; }
+  .form-grid > *, .fee-discount, fieldset { min-width: 0; }
+  .section-actions > .btn, .modal-actions > .btn, .form-actions-inline > .btn { flex: 1 1 140px; }
+  .modal-card, .service-modal-content, .gmd-modal-content { border-radius: 16px; }
+  .modal-header, .modal-body { padding-inline: 16px; }
+  .staff-fee-line { grid-template-columns: minmax(0, 1fr); }
+  .staff-fee-line-price { flex-direction: row; justify-content: space-between; flex-wrap: wrap; }
+  .schedule-doctor-heading { overflow-wrap: anywhere; }
+  .panel-title, .section-title, .topbar h1 { overflow-wrap: anywhere; }
+  .notification-dropdown, .notifications-dropdown { max-width: calc(100vw - 24px); }
+}
+/* Avoid iOS focus zoom and make controls usable by touch, including iPads. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]), select, textarea { font-size: max(16px, 1em); }
+  .btn, .action-btn, .kebab-btn, .icon-btn, .mobile-sidebar-toggle,
+  .modal-close, .nav-item, .nav-link { min-height: 44px; }
+  .action-btn, .kebab-btn, .icon-btn, .mobile-sidebar-toggle, .modal-close { min-width: 44px; }
+}
+@media (max-height: 540px) and (orientation: landscape) {
+  .modal-card, .service-modal-content, .gmd-modal-content { max-height: calc(100dvh - 16px); margin-block: 8px; }
+  .sidebar { height: 100dvh; overflow-y: auto; }
+  .main-header, .topbar { position: relative; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto !important; }
+  .sidebar, .sidebar-backdrop, .modal-card { transition: none !important; }
+}
+/* Keep wide tables contained before their mobile card labels are initialized. */
+.table-wrap:has(table:not(.mobile-card-table)),
+.table-modern:has(table:not(.mobile-card-table)),
+.table-responsive:has(table:not(.mobile-card-table)) {
+  overflow-x: auto !important; max-width: 100%;
+}
+@media (max-width: 1024px) {
+  .topbar-actions { min-width: 0; max-width: 100%; flex-wrap: wrap; }
+  .main > .topbar, .main > .section { max-width: 100%; }
+  .toolbar, .form-grid { min-width: 0; }
+}
+
+#my-appointments .premium-appointments-table-wrap:has(table:not(.mobile-card-table)) {
+  overflow-x: auto !important;
+}
+#dashboard .table-modern:has(table:not(.mobile-card-table)) { overflow-x: auto !important; }
+
+/* Navigation must remain reachable at normal zoom and on short displays. */
+.app-shell > .sidebar {
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  scrollbar-width: thin;
+  scrollbar-color: #7292bd #14233b;
+  scroll-padding-block: 16px;
+  -webkit-overflow-scrolling: touch;
+}
+.app-shell > .sidebar > * { flex-shrink: 0; }
+.app-shell > .sidebar > .nav,
+.app-shell > .sidebar > .side-nav { flex: 0 0 auto; min-height: auto; padding-bottom: 16px; }
+.app-shell > .sidebar .nav-item,
+.app-shell > .sidebar .nav-link { flex-shrink: 0; }
+
+/* Give action groups room to wrap without covering labels or adjacent controls. */
+.inline-actions, .invoice-actions, .patient-actions, .service-actions,
+.patient-card-actions, .patient-finding-actions, .notif-warning-actions,
+.page-actions, .hero-actions, .cms-header-actions, .form-actions-inline,
+.modal-actions, .section-actions, .appointments-top-actions {
+  gap: 12px !important;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.inline-actions, .invoice-actions, .patient-card-actions,
+.patient-finding-actions, .notif-warning-actions { display: flex; align-items: center; }
+.panel-header, .section-header, .page-header, .card-header,
+.billing-header, .summary-card-head {
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  min-width: 0;
+}
+.panel-header > *, .section-header > *, .page-header > *,
+.card-header > *, .billing-header > * { min-width: 0; }
+.inline-actions > button, .inline-actions > .btn,
+.modal-actions > button, .section-actions > button,
+.form-actions-inline > button { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+/* Some existing table actions have no group wrapper. Keep the table cell layout. */
+td > button, td > a.btn { margin-block: 4px; }
+td > button + button, td > button + a.btn,
+td > a.btn + button, td > a.btn + a.btn { margin-inline-start: 10px; }
+.modal-header > :is(button, .icon-btn, .btn-close),
+.panel-header > :is(button, .icon-btn) { flex-shrink: 0; }
+@media (max-width: 640px) {
+  .page-header, .section-header, .panel-header { align-items: flex-start; }
+  .inline-actions, .patient-actions, .service-actions { row-gap: 12px; }
+  .modal-actions > button, .form-actions-inline > button { flex: 1 1 140px; }
+}
+
+/* Drawer bodies share available height with their headers, rather than adding to it. */
+.side-panel, #tipsPanel, .offcanvas-end { max-width: 100vw; }
+.side-panel > .panel-header, .offcanvas > .offcanvas-header { flex: 0 0 auto; }
+.side-panel .panel-body, #tipsPanel .panel-body,
+.offcanvas .offcanvas-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+}
+.modal-header > :is(h2, h3, h4, h5, .modal-title) {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.modal-header > :is(button, .btn-close, .icon-btn) { margin-left: 12px; }
+.form-grid > *, .toolbar-grid > *, .invoice-grid > *,
+.summary-item > *, .amount-grid > * { min-width: 0; }
+.summary-item { gap: 12px; flex-wrap: wrap; }
+.summary-value, .patient-name, .service-name { overflow-wrap: anywhere; }
+/* Long patient names and service descriptions must not paint over the next cell. */
+table th, table td { overflow-wrap: anywhere; }
+table td > .inline-actions { min-width: 0; }
+/* Flex children otherwise retain their word width and paint into the next cell. */
+td .table-service { min-width: 0; max-width: 100%; }
+td .table-service > .service-mark { flex: 0 0 auto; }
+td .table-service > span:last-child {
+  flex: 1 1 0;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 480px) {
+  .side-panel, #tipsPanel, .offcanvas-end { width: 100vw !important; }
+  .modal-header { gap: 10px; }
+  .modal-header > :is(h2, h3, h4, h5, .modal-title) { font-size: clamp(16px, 5vw, 20px); }
+}
+
+/* Shared type and spacing scale: cards grow with their content at every zoom. */
+:root {
+  --ui-body: clamp(.9375rem, .91rem + .12vw, 1rem);
+  --ui-small: .875rem;
+  --ui-card-title: clamp(1.0625rem, 1rem + .28vw, 1.25rem);
+  --ui-page-title: clamp(1.5rem, 1.22rem + 1.1vw, 2.25rem);
+  --ui-card-padding: clamp(1rem, .75rem + 1vw, 1.5rem);
+  --ui-gap: clamp(.875rem, .65rem + .9vw, 1.5rem);
+  --ui-radius: clamp(1rem, .8rem + .5vw, 1.375rem);
+}
+
+/* Compact dentist tiles retain two columns even on narrow phones. */
+#landingDentistsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(.625rem, 2vw, 1rem);
+  margin-inline: 0;
+}
+#landingDentistsGrid > * { width: auto; min-width: 0; padding: 0; margin-top: 0; }
+#landingDentistsGrid .dentist-card { padding: 0; border-radius: 1rem; }
+#landingDentistsGrid .card-body { padding: clamp(.75rem, 2vw, 1.125rem); }
+#landingDentistsGrid .dentist-avatar { width: 3.25rem; height: 3.25rem; margin: 0 auto .625rem; }
+#landingDentistsGrid .dentist-icon { font-size: 1.875rem; }
+#landingDentistsGrid .dentist-card h5 {
+  font-size: clamp(.875rem, .82rem + .25vw, 1.0625rem);
+  line-height: 1.35;
+  margin: .625rem 0 .375rem !important;
+  overflow-wrap: anywhere;
+}
+#landingDentistsGrid .dentist-card p { font-size: .8125rem; line-height: 1.45; margin-bottom: 0; }
+@media (min-width: 992px) {
+  #landingDentistsGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+body { font-size: var(--ui-body); line-height: 1.55; }
+:is(.panel, .settings-card, .booking-card, .service-card, .person-card,
+  .patient-card, .stat-card, .stat-item, .invoice-card, .billing-card,
+  .billing-summary-card, .summary-service-card, .premium-profile-card,
+  .security-note-card, .contact-card, .about-card, .choose-card,
+  .process-card, .mini-feature-card, .dentist-card) {
+  min-width: 0;
+  border-radius: var(--ui-radius);
+  overflow-wrap: anywhere;
+}
+:is(.panel, .settings-card, .booking-card, .person-card, .patient-card,
+  .stat-card, .stat-item, .invoice-card, .billing-card, .billing-summary-card,
+  .contact-card, .about-card, .choose-card, .process-card, .mini-feature-card) {
+  padding: var(--ui-card-padding);
+}
+:is(.card, .service-card, .dentist-card) > .card-body { padding: var(--ui-card-padding); }
+:is(.stats-grid, .dashboard-grid, .patients-grid, .people-grid, .invoice-grid,
+  .booking-grid, .premium-settings-grid, .contact-grid) { gap: var(--ui-gap); }
+:is(.stat-left, .stat-card, .person-card, .patient-card) > div { min-width: 0; }
+:is(.panel, .settings-card, .booking-card, .service-card, .person-card,
+  .patient-card, .contact-card, .about-card, .choose-card, .process-card,
+  .mini-feature-card, .dentist-card) :is(h2, h3, h4, h5, h6),
+.panel-header h2, .card-header h5 {
+  font-size: var(--ui-card-title);
+  line-height: 1.35;
+  letter-spacing: -.015em;
+  overflow-wrap: anywhere;
+}
+:is(.panel, .settings-card, .booking-card, .service-card, .person-card,
+  .patient-card, .contact-card, .about-card, .choose-card, .process-card,
+  .mini-feature-card, .dentist-card) p {
+  font-size: var(--ui-body);
+  line-height: 1.6;
+}
+#pageTitle, .page-header h1, .main-header h1, .section-title,
+.promo-text h1 { font-size: var(--ui-page-title); line-height: 1.25; }
+#pageSubtitle, .page-subtitle, .section-subtitle { font-size: var(--ui-body); line-height: 1.55; }
+.stat-card, .stat-item { height: auto; min-height: 0; gap: 1rem; }
+.stat-card h3, .stat-item h3 {
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 2.125rem);
+  line-height: 1.2;
+  margin-block: .25rem;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.stat-card p, .stat-item p { font-size: var(--ui-small); line-height: 1.45; }
+.stat-icon { flex-shrink: 0; width: 3rem; height: 3rem; font-size: 1.375rem; border-radius: .875rem; }
+.stat-item { display: flex; flex-direction: column; gap: .75rem; }
+.stat-item > .btn { margin-top: auto !important; }
+.promo-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem 1.5rem;
+  padding: var(--ui-card-padding);
+}
+.promo-card .hero-date-container {
+  position: relative;
+  inset: auto;
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: start;
+  max-width: 100%;
+}
+.promo-card .promo-text { grid-column: 1; grid-row: 2; max-width: 100%; padding-top: 0; min-width: 0; }
+.promo-card .promo-visual { grid-column: 2; grid-row: 1 / 3; }
+.promo-card > .waves { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+.promo-card > .waves svg { position: absolute; bottom: 0; left: 0; width: 100%; height: 45%; fill: rgb(255 255 255 / 10%); }
+.promo-card > .waves .wave-soft { bottom: -.5rem; fill: rgb(255 255 255 / 6%); }
+.promo-card .date-label { font-size: .75rem !important; line-height: 1.4; }
+.promo-card .date-value { font-size: .875rem !important; line-height: 1.4; }
+.promo-card .date-badge-content { padding: .5rem .75rem; }
+.panel-header, .card-header { margin-bottom: 1rem; }
+.btn, .service-filter-chip {
+  font-size: var(--ui-small);
+  line-height: 1.4;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  padding: .65rem 1rem;
+  min-height: 44px;
+}
+.form-label, .label { font-size: var(--ui-small); line-height: 1.5; }
+.form-control, .form-select, .input, .select {
+  font-size: 1rem;
+  line-height: 1.5;
+  min-height: 44px;
+}
+/* Keep public-page text readable without the oversized mobile whitespace. */
+body[data-landing-page] .section-block { padding-block: clamp(2rem, 1rem + 3vw, 4.5rem); }
+body[data-landing-page] .hero-section { padding-block: clamp(2rem, 1rem + 3vw, 4.5rem); }
+body[data-landing-page] .hero-title { font-size: clamp(2rem, 1.35rem + 2.6vw, 3.75rem); line-height: 1.15; }
+body[data-landing-page] .section-heading h2 { font-size: clamp(1.5rem, 1.15rem + 1.4vw, 2.5rem); line-height: 1.25; }
+body[data-landing-page] :is(.hero-description, .section-heading p) { font-size: var(--ui-body); line-height: 1.65; }
+body[data-landing-page] .section-heading { margin-bottom: clamp(1.5rem, 1rem + 1vw, 2.25rem); }
+body[data-landing-page] .service-card .service-price {
+  font-size: clamp(1.25rem, 1.1rem + .5vw, 1.625rem);
+  line-height: 1.3;
+  padding-top: .75rem;
+  margin-bottom: .75rem;
+}
+body[data-landing-page] .service-card h5 { margin-bottom: .75rem; }
+body[data-landing-page] .service-card .btn { margin-top: .5rem !important; }
+body[data-landing-page] .services-toolbar { gap: 1rem; margin-bottom: 1.5rem; }
+body[data-landing-page] .service-filters { gap: .5rem; }
+body[data-landing-page] .service-filter-chip { padding: .6rem .875rem; }
+
+/* Tablet cards use available width; their text never relies on fixed heights. */
+@media (min-width: 641px) and (max-width: 1100px) {
+  .app-shell #home > .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .app-shell #home > .stats-grid > .stat-card:nth-child(n) { grid-column: auto; }
+  .dashboard-grid { grid-template-columns: minmax(0, 1fr); }
+  .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .patients-grid, .people-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .booking-grid { grid-template-columns: minmax(0, 1fr); }
+  body[data-landing-page] #servicesGrid > .service-item { width: 50%; }
+}
+@media (max-width: 1100px) {
+  .promo-card { grid-template-columns: minmax(0, 1fr); }
+  .promo-card .promo-visual { display: none; }
+}
+@media (max-width: 640px) {
+  .topbar, .main-header { padding: 1rem; margin-bottom: 1rem; }
+  .stats-grid, .patients-grid, .people-grid, .booking-grid,
+  .invoice-grid, .premium-settings-grid { grid-template-columns: minmax(0, 1fr) !important; }
+  .app-shell #home > .stats-grid { grid-template-columns: minmax(0, 1fr) !important; }
+  .app-shell #home > .stats-grid > .stat-card:nth-child(n) { grid-column: auto; }
+  .stat-card { padding: 1rem; }
+  .promo-card { padding: 1.25rem; height: auto; min-height: 0; }
+  .promo-text { max-width: 100%; padding-top: 0; }
+  .promo-text p { font-size: var(--ui-body); line-height: 1.55; }
+  .panel-header h2 { align-items: flex-start; }
+  .panel-header h2 > i { flex-shrink: 0; line-height: 1.35; }
+  .card-header, .panel-header { gap: .75rem; }
+  .service-picker-name, .patient-name, .service-name { font-size: 1rem; line-height: 1.4; }
+  .service-picker-card { height: auto; min-height: 0; padding: 1rem; }
+  .modal-header, .modal-body, .modal-footer, .modal-actions { padding: 1rem; }
+  table.mobile-card-table tbody td { font-size: var(--ui-small); line-height: 1.55; padding-block: .75rem; }
+  table.mobile-card-table tbody td::before { font-size: .8125rem; line-height: 1.5; letter-spacing: .025em; }
+  body[data-landing-page] .container { padding-inline: 1rem; }
+  body[data-landing-page] #servicesGrid > .service-item { width: 100%; }
+  body[data-landing-page] :is(.hero-actions, .contact-card .btn) { width: 100%; }
+  body[data-landing-page] .hero-actions > .btn { flex: 1 1 100%; }
+  body[data-landing-page] .section-kicker { font-size: .8125rem; letter-spacing: .08em; }
+  #loginModal .auth-form-head h3 { font-size: 1.5rem; line-height: 1.3; }
+  #loginModal .auth-form-head p { font-size: var(--ui-small); line-height: 1.5; }
+}
+/* Compact repeated cards across public pages and all four portals. */
+@media (max-width: 991px) {
+  body .stats-grid,
+  body #dashboard .stats-grid,
+  body.app-shell .stats-grid,
+  .app-shell #home > .stats-grid,
+  body .patients-grid, body .people-grid,
+  body .services-wrapper, body .services-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: .75rem;
+  }
+  .app-shell #home > .stats-grid > .stat-card:nth-child(n) { grid-column: auto; }
+  body[data-landing-page] #servicesGrid,
+  body[data-landing-page] .row:has(> div > .process-card),
+  body[data-landing-page] .row:has(> div > .choose-card),
+  body[data-landing-page] .about-highlights {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .75rem;
+    margin-inline: 0;
+  }
+  body[data-landing-page] #servicesGrid > .service-item,
+  body[data-landing-page] .row:has(> div > .process-card) > div,
+  body[data-landing-page] .row:has(> div > .choose-card) > div {
+    width: auto;
+    min-width: 0;
+    padding: 0;
+    margin-top: 0;
+  }
+  body .stats-grid .stat-card, body #dashboard .stats-grid .stat-item,
+  body .stats-grid .stat-item {
+    padding: .875rem;
+    border-radius: 1rem;
+    min-height: 0;
+    gap: .625rem;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  body .stats-grid .stat-left { flex-direction: column; align-items: flex-start; gap: .5rem; }
+  body .stats-grid .stat-icon { width: 2.5rem; height: 2.5rem; font-size: 1.125rem; border-radius: .75rem; }
+  body .stats-grid :is(.stat-card,.stat-item) h3 { font-size: clamp(1.125rem, 4vw, 1.625rem) !important; line-height: 1.25; }
+  body .stats-grid :is(.stat-card,.stat-item) p { font-size: .8125rem; line-height: 1.4; }
+  body .stats-grid :is(.btn,.btn-gradient) { width: 100%; font-size: .8125rem; padding: .5rem; white-space: normal; min-height: 44px; }
+  body .services-wrapper .service-card,
+  body .services-grid .service-card,
+  body .patients-grid .patient-card, body .people-grid .person-card,
+  body[data-landing-page] :is(.service-card,.process-card,.choose-card,.mini-feature-card) {
+    padding: .875rem;
+    border-radius: 1rem;
+    min-width: 0;
+    height: auto;
+  }
+  body[data-landing-page] .service-card { padding: 0; }
+  body[data-landing-page] .service-card .card-body { padding: .875rem; }
+  body[data-landing-page] .mini-feature-card { flex-direction: column; gap: .5rem; }
+  body :is(.services-wrapper,.services-grid,.patients-grid,.people-grid) :is(h3,h4,h5),
+  body[data-landing-page] :is(.service-card,.process-card,.choose-card,.mini-feature-card) :is(h3,h4,h5) {
+    font-size: .9375rem;
+    line-height: 1.35;
+    margin-block: .5rem;
+    overflow-wrap: anywhere;
+  }
+  body :is(.services-wrapper,.services-grid,.patients-grid,.people-grid) p,
+  body[data-landing-page] :is(.service-card,.process-card,.choose-card,.mini-feature-card) p { font-size: .8125rem; line-height: 1.5; }
+  body[data-landing-page] .service-card .service-price,
+  body .services-wrapper .price-tag { font-size: 1.0625rem; line-height: 1.35; padding-top: .5rem; }
+  body :is(.services-wrapper,.services-grid,.patients-grid,.people-grid) :is(.btn,.btn-gradient),
+  body[data-landing-page] .service-card .btn { font-size: .8125rem; line-height: 1.4; padding: .5rem; min-height: 44px; white-space: normal; max-width: 100%; }
+  body .services-wrapper .service-card > .d-grid { padding-inline: 0 !important; padding-bottom: 0 !important; margin-top: auto; }
+  body .services-wrapper .service-card > i.fs-1 { font-size: 1.75rem !important; }
+  body[data-landing-page] :is(.service-icon,.process-icon) { width: 2.75rem; height: 2.75rem; font-size: 1.375rem; margin-bottom: .5rem; }
+  body .patient-card-header { flex-wrap: wrap; gap: .5rem; }
+  body .patient-card-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+  body .patient-card-actions > * { flex: 1 1 100%; min-width: 0; }
+}
+.service-description { margin-bottom: .75rem; text-align: left; }
+.service-description[hidden] { display: none; }
+#servicesGrid .service-card { position: relative; }
+#servicesGrid .service-card .card-body { position: static; z-index: auto; }
+#servicesGrid .service-details-toggle { position: absolute; inset: 0; z-index: 1; border: 0; border-radius: inherit; background: transparent; cursor: pointer; }
+#servicesGrid .service-details-toggle:focus-visible { outline: 3px solid #60a5fa; outline-offset: 3px; }
+#servicesGrid .service-card .btn { position: relative; z-index: 2; }
+.service-description p { margin: .5rem 0 0; }
+@media (max-width: 991px) {
+  #servicesGrid .service-card .card-body { gap: .25rem; }
+  #servicesGrid .service-description { margin-bottom: .25rem; }
+}
+/* Separate filter controls from tiles; hover must not consume that spacing. */
+body[data-landing-page] #servicesGrid { margin-top: 1.5rem; row-gap: 1rem; }
+body[data-landing-page] #servicesGrid .service-card:hover { transform: none; }
+body[data-landing-page] #servicesGrid .card-body { padding: 1rem; gap: .75rem; }
+body[data-landing-page] #servicesGrid .service-card h5 { margin: 0 0 .25rem; }
+body[data-landing-page] #servicesGrid .service-price { padding-top: .5rem; margin-bottom: .25rem; }
+body[data-landing-page] #servicesGrid .btn { margin-top: .5rem !important; }
+.service-details-modal .modal-content { border-radius: 1.25rem; background: #fff; color: #17324d; border: 1px solid #d4e1ee; }
+.service-details-modal .modal-header, .service-details-modal .modal-body, .service-details-modal .modal-footer { padding: 1.25rem; }
+.service-details-modal .modal-title { font-size: 1.25rem; line-height: 1.4; }
+.service-details-modal .modal-body p { font-size: 1rem; line-height: 1.65; overflow-wrap: anywhere; }
+.service-details-modal .modal-body .service-popup-price { font-size: 1.5rem; font-weight: 800; color: #2563eb; margin-bottom: 0; }
+.service-popup-close { flex-shrink: 0; width: 44px; height: 44px; background: transparent; color: inherit; border: 0; border-radius: .75rem; font-size: 2rem; line-height: 1; }
+html[data-theme="dark"] .service-details-modal .modal-content { background: #0d1c2e; color: #dce9f8; border-color: #294159; }
+html[data-theme="dark"] .service-details-modal .modal-header, html[data-theme="dark"] .service-details-modal .modal-footer { border-color: #294159; }
+html[data-theme="dark"] .service-details-modal .service-popup-price { color: #7dd3fc; }
+/* Keep theme control beside the contact information instead of a third row. */
+body[data-landing-page] > .topbar { padding: .625rem 0; margin-bottom: 0; }
+body[data-landing-page] .topbar-content { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: .75rem; }
+body[data-landing-page] .topbar-left { display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: center; gap: .375rem 1.25rem; min-width: 0; text-align: left; }
+body[data-landing-page] .topbar-left > span { min-width: 0; line-height: 1.5; }
+body[data-landing-page] .topbar-right { width: auto; justify-content: flex-end; margin: 0; }
+body[data-landing-page] .theme-toggle { min-width: 44px; min-height: 44px; margin: 0; flex-shrink: 0; }
+@media (max-width: 1199px) {
+  body[data-landing-page] .topbar-left { flex-direction: column; align-items: flex-start; font-size: .8125rem; }
+  body[data-landing-page] .theme-toggle { width: 44px; height: 44px; padding: 0; display: grid; place-items: center; }
+  body[data-landing-page] .theme-toggle span { display: none; }
+}
+#servicesGrid .service-desktop-details { display: none; }
+@media (min-width: 1200px) {
+  #servicesGrid .service-desktop-details { display: block; }
+  #servicesGrid .service-details-toggle { display: none; }
+  #servicesGrid .service-desktop-details p { font-size: .9375rem; line-height: 1.65; margin-bottom: .75rem; }
+}
+/* Quick actions share one edge and reserve a full button plus gap above Top. */
+body[data-landing-page] {
+  --quick-action-size: 54px;
+  --quick-action-gap: 12px;
+  --quick-action-right: max(16px, env(safe-area-inset-right));
+  --quick-action-bottom: max(20px, env(safe-area-inset-bottom));
+}
+body[data-landing-page] .floating-actions {
+  right: var(--quick-action-right);
+  bottom: calc(var(--quick-action-bottom) + var(--quick-action-size) + var(--quick-action-gap));
+  gap: var(--quick-action-gap);
+  align-items: center;
+}
+body[data-landing-page] :is(.floating-action-btn, .back-to-top) {
+  width: var(--quick-action-size);
+  height: var(--quick-action-size);
+  padding: 0;
+  flex-shrink: 0;
+  line-height: 1;
+}
+body[data-landing-page] .back-to-top { right: var(--quick-action-right); bottom: var(--quick-action-bottom); }
+@media (min-width: 641px) and (max-width: 1199px) {
+  body[data-landing-page] .floating-actions { display: flex; }
+}
+@media (hover: none) {
+  body[data-landing-page] :is(.floating-action-btn, .back-to-top):hover { transform: none; }
+}
+/* Smaller visual icons on touch layouts; controls retain 44px tap targets. */
+@media (max-width: 1199px) {
+  body[data-landing-page] { --quick-action-size: 44px; }
+  body[data-landing-page] :is(.floating-action-btn,.back-to-top,.theme-toggle) i { font-size: 1rem; }
+  body[data-landing-page] :is(.service-icon,.about-icon-badge) { width: 36px; height: 36px; border-radius: 11px; font-size: 1.125rem; flex-shrink: 0; }
+  body[data-landing-page] .choose-icon { font-size: 1.5rem; margin-bottom: .5rem; }
+  body[data-landing-page] .mini-feature-card > i { font-size: 1.25rem; }
+  #landingDentistsGrid .dentist-avatar { width: 40px; height: 40px; }
+  #landingDentistsGrid .dentist-icon { font-size: 1.5rem; }
+  body .stats-grid .stat-icon { width: 36px; height: 36px; font-size: 1.125rem; border-radius: 11px; }
+  body :is(.icon-btn,.action-btn,.kebab-btn,.nav-item,.nav-link,.modal-close,.btn) > i { font-size: 1rem; }
+  body :is(.service-mark,.person-avatar,.patient-avatar) { width: 36px; height: 36px; min-width: 36px; font-size: 1.125rem; flex-shrink: 0; }
+  body .services-wrapper .service-card > i.fs-1 { font-size: 1.5rem !important; }
+  body[data-landing-page] .process-card {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    align-content: start;
+    align-items: start;
+    gap: .75rem .5rem;
+  }
+  body[data-landing-page] .process-card .process-number {
+    grid-column: 1;
+    grid-row: 1;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    margin: 0;
+    font-size: .8125rem;
+    line-height: 1;
+  }
+  body[data-landing-page] .process-card h5 {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    margin: 0;
+    font-size: clamp(.8125rem, 1.6vw, 1rem);
+    line-height: 1.4;
+  }
+  body[data-landing-page] .process-card p { grid-column: 1 / -1; grid-row: 2; margin: 0; }
+}
+/* Keep the clinic identity and menu visible without a nested scroll container. */
+@media (max-width: 1199px) {
+  html:has(body[data-landing-page]), body[data-landing-page] { overflow-x: clip; }
+  body[data-landing-page] #mainNavbar { position: sticky; top: 0; z-index: 1020; width: 100%; }
+  body[data-landing-page] #mainNavbar > .container { align-items: center; }
+  body[data-landing-page] #navbarNav { max-height: calc(100dvh - 90px); overflow-y: auto; overscroll-behavior: contain; }
+}

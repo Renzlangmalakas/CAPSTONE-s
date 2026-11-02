@@ -1,0 +1,23 @@
+tr.gm-page-hidden { display: none !important; }
+.gm-pagination { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 12px 20px; padding: 18px 4px 6px; color: inherit; font-size: 13px; }
+.gm-pagination[hidden] { display: none !important; }
+.gm-pagination .gm-page-summary { margin-right: auto; }
+.gm-pagination label, .gm-page-buttons { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0; }
+.gm-pagination button, .gm-pagination select { width: auto; min-width: 40px; min-height: 40px; margin: 0; padding: 8px 12px; border: 1px solid #7185a666; border-radius: 9px; background: var(--surface, #142238); color: inherit; font: inherit; cursor: pointer; }
+.gm-pagination button[aria-current="page"] { background: #2864e8; border-color: #2864e8; color: #fff; }
+.gm-pagination button:disabled { opacity: .45; cursor: default; }
+.gm-pagination button:focus-visible, .gm-pagination select:focus-visible { outline: 2px solid #609cff; outline-offset: 2px; }
+@media (max-width: 640px) { .gm-pagination { justify-content: flex-start; } .gm-page-buttons { width: 100%; } .gm-pagination button, .gm-pagination select { min-height: 44px; } }
+@media print { .gm-pagination { display: none !important; } tr.gm-page-hidden { display: table-row !important; } }
+
+/* Explicit light surfaces: portal surface variables may still contain dark colors. */
+body:not(.dark):not(.dark-mode) .gm-pagination { color: #334764; }
+body:not(.dark):not(.dark-mode) .gm-pagination :is(button,select) {
+ background: #fff; color: #334764; border-color: #ced9e8; color-scheme: light;
+}
+body:not(.dark):not(.dark-mode) .gm-pagination button[aria-current="page"] {
+ background: #2864e8; border-color: #2864e8; color: #fff;
+}
+body:not(.dark):not(.dark-mode) .gm-pagination button:disabled {
+ background: #edf1f7; color: #718096; border-color: #dce3ed; opacity: 1;
+}

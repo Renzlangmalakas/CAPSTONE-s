@@ -1,0 +1,37 @@
+﻿.cms-workspace { display:grid; grid-template-columns:230px minmax(0,1fr); gap:20px; align-items:start; }
+.cms-section-nav { padding:14px; border:1px solid var(--border); border-radius:16px; background:var(--surface); position:sticky; top:20px; }
+.cms-section-nav > p { font-size:11px; font-weight:800; letter-spacing:.1em; padding:8px; }
+.cms-section-nav button { display:flex; align-items:center; gap:10px; width:100%; padding:12px 10px; border:1px solid transparent; border-radius:10px; background:transparent; color:inherit; text-align:left; cursor:pointer; font:inherit; font-size:13px; margin:3px 0; }
+.cms-section-number { display:grid; place-items:center; background:rgba(100,140,200,.12); border-radius:8px; min-width:30px; height:30px; font-size:11px; font-weight:800; }
+.cms-section-nav button[aria-current="true"] { background:rgba(37,99,235,.13); border-color:#3b82f6; color:#3b82f6; font-weight:800; }
+#cms .cms-panel { min-width:0; margin:0; }
+#cms .cms-fields { display:block; }
+#cms [hidden] { display:none !important; }
+#cms .cms-text-group { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
+#cms .cms-text-group > div { min-width:0; }
+#cms .cms-text-group textarea { min-height:120px; }
+#cms .cms-text-group .btn { margin-top:8px; font-size:12px; padding:6px 10px; }
+#cms .cms-picture-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+#cms .cms-actions { position:sticky; bottom:0; background:var(--surface,#fff); padding:18px 0; border-top:1px solid var(--border); display:flex; flex-wrap:wrap; gap:10px; align-items:center; z-index:2; }
+.cms-draft-state { font-size:12px; opacity:.75; }
+#cms .cms-clinic-settings { display:block; margin-bottom:20px; }
+#cms .cms-clinic-settings .panel { padding:16px 22px; }
+#cms .cms-clinic-settings .panel-header { display:none; }
+html.cms-preview-open, html.cms-preview-open body { overflow:hidden !important; }
+.cms-device-preview { position:fixed; inset:0; overflow:hidden; box-sizing:border-box; padding:0; margin:0; width:100vw; height:100dvh; max-width:none; max-height:none; border:0; background:#101923; color:#eef5ff; }
+.cms-device-preview[open] { display:flex; flex-direction:column; }
+.cms-device-preview::backdrop { background:#080e16; }
+.cms-preview-toolbar { flex-shrink:0; display:flex; gap:16px; padding:14px 20px; align-items:center; border-bottom:1px solid #334155; flex-wrap:wrap; }
+.cms-device-tabs { display:flex; gap:4px; border:1px solid #334155; border-radius:24px; padding:4px; }
+.cms-device-tabs button { border:0; border-radius:20px; background:transparent; color:#d4dfeb; padding:10px 16px; cursor:pointer; font-weight:700; }
+.cms-device-tabs button[aria-pressed="true"] { background:#2563eb; color:white; }
+.cms-preview-note { margin-left:auto; font-size:12px; color:#93c5fd; }
+.cms-preview-stage { flex:1; min-height:0; min-width:0; overflow:hidden; padding:12px; display:flex; align-items:center; justify-content:center; }
+.cms-preview-frame-wrap { flex:none; overflow:hidden; position:relative; margin:auto; background:white; box-shadow:0 16px 60px #0008; }
+.cms-preview-frame-wrap iframe { display:block; border:0; transform-origin:top left; background:white; }
+.cms-device-preview button:focus-visible,.cms-section-nav button:focus-visible { outline:3px solid #60a5fa; outline-offset:3px; }
+@media(max-width:1100px) { .cms-workspace{grid-template-columns:190px minmax(0,1fr)} #cms .cms-text-group{grid-template-columns:1fr} }
+@media(max-width:700px) { .cms-workspace{grid-template-columns:1fr} .cms-section-nav{position:static; display:flex; overflow:auto; gap:6px} .cms-section-nav >p{display:none} .cms-section-nav button{width:auto; flex-shrink:0; max-width:190px} #cms .cms-picture-grid{grid-template-columns:1fr} .cms-preview-toolbar{gap:8px;padding:10px} .cms-preview-toolbar strong{font-size:13px} .cms-device-tabs{order:3;width:100%;justify-content:center} .cms-preview-note{display:none} #cmsClosePreview{margin-left:auto} }
+
+.cms-preview-frame-wrap[data-device="iphone"] { border-radius:28px; outline:4px solid #334155; }
+.cms-preview-frame-wrap[data-device="ipad"] { border-radius:18px; outline:4px solid #334155; }

@@ -1,0 +1,28 @@
+﻿/* Icon geometry for static and dynamically rendered UI across the whole app. */
+body i.bi { display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; width:1em; height:1em; padding:0; line-height:1 !important; vertical-align:-.125em; text-indent:0; letter-spacing:0; }
+body i.bi::before { display:block; line-height:1 !important; vertical-align:0 !important; }
+body :is(button,a.btn,.btn,.action-chip,.menu-link) > i.bi { font-size:18px; }
+body :is(.icon-btn,.action-btn,.kebab-btn,.sidebar-toggle,.menu-toggle,.mobile-sidebar-toggle,.modal-close,.service-popup-close) { display:inline-flex; align-items:center; justify-content:center; }
+body :is(.icon-btn,.action-btn,.kebab-btn,.sidebar-toggle,.menu-toggle,.mobile-sidebar-toggle,.modal-close) > i.bi { margin:0 !important; font-size:22px !important; width:24px; height:24px; }
+body[data-portal-role] .sidebar :is(.nav-item,.nav-link) > i.bi { font-size:24px !important; width:26px; min-width:26px; height:26px; flex:0 0 26px; }
+body[data-portal-role] :is(.sidebar-toggle,.menu-toggle,.mobile-sidebar-toggle) > i.bi { font-size:26px !important; }
+body :is(.panel-header,.card-header,.section-title,.modal-title) > i.bi,
+body :is(.panel-header,.card-header) :is(h2,h3,h4,h5) > i.bi { font-size:22px; }
+body :is(.brand-icon,.brand-logo) > i.bi { font-size:28px !important; }
+body :is(.stat-icon,.service-mark,.recent-service-icon,.patient-avatar,.person-avatar) > i.bi { font-size:22px; }
+body :is(.table-wrap,.table-modern,.records-table-wrap) :is(button,a) > i.bi { font-size:18px !important; }
+body :is(.input-group-text,.password-toggle,.toggle-password) > i.bi { font-size:20px; }
+@media(pointer:coarse) {
+ body :is(.icon-btn,.action-btn,.kebab-btn,.sidebar-toggle,.menu-toggle,.mobile-sidebar-toggle,.modal-close) { min-width:44px; min-height:44px; }
+}
+
+/* The photo-upload control must stay circular rather than inherit text-button padding. */
+body[data-portal-role=dentist] #profile .profile-photo-upload {
+ position:absolute; right:0; bottom:0; display:flex; align-items:center; justify-content:center;
+ width:44px; height:44px; min-width:44px; min-height:44px; padding:0 !important; margin:0;
+ border:2px solid #fff; border-radius:50%; background:#2563eb; color:#fff;
+ box-shadow:0 4px 12px #0003; cursor:pointer; line-height:1;
+}
+body[data-portal-role=dentist] #profile .profile-photo-upload > i.bi { width:22px; height:22px; font-size:22px !important; line-height:1 !important; margin:0; }
+body[data-portal-role=dentist].dark #profile .profile-photo-upload { border-color:#0f1e32; }
+body[data-portal-role=dentist] #profile .profile-photo-upload:hover { background:#1d4ed8; }

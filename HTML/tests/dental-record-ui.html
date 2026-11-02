@@ -1,0 +1,8 @@
+<!doctype html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="../Dentist/patient-record.css"></head><body style="font-family:Arial" class="dark"><script>
+let notes=[];const currentDentistUser={name:'Test dentist'};
+const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const getMyAppointments=()=>[{id:'apt-test',patientId:'test',patientName:'Test patient',service:'Consultation',date:'2026-10-07',status:'Approved'}];
+const getPatientClinicalKey=r=>r.patientId; const getClinicDb=()=>({patients:[]}),ensureClinicDbShape=x=>x;
+const getPatientNotesForKey=k=>notes.filter(n=>n.patientKey===k),getPatientClinicalNotes=()=>notes,savePatientClinicalNotes=n=>notes=n;
+const formatClinicalNoteDate=v=>v,createDentistEntityId=()=>crypto.randomUUID(),showToast=()=>{},renderPatients=()=>{};
+</script><script src="../Dentist/patient-record.js"></script><script>openDentalRecord('test','Test%20patient');</script></body></html>

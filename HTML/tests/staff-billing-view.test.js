@@ -1,0 +1,6 @@
+const test=require('node:test');const assert=require('node:assert/strict');const fs=require('fs');const vm=require('vm');
+const source=fs.readFileSync('HTML/Staff/staff.js','utf8');const context={isCancelledBill:x=>/cancelled|canceled/i.test(x.status||''),isRefundableAppointment:x=>/cancelled|canceled/i.test(x.status||'')&&Number(x.paid)>0};vm.createContext(context);vm.runInContext(source.slice(source.indexOf('function filterStaffBillingView('),source.indexOf('function sortStaffBilling(')),context);
+const rows=[{id:'unpaid',paymentStatus:'Unpaid'},{id:'partial',paymentStatus:'Partial'},{id:'paid',paymentStatus:'Paid'},{id:'cancelled',status:'Cancelled'},{id:'refund',status:'Cancelled',paid:500},{id:'refunded',status:'Cancelled',refunds:[{amount:500}]}];const ids=view=>Array.from(context.filterStaffBillingView(rows,view),r=>r.id);
+test('default billing includes unpaid, partial and refund records only',()=>assert.deepEqual(ids('active'),['unpaid','partial','refund','refunded']));
+test('paid and cancelled records remain accessible',()=>{assert.deepEqual(ids('paid'),['paid']);assert.deepEqual(ids('cancelled'),['cancelled','refund','refunded']);assert.equal(ids('all').length,6);assert.equal(rows.length,6);});
+test('refund filter retains both pending and completed refunds',()=>assert.deepEqual(ids('refund'),['refund','refunded']));

@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>Set up your account | G-M Dental</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:32px 16px;background:#0b1425;color:#e6eefb;font:16px/1.5 system-ui,sans-serif;min-height:100vh;display:grid;place-items:center}main{width:min(100%,540px);padding:32px;border:1px solid #2b3d56;border-radius:24px;background:#122039}h1{font-size:1.7rem;margin:8px 0}p{color:#afc0d7}label{display:block;margin:16px 0 6px;font-size:.9rem;font-weight:600}input{width:100%;padding:12px;border:1px solid #3a526f;border-radius:10px;background:#0c182c;color:inherit;font:inherit}input:focus{outline:2px solid #80b8ff}button,.login{display:block;width:100%;margin-top:24px;padding:13px;background:#2961eb;color:white;border:0;border-radius:10px;font:inherit;text-align:center;text-decoration:none;cursor:pointer}button:disabled{opacity:.6;cursor:wait}[hidden]{display:none!important}#status{white-space:pre-wrap}small{color:#afc0d7}@media(max-width:480px){main{padding:22px}}
+</style><link rel="stylesheet" href="../Shared/responsive.css?v=20261012-table-fit">
+<link rel="stylesheet" href="../Shared/motion.css?v=20261027">
+</head><body><main><small>G-M DENTAL • DENTIST INVITATION</small><h1>Create your account</h1><p>Choose your own password and enter your details to finish joining the clinic.</p>
+<form id="setupForm">
+<label for="email">Invited email</label><input id="email" type="email" readonly required autocomplete="username">
+<label for="name">Full name</label><input id="name" maxlength="150" required autocomplete="name">
+<label for="mobile">Contact number (optional)</label><input id="mobile" type="tel" inputmode="numeric" pattern="[0-9]{7,12}" maxlength="12" autocomplete="tel">
+<label for="address">Address (optional)</label><input id="address" maxlength="500" autocomplete="street-address">
+<label for="password">Password</label><input id="password" type="password" minlength="8" maxlength="72" required autocomplete="new-password"><small>At least 8 characters.</small>
+<label for="confirm">Confirm password</label><input id="confirm" type="password" required autocomplete="new-password">
+<button id="submit" type="submit">Finish account setup</button></form>
+<p id="status" role="status" aria-live="polite"></p><a class="login" id="login" href="landing.html" hidden>Go to sign in</a>
+</main><script src="dentist-setup.js"></script></body></html>

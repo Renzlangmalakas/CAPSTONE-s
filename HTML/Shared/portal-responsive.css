@@ -1,0 +1,177 @@
+﻿/* Shared role-portal layout contract. Loaded last; does not style the public site. */
+body[data-portal-role] { --portal-gap:clamp(12px,2vw,24px); }
+body[data-portal-role] :is(.main,.main-content,.scroll-area,.section,.view,.dashboard-grid,.dashboard-grid > *, .panel,.settings-card,.records-table-wrap,.toolbar,.page-head,.topbar-actions) { min-width:0; max-width:100%; }
+body[data-portal-role] :is(.table-wrap,.table-modern,.table-responsive,.records-table-wrap) { min-width:0; max-width:100%; overscroll-behavior-x:contain; }
+body[data-portal-role] :is(.panel-header,.page-head,.card-header,.form-actions,.modal-footer,.service-actions,.records-row-actions) { flex-wrap:wrap; gap:12px; }
+body[data-portal-role] :is(.panel-header,.page-head,.card-header) > * { min-width:0; }
+body[data-portal-role] :is(.panel-header h2,.page-head h2,.card-header h5) { overflow-wrap:break-word; }
+body[data-portal-role] :is(.gm-pagination,.records-pagination) { position:relative; height:auto; min-height:0; flex-shrink:0; clear:both; }
+body[data-portal-role] :is(.gm-page-buttons,.records-pagination > div) { flex-wrap:wrap; }
+body[data-portal-role] :is(.form-grid,.dental-fields,.settings-grid) > * { min-width:0; }
+body[data-portal-role] :is(input,select,textarea) { min-width:0; max-width:100%; }
+body[data-portal-role] :is(.status-pill,.badge) { word-break:normal; overflow-wrap:normal; }
+body[data-portal-role] :is(.modal-dialog,.modal-card,.gmd-modal-content,.service-modal-content) { max-width:calc(100vw - 24px); }
+body[data-portal-role] :is(.modal-content,.modal-card,.gmd-modal-content,.service-modal-content) { max-height:calc(100dvh - 24px); }
+body[data-portal-role] .modal-content { overflow:hidden; }
+body[data-portal-role] .modal-content > .modal-body { overflow-y:auto; overscroll-behavior:contain; }
+body[data-portal-role] :is(.modal-header,.modal-footer) { flex-shrink:0; }
+@media (max-width:1024px) {
+  body[data-portal-role] :is(.main,.main-content) { min-width:0; width:100%; margin-left:0 !important; }
+  body[data-portal-role] .sidebar { position:fixed !important; inset:0 auto 0 0 !important; width:min(300px,calc(100vw - 48px)) !important; height:100dvh !important; max-height:100dvh !important; overflow-y:auto !important; transform:translateX(-105%) !important; z-index:1050; visibility:hidden; }
+  body[data-portal-role].sidebar-open .sidebar { transform:translateX(0) !important; visibility:visible; }
+  body[data-portal-role] .mobile-sidebar-toggle { display:inline-flex !important; align-items:center; justify-content:center; flex-shrink:0; width:44px; min-height:44px; }
+  body[data-portal-role] .sidebar-backdrop { position:fixed; inset:0; z-index:1040; }
+  body[data-portal-role].sidebar-open { overflow:hidden; }
+  body[data-portal-role] :is(.topbar,.main-header,.page-head) { flex-wrap:wrap; gap:12px; }
+  body[data-portal-role] :is(.topbar,.main-header) > * { min-width:0; max-width:100%; }
+  body[data-portal-role] :is(.toolbar,.schedule-toolbar) { flex-wrap:wrap; }
+  body[data-portal-role] :is(.toolbar,.schedule-toolbar) > :is(input,select,label) { min-width:0; max-width:100%; }
+  body[data-portal-role] :is(button,.btn,.action-chip,.nav-link,.nav-item) { min-height:44px; }
+  body[data-portal-role] :is(input:not([type=checkbox]):not([type=radio]):not([type=hidden]),select,textarea) { font-size:16px; }
+}
+@media (min-width:768px) and (max-width:1024px) {
+  body[data-portal-role] .dashboard-grid { grid-template-columns:minmax(0,1fr) !important; }
+  body[data-portal-role] :is(.table-wrap,.table-modern,.table-responsive,.records-table-wrap) { overflow-x:auto; }
+}
+@media (max-width:767px) {
+  body[data-portal-role] :is(.main,.scroll-area) { padding-inline:12px !important; }
+  body[data-portal-role] :is(.dashboard-grid,.settings-grid,.staff-settings-grid,.form-grid.two,.form-grid.three,.form-grid.four) { grid-template-columns:minmax(0,1fr) !important; }
+  body[data-portal-role] .dashboard-grid > * { grid-column:auto !important; grid-row:auto !important; }
+  body[data-portal-role] :is(.panel,.settings-card) { padding:16px; }
+  body[data-portal-role] :is(.panel-header,.page-head) { align-items:flex-start; }
+  body[data-portal-role] :is(.panel-header h2,.section-title) { font-size:clamp(1.125rem,5vw,1.5rem); line-height:1.35; }
+  body[data-portal-role] :is(.records-toolbar,.billing-filter-grid) { grid-template-columns:minmax(0,1fr) !important; }
+  body[data-portal-role] .records-toolbar > * { grid-column:auto !important; }
+  /* Remove the desktop scroll cap when rows become vertically flowing cards. */
+  body[data-portal-role] :is(.table-wrap,.table-modern,.table-responsive,.records-table-wrap):has(> table:is(.portal-card-table,.mobile-card-table)) { height:auto !important; max-height:none !important; min-height:0 !important; overflow:visible !important; padding:0; }
+  body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) { display:block !important; width:100% !important; min-width:0 !important; max-width:100% !important; height:auto !important; table-layout:auto; border-spacing:0 !important; }
+  body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) > thead { position:absolute !important; width:1px !important; height:1px !important; overflow:hidden; clip-path:inset(50%); }
+  body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) > tbody { display:grid !important; grid-template-columns:minmax(0,1fr) !important; gap:12px; width:100%; }
+  body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) > tbody > tr:not(.gm-page-hidden):not([hidden]) { display:block; width:100%; min-width:0; height:auto; padding:14px !important; border:1px solid var(--line,var(--border-color,#7185a644)); border-radius:16px; transform:none !important; }
+  body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) > tbody > tr > td { display:flex !important; flex-direction:column; align-items:stretch; gap:6px; position:static; min-width:0 !important; max-width:none !important; width:100% !important; height:auto !important; padding:10px 0 !important; border:0 !important; border-radius:0 !important; background:transparent !important; white-space:normal !important; overflow-wrap:anywhere; font-size:14px; line-height:1.5; text-align:left !important; }
+  body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) td[data-label]::before { content:attr(data-label); display:block; position:static; width:auto; font-size:12px; line-height:1.4; font-weight:700; text-transform:uppercase; opacity:.75; }
+  body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) td[colspan]::before { content:none; }
+  body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) td > * { min-width:0; max-width:100%; }
+  body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) :is(.badge,.status-pill) { width:fit-content !important; max-width:100%; white-space:normal; }
+  body[data-portal-role] :is(.gm-pagination,.records-pagination) { justify-content:flex-start; gap:12px; padding-top:16px; }
+  body[data-portal-role] .gm-pagination .gm-page-summary { flex-basis:100%; }
+  body[data-portal-role] .gm-pagination :is(button,select) { min-height:44px; }
+  body[data-portal-role] .records-row-actions button { white-space:normal; }
+  body[data-portal-role] :is(.notification-dropdown,.notifications-dropdown,.notification-panel,.profile-panel) { max-width:calc(100vw - 24px); }
+}
+@media (max-width:767px) {
+  body[data-portal-role=patient] :is(.premium-archive-toolbar,.premium-appointments-toolbar,.premium-history-toolbar,.billing-layout,.payment-options,.payment-type-toggle,.gcash-qr-container) { grid-template-columns:minmax(0,1fr) !important; }
+  body[data-portal-role=patient] :is(.record-filters,.history-toolbar,.billing-layout,.billing-main-card,.billingForm,.premium-profile-card,.premium-profile-meta) { min-width:0; max-width:100%; }
+  body[data-portal-role=patient] :is(.record-filters,.history-toolbar,.billing-layout) > * { min-width:0; max-width:100%; }
+  body[data-portal-role=patient] :is(.archive-kicker,.appointments-kicker,.history-kicker,.settings-kicker,.billing-shell-kicker,.archive-summary-chip,.appointments-summary-chip,.history-summary-chip,.premium-meta-pill) { white-space:normal; flex-wrap:wrap; overflow-wrap:anywhere; }
+  body[data-portal-role=patient] :is(.premium-profile-card,.billing-hero,.billing-panel-head,.gcash-instructions) { flex-direction:column; align-items:stretch; }
+  body[data-portal-role=patient] .premium-profile-avatar-wrap { align-self:center; }
+  body[data-portal-role=patient] :is(.billing-shell-head,.billing-main-card,.billing-card,.billing-summary-card,.premium-profile-card) { padding:16px; }
+  body[data-portal-role=patient] :is(.promo-card,.reminder-header) { flex-wrap:wrap; }
+  body[data-portal-role=patient] .date-text { min-width:0; white-space:normal; }
+  body[data-portal-role=patient] #editProfileBtn { max-width:100%; white-space:normal; }
+}
+body[data-portal-role] #freeConsultationModal .gmd-modal-content { min-height:0; overflow-y:auto; }
+@media (max-width:1024px) {
+  body[data-portal-role] .sidebar :is(.nav-link,.nav-item,.menu-link) { white-space:normal; }
+}
+@media (prefers-reduced-motion:reduce) {
+  body[data-portal-role] :is(.sidebar,.main,.main-content,.scroll-area) { transition:none !important; }
+}
+/* Compact mobile record cards: two fields per row instead of a long stack. */
+@media (max-width:767px) {
+ body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) > tbody > tr:not(.gm-page-hidden):not([hidden]) {
+   display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px 16px;
+   align-items:start;
+ }
+ body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) > tbody > tr > td {
+   min-width:0 !important; padding:6px 0 !important; gap:6px;
+ }
+ body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) > tbody > tr > td[colspan],
+ body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) > tbody > tr > td[data-label="Actions"],
+ body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) > tbody > tr > td[data-label="Action"] { grid-column:1/-1; }
+ body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) td :is(.table-service,.recent-service) { flex-wrap:wrap; gap:8px; }
+ body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) td :is(strong,small,span,p) { min-width:0; overflow-wrap:anywhere; }
+ body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) td :is(.records-row-actions,.inline-actions,.action-buttons) { flex-wrap:wrap; }
+}
+/* Clean mobile table cards with one visual boundary and a separate action area. */
+@media(max-width:767px) {
+ body[data-portal-role] :is(.table-modern,.table-wrap,.table-responsive,.records-table-wrap):has(> table:is(.portal-card-table,.mobile-card-table)) {
+   border:0 !important; border-radius:0 !important; background:transparent !important; box-shadow:none !important;
+ }
+ body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) { border:0 !important; background:transparent !important; box-shadow:none !important; }
+ body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) > tbody > tr:not(.gm-page-hidden):not([hidden]) {
+   padding:18px !important; gap:14px 16px; border-radius:18px; box-shadow:none !important;
+ }
+ body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) > tbody > tr > td { box-shadow:none !important; outline:0; line-height:1.5; }
+ body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) td[data-label]::before { font-size:11px; letter-spacing:.04em; line-height:1.4; }
+ body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) > tbody > tr > td:is([data-label="actions" i],[data-label="action" i]) {
+   grid-column:1/-1; padding-top:14px !important; border-top:1px solid #829fc82e !important;
+ }
+ body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) td:is([data-label="actions" i],[data-label="action" i])::before { display:none; }
+ body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) :is(.dentist-action-group,.action-buttons,.records-row-actions) {
+   display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; width:100%; min-width:0;
+   border:0; padding:0; background:transparent; box-shadow:none;
+ }
+ body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) :is(.dentist-action-group,.action-buttons,.records-row-actions) > button {
+   width:100%; min-width:0; min-height:44px; height:auto; padding:10px 8px;
+   font-size:12px; line-height:1.4; white-space:normal; overflow-wrap:break-word; margin:0;
+ }
+ body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) :is(.dentist-action-group,.action-buttons,.records-row-actions) > button:only-child { grid-column:1/-1; }
+ /* Appointment identity is full width; date/time remain paired below it. */
+ body[data-portal-role=dentist] table:is(.portal-card-table,.mobile-card-table):has(#scheduleTableBody) td:is([data-label="patient" i],[data-label="service" i]) { grid-column:1/-1; }
+ body[data-portal-role=dentist] table:is(.portal-card-table,.mobile-card-table):has(#scheduleTableBody) td[data-label="patient" i] { font-size:16px; font-weight:700; }
+ body[data-portal-role=dentist] table:is(.portal-card-table,.mobile-card-table):has(#scheduleTableBody) td[data-label="status" i] { grid-column:1/-1; }
+}
+/* Mobile record presentation: a single surface with quiet labels and clear actions. */
+@media(max-width:767px) {
+ body[data-portal-role] { --record-card-bg:#fff; --record-card-line:#dce5f0; --record-card-ink:#20334d; --record-card-muted:#62748b; }
+ body[data-portal-role]:is(.dark,.dark-mode) { --record-card-bg:#0f1e32; --record-card-line:#25374e; --record-card-ink:#e5edf8; --record-card-muted:#9aadC5; }
+ body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) > tbody { gap:16px; }
+ body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) > tbody > tr:not(.gm-page-hidden):not([hidden]) {
+   background:var(--record-card-bg) !important; border:1px solid var(--record-card-line) !important;
+   border-radius:18px !important; padding:18px !important; gap:18px 16px;
+   box-shadow:0 3px 12px #00000008 !important;
+ }
+ body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) > tbody > tr > td {
+   --bs-table-bg:transparent; --bs-table-accent-bg:transparent;
+   background:transparent !important; border:0 !important; border-radius:0 !important;
+   box-shadow:none !important; padding:0 !important; color:var(--record-card-ink); font-size:14px; line-height:1.5; gap:7px;
+ }
+ body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) td[data-label]::before {
+   color:var(--record-card-muted) !important; opacity:1; font-size:10px !important;
+   font-weight:700; letter-spacing:.07em; line-height:1.4;
+ }
+ body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) td:first-child { font-weight:600; }
+ body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) td :is(.badge,.status-pill) {
+   align-self:flex-start; font-size:11px; line-height:1.35; padding:6px 11px; border-radius:999px;
+ }
+ body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) > tbody > tr > td:is([data-label="actions" i],[data-label="action" i]) {
+   border-top:1px solid var(--record-card-line) !important; padding-top:14px !important;
+   background:transparent !important; border-radius:0 !important;
+ }
+ body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) td:is([data-label="actions" i],[data-label="action" i]) > button:only-child { width:100%; min-height:44px; margin:0; }
+ body[data-portal-role] table:is(.portal-card-table,.mobile-card-table) td:is([data-label="actions" i],[data-label="action" i]) :is(button,.action-chip,.btn-soft) { border-radius:11px; font-size:13px; line-height:1.4; }
+ body[data-portal-role] :is(.gm-pagination,.records-pagination) { padding-inline:0; margin-top:6px; font-size:12px; }
+}
+/* Dentist Schedule and Treatment Log use the same mobile layout as Billing. */
+@media(max-width:767px) {
+ body[data-portal-role=dentist] table:is(.portal-card-table,.mobile-card-table):has(> :is(#scheduleTableBody,#historyTableBody)) > tbody > tr:not(.gm-page-hidden):not([hidden]) {
+   display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px 18px; padding:20px !important;
+ }
+ body[data-portal-role=dentist] table:is(.portal-card-table,.mobile-card-table):has(> :is(#scheduleTableBody,#historyTableBody)) > tbody > tr > td:not([colspan]) {
+   grid-column:auto; font-size:14px; font-weight:400; min-width:0 !important; white-space:normal !important;
+ }
+ body[data-portal-role=dentist] table:is(.portal-card-table,.mobile-card-table):has(> :is(#scheduleTableBody,#historyTableBody)) > tbody > tr > td:first-child { font-weight:700; }
+ body[data-portal-role=dentist] table:is(.portal-card-table,.mobile-card-table):has(> :is(#scheduleTableBody,#historyTableBody)) > tbody > tr > td:is([data-label="actions" i],[data-label="action" i]) {
+   grid-column:1/-1; display:flex !important; flex-direction:column; gap:10px;
+   border-top:1px solid var(--record-card-line) !important; padding-top:16px !important;
+ }
+ body[data-portal-role=dentist] table:is(.portal-card-table,.mobile-card-table):has(> :is(#scheduleTableBody,#historyTableBody)) td:is([data-label="actions" i],[data-label="action" i]) :is(.dentist-action-group,.action-buttons) {
+   display:grid !important; grid-template-columns:minmax(0,1fr) !important; width:100%; gap:10px;
+ }
+ body[data-portal-role=dentist] table:is(.portal-card-table,.mobile-card-table):has(> :is(#scheduleTableBody,#historyTableBody)) td:is([data-label="actions" i],[data-label="action" i]) button {
+   width:100% !important; min-width:0; min-height:44px; margin:0; padding:12px !important;
+   border-radius:12px; font-size:13px; line-height:1.4; white-space:normal;
+ }
+}

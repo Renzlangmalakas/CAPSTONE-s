@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Patient Page</title>
+</head>
+<body>
+    <h1>Test Page</h1>
+    <button onclick="testFunction()">Test Function</button>
+    <script>
+        function testFunction() {
+            alert('Test function works');
+        }
+        
+        // Test if patient.js functions are available
+        window.onload = function() {
+            console.log('Testing functions...');
+            console.log('showSection:', typeof showSection);
+            console.log('toggleSidebar:', typeof toggleSidebar);
+            console.log('getCurrentUser:', typeof getCurrentUser);
+        }
+    </script>
+</body>
+</html>

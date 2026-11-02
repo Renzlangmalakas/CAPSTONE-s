@@ -1,0 +1,27 @@
+.records-toolbar { display:grid;grid-template-columns:minmax(220px,2fr) minmax(180px,1fr) 110px;gap:16px;margin-bottom:24px; }
+.records-toolbar label { display:flex;flex-direction:column;gap:8px;font-size:14px;min-width:0; }
+.records-toolbar input,.records-toolbar select { min-height:44px;font-size:14px; }
+.records-pagination { display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-top:24px;font-size:14px; }
+.records-pagination > div { display:flex;align-items:center;gap:12px; }
+.records-pagination button:disabled { opacity:.45;cursor:default; }
+#clinicalPatientCards { grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr)); }
+#clinicalPatientCards .patient-card-header { flex-wrap:wrap;gap:12px;align-items:flex-start; }
+#clinicalPatientCards .patient-card-header > .d-flex { flex:1 1 180px;min-width:0; }
+#clinicalPatientCards .patient-card-header h5 { font-size:20px;overflow-wrap:break-word;word-break:normal; }
+#clinicalPatientCards .patient-meta { font-size:13px;word-break:normal;overflow-wrap:normal; }
+#clinicalPatientCards .patient-card-header .badge { flex:0 0 auto; }
+@media(max-width:720px) { .records-toolbar { grid-template-columns:1fr 110px; } .records-toolbar label:first-child { grid-column:1/-1; } }
+
+.records-table-wrap { width:100%;overflow-x:auto;border:1px solid rgba(140,165,200,.2);border-radius:18px; }
+.records-table { width:100%;min-width:1050px;border-collapse:collapse;font-size:14px; }
+.records-table th { padding:16px;text-align:left;font-size:12px;white-space:nowrap;letter-spacing:.04em;background:rgba(80,115,185,.12); }
+.records-table td { padding:18px 16px;vertical-align:middle;border-top:1px solid rgba(140,165,200,.15);overflow-wrap:break-word; }
+.records-table td:first-child { min-width:170px; }
+.records-table td:nth-child(5) { min-width:220px;max-width:360px; }
+.records-table small { display:block;margin-top:5px;font-size:13px;line-height:1.5;opacity:.75; }
+.records-table .records-note { white-space:normal;overflow-wrap:anywhere; }
+.records-table .records-nowrap,.records-table .badge { white-space:nowrap; }
+.records-row-actions { display:flex;gap:8px;flex-wrap:wrap;min-width:130px; }
+.records-row-actions button { font-size:12px;min-height:40px;white-space:nowrap; }
+.records-table tbody tr:hover { background:rgba(80,115,185,.06); }
+.records-table tbody tr:focus { outline:2px solid #60a5fa;outline-offset:-2px; }

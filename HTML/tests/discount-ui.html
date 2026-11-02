@@ -1,0 +1,48 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="../Staff/staff.css"><body class="dark"><div class="modal" style="display:flex"><div class="modal-card"><div class="modal-header"><h2 id="title"></h2></div><div class="modal-body" id="body"></div></div></div><script src="../Shared/additional-fees.js"></script><script>
+const qs=s=>document.querySelector(s);const escapeHtml=s=>String(s||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;');const escapeAttr=escapeHtml;const formatMoney=GMAdditionalFees.currency;
+const state={dentists:[{id:'d1',name:'Dr. Example'}],appointments:[{id:'a1',patient:'Preview Patient',serviceTotal:500,total:1000,paid:50,additionalFees:[{feeName:'Laboratory Fee',description:'Additional laboratory charge for dental work that needs to be fabricated or processed outside the clinic.',quantity:1,unitPrice:500}]}]};
+function openSharedModal(title,html){qs('#title').textContent=title;qs('#body').innerHTML=html;}function saveState(){}function closeSharedModal(){}function renderAll(){}function showToast(message){window.lastToast=message;}
+function openStaffAdditionalFeeModal(id = "") {
+  const item = state.appointments.find(appointment => appointment.id === id) || state.appointments[0];
+  if (!item) return showToast("No patient bill is available.", "error");
+  const lines = GMAdditionalFees.calculate(item.additionalFees || []);
+  const feeOptions = GMAdditionalFees.activeFees().map(fee => `<option value="${escapeAttr(fee.id)}">${escapeHtml(fee.name)} (${GMAdditionalFees.priceLabel(fee)})</option>`).join("");
+  openSharedModal("Additional Fees & Discount", `<div class="form-grid one staff-fee-editor"><div class="detail-box"><strong>${escapeHtml(item.patient || "Patient")}</strong><div>Service total: ${formatMoney(window.GMAdditionalFees.serviceTotal(item))}</div></div><div class="form-grid two"><select class="input select" id="staffFeeSelect" aria-label="Additional fee"><option value="">Select a fee</option>${feeOptions}</select><input class="input" id="staffFeeQuantity" aria-label="Quantity" type="number" min="1" step="1" value="1" /></div><p id="staffFeeDescription"></p><label class="label" for="staffFeeUnitPrice">Unit price (PHP)</label><input class="input" id="staffFeeUnitPrice" type="number" min="0" step="0.01"><button class="btn secondary" type="button" id="addStaffFeeLineBtn"><i class="bi bi-plus"></i> Add Fee</button><div id="staffFeeLines"></div><fieldset class="fee-discount"><legend>Dentist discount</legend><label class="label" for="staffDiscountAmount">Discount (PHP)</label><input class="input" id="staffDiscountAmount" type="number" min="0" step="0.01" value="${Number(item.discount?.amount || 0)}"><label class="label" for="staffDiscountDentist">Granted by dentist</label><select class="input select" id="staffDiscountDentist"><option value="">Select the dentist who granted the discount</option>${(state.dentists || []).filter(d => !d.archived).map(d => `<option value="${escapeAttr(d.id)}" ${String(item.discount?.dentistId) === String(d.id) ? "selected" : ""}>${escapeHtml(d.name)}</option>`).join("")}</select><label class="label" for="staffDiscountReason">Reason (optional)</label><input class="input" id="staffDiscountReason" maxlength="300" value="${escapeAttr(item.discount?.reason || "")}"></fieldset><div class="detail-box"><strong>Additional Fees Total: <span id="staffFeeTotal">${GMAdditionalFees.currency(lines.total)}</span></strong><br>Grand Total: <strong id="staffGrandTotal">${GMAdditionalFees.currency(Math.max(0, window.GMAdditionalFees.serviceTotal(item) + lines.total - Number(item.discount?.amount || 0)))}</strong></div><button class="btn primary" type="button" id="saveStaffFeesBtn">Save Fees &amp; Discount</button></div>`);
+  let selected = lines.lines.map(line => ({ ...line }));
+  const renderLines = () => {
+    const calculated = GMAdditionalFees.calculate(selected);
+    qs("#staffFeeLines").innerHTML = calculated.lines.length ? calculated.lines.map((line,index) => `<article class="staff-fee-line"><div><strong>${escapeHtml(line.feeName || line.name)}</strong><p>${escapeHtml(line.description || "")}</p><small>Qty ${line.quantity} &times; ${GMAdditionalFees.currency(line.unitPrice)}</small></div><div class="staff-fee-line-price"><strong>${GMAdditionalFees.currency(line.subtotal)}</strong><button class="btn secondary" type="button" data-remove-fee="${index}" aria-label="Remove ${escapeAttr(line.feeName || line.name)}">Remove</button></div></article>`).join("") : '<p>No additional fees selected.</p>';
+    const total = calculated.total;
+    qs("#staffFeeTotal").textContent = GMAdditionalFees.currency(total);
+    qs("#staffGrandTotal").textContent = GMAdditionalFees.currency(Math.max(0, window.GMAdditionalFees.serviceTotal(item) + total - Number(qs("#staffDiscountAmount").value || 0)));
+    qs("#staffFeeLines").querySelectorAll("[data-remove-fee]").forEach(button => button.addEventListener("click", () => { selected.splice(Number(button.dataset.removeFee), 1); renderLines(); }));
+  };
+  qs("#staffDiscountAmount").addEventListener("input", renderLines);
+  renderLines();
+  GMAdditionalFees.bindPriceInput(qs("#staffFeeSelect"), qs("#staffFeeUnitPrice"), qs("#staffFeeDescription"), qs("#staffFeeQuantity"));
+  qs("#addStaffFeeLineBtn").addEventListener("click", () => {
+    const fee = GMAdditionalFees.activeFees().find(candidate => candidate.id === qs("#staffFeeSelect").value);
+    const quantity = Number(qs("#staffFeeQuantity").value || 0);
+    if (!fee || !Number.isInteger(quantity) || quantity < 1) return showToast("Select a fee and enter a quantity of at least 1.", "error");
+    let unitPrice;
+    try { unitPrice = GMAdditionalFees.selectedPrice(fee, qs("#staffFeeUnitPrice").value); } catch (error) { return showToast(error.message, "error"); }
+    const existing = selected.find(line => line.additionalFeeId === fee.id && line.unitPrice === unitPrice);
+    if (existing) existing.quantity += quantity; else selected.push({ additionalFeeId: fee.id, feeName: fee.name, description: fee.description, quantity, unitPrice });
+    renderLines();
+  });
+  qs("#saveStaffFeesBtn").addEventListener("click", () => {
+    const amount = Number(qs("#staffDiscountAmount").value);
+    const dentist = (state.dentists || []).find(d => String(d.id) === qs("#staffDiscountDentist").value && !d.archived);
+    const gross = GMAdditionalFees.serviceTotal(item) + GMAdditionalFees.calculate(selected).total;
+    const paid = Number(item.paid || item.totalCollected || 0);
+    if (!Number.isFinite(amount) || amount < 0 || amount > Math.max(0, gross - paid)) return showToast("Discount must not exceed the unpaid bill amount.", "error");
+    if (amount > 0 && !dentist) return showToast("Select the dentist who granted the discount.", "error");
+    item.discount = amount > 0 ? { amount: Math.round(amount * 100) / 100, dentistId: dentist.id, dentistName: dentist.name, reason: qs("#staffDiscountReason").value.trim(), recordedAt: new Date().toISOString() } : null;
+    GMAdditionalFees.attachToAppointment(item, selected);
+    saveState(); closeSharedModal(); renderAll(); showToast("Fees and discount saved.", "success");
+    Promise.resolve(window.GmDentalSupabaseSync?.flushNow?.()).catch(() => {});
+  });
+}
+
+
+openStaffAdditionalFeeModal('a1');</script>

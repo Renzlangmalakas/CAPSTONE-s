@@ -1,0 +1,71 @@
+﻿/* Consistent metric cards for Patient, Dentist, Staff, Admin and Revenue. */
+body[data-portal-role] :is(#home,#dashboard,#revenue) .stats-grid :is(.stat-card,.stat-item) {
+ --metric-accent:#4b86ff; --metric-surface:#fff; --metric-ink:#172b4d; --metric-muted:#60728b;
+ display:flex; flex-direction:column !important; align-items:flex-start !important; justify-content:space-between;
+ gap:22px !important; padding:24px !important; min-height:172px; height:auto; min-width:0;
+ background:var(--metric-surface) !important; color:var(--metric-ink);
+ border:1px solid #829fc82e !important; border-top:3px solid var(--metric-accent) !important;
+ border-radius:20px; box-shadow:none; overflow:hidden;
+}
+body[data-portal-role]:is(.dark,.dark-mode) :is(#home,#dashboard,#revenue) .stats-grid :is(.stat-card,.stat-item) { --metric-surface:linear-gradient(150deg,#102139,#0b1728); --metric-ink:#e6edf8; --metric-muted:#afbed3; }
+body[data-portal-role] :is(#home,#dashboard,#revenue) .stats-grid :is(.stat-card,.stat-item):is(.green,:has(.b-green)) { --metric-accent:#19bd91; }
+body[data-portal-role] :is(#home,#dashboard,#revenue) .stats-grid :is(.stat-card,.stat-item):is(.amber,:has(.b-amber)) { --metric-accent:#e29a13; }
+body[data-portal-role] :is(#home,#dashboard,#revenue) .stats-grid :is(.stat-card,.stat-item):is(.purple,:has(.b-purple)) { --metric-accent:#8870ff; }
+body[data-portal-role] :is(#home,#dashboard,#revenue) .stats-grid :is(.stat-card,.stat-item)::before,
+body[data-portal-role] :is(#home,#dashboard,#revenue) .stats-grid :is(.stat-card,.stat-item)::after { display:none !important; }
+body[data-portal-role] :is(#home,#dashboard,#revenue) .stats-grid .stat-icon { display:grid; place-items:center; width:44px !important; min-width:44px !important; height:44px !important; flex:0 0 44px; border-radius:13px; font-size:22px; background:color-mix(in srgb,var(--metric-accent) 14%,transparent) !important; color:var(--metric-accent) !important; }
+body[data-portal-role] :is(#home,#dashboard,#revenue) .stats-grid :is(.stat-card,.stat-item) h3 { color:var(--metric-ink) !important; -webkit-text-fill-color:var(--metric-ink) !important; font-size:clamp(24px,2.5vw,30px) !important; line-height:1.25; margin:0 0 8px; overflow-wrap:anywhere; }
+body[data-portal-role] :is(#home,#dashboard,#revenue) .stats-grid :is(.stat-card,.stat-item) p { color:var(--metric-muted) !important; font-size:13px !important; line-height:1.5; margin:0; }
+body[data-portal-role] :is(#home,#dashboard,#revenue) .stats-grid .stat-card > div:last-child { flex:0 1 auto; width:100%; }
+body[data-portal-role] :is(#home,#dashboard,#revenue) .stats-grid .stat-left { display:flex; flex-direction:column; align-items:flex-start; gap:22px; width:100%; min-width:0; }
+body[data-portal-role] :is(#home,#dashboard,#revenue) .stats-grid .stat-left > div:last-child { display:flex; flex-direction:column; min-width:0; }
+body[data-portal-role] :is(#home,#dashboard,#revenue) .stats-grid .stat-left h3 { order:-1; }
+body[data-portal-role] :is(#home,#dashboard,#revenue) .stats-grid .stat-item > button { margin-top:auto !important; width:100%; }
+@media(max-width:767px) {
+ body[data-portal-role] :is(#home,#dashboard,#revenue) .stats-grid :is(.stat-card,.stat-item) { padding:18px !important; gap:18px !important; min-height:158px; }
+ body[data-portal-role] :is(#home,#dashboard,#revenue) .stats-grid .stat-left { gap:18px; }
+}
+
+/* Compact dentist dashboard summaries without changing other role cards. */
+body:is([data-portal-role="dentist"],[data-portal-role="patient"]) :is(#dashboard,#home) .stats-grid .stat-item.stat-item {
+  min-height: 0;
+  padding: 12px !important;
+  gap: 8px !important;
+  align-self: start;
+  border-radius: 18px;
+}
+body:is([data-portal-role="dentist"],[data-portal-role="patient"]) :is(#dashboard,#home) .stats-grid .stat-left {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+body:is([data-portal-role="dentist"],[data-portal-role="patient"]) :is(#dashboard,#home) .stats-grid .stat-icon {
+  width: 36px !important;
+  min-width: 36px !important;
+  height: 36px !important;
+  flex-basis: 36px;
+  border-radius: 11px;
+}
+body:is([data-portal-role="dentist"],[data-portal-role="patient"]) :is(#dashboard,#home) .stats-grid .stat-item.stat-item h3 {
+  font-size: 24px !important;
+  margin-bottom: 2px;
+}
+body:is([data-portal-role="dentist"],[data-portal-role="patient"]) :is(#dashboard,#home) .stats-grid .stat-item > button {
+  min-height: 44px;
+  padding: 10px 14px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+body[data-portal-role="dentist"] #dashboard .reminder-card {
+  padding: 16px;
+  border-radius: 18px;
+}
+body[data-portal-role="dentist"] #dashboard .reminder-header {
+  gap: 10px;
+  margin-bottom: 8px;
+}
+body[data-portal-role="dentist"] #dashboard .reminder-list li {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  line-height: 1.5;
+}

@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dental Staff Dashboard</title>
+  <link rel="icon" type="image/jpeg" href="../Images/logo.jpg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="staff.css?v=20261007-schedule" />
+  <link rel="stylesheet" href="../Shared/receipt-review.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+  <link rel="stylesheet" href="../Shared/account-security.css" />
+<link rel="stylesheet" href="../Shared/responsive.css?v=20261026-small-icons">
+<link rel="stylesheet" href="../Shared/table-pagination.css?v=20261029-light">
+<script defer src="../Shared/table-pagination.js?v=20261012"></script>
+<link rel="stylesheet" href="staff-tables.css?v=20261027-settings">
+<link rel="stylesheet" href="../Shared/motion.css?v=20261027">
+<link rel="stylesheet" href="../Shared/theme-readability.css?v=20261028">
+<link rel="stylesheet" href="../Admin/dashboard-overview.css?v=20261028-staff">
+<link rel="stylesheet" href="dashboard-overview.css?v=20261028-1">
+<link rel="stylesheet" href="../Shared/portal-responsive.css?v=20261028-schedule-log">
+<script defer src="../Shared/portal-responsive.js?v=20261028-1"></script>
+<link rel="stylesheet" href="../Shared/dashboard-cards.css?v=20261028-preserve-staff">
+<link rel="stylesheet" href="../Shared/metric-cards.css?v=20261028-1">
+<link rel="stylesheet" href="../Shared/sidebar-icons.css?v=20261028-1">
+<link rel="stylesheet" href="../Shared/ui-icons.css?v=20261028-1">
+</head>
+<body data-portal-role="staff">
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-icon"><i class="bi bi-clipboard2-pulse"></i></div>
+        <div class="brand-text">
+          <strong>Dental Staff</strong>
+          <span>Clinic Operations</span>
+        </div>
+      </div>
+
+      <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Toggle sidebar">
+        <i class="bi bi-list"></i>
+      </button>
+
+      <nav class="nav">
+        <button class="nav-item active" data-section="home">
+          <i class="bi bi-grid" aria-hidden="true"></i><span>Dashboard</span>
+        </button>
+        <button class="nav-item" data-section="queue">
+          <i class="bi bi-people"></i><span>Patient Queue</span>
+        </button>
+        <button class="nav-item" data-section="appointments">
+          <i class="bi bi-calendar-event" aria-hidden="true"></i><span>Appointments</span>
+        </button>
+        <button class="nav-item" data-section="dentist-calendar">
+          <i class="bi bi-calendar-week"></i><span>Dentist Calendar</span>
+        </button>
+        <button class="nav-item" data-section="billing">
+          <i class="bi bi-receipt" aria-hidden="true"></i><span>Billing</span>
+        </button>
+        <button class="nav-item" data-section="patients">
+          <i class="bi bi-people" aria-hidden="true"></i><span>Patients</span>
+        </button>
+        <button class="nav-item" data-section="settings">
+          <i class="bi bi-gear"></i><span>Settings</span>
+        </button>
+      </nav>
+    </aside>
+    <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-title-row">
+          <button class="mobile-sidebar-toggle" id="mobileSidebarToggle" type="button" aria-label="Open navigation menu">
+            <i class="bi bi-list"></i>
+          </button>
+          <div>
+          <h1 id="pageTitle">Dashboard</h1>
+          <p id="pageSubtitle">Welcome back, Staff 👋</p>
+        </div>
+
+        </div>
+
+        <div class="topbar-actions">
+          <div class="icon-menu" id="notifMenuWrap">
+            <button class="icon-btn bell-btn" id="notifToggle" type="button" aria-label="Open notifications">
+              <i class="bi bi-bell"></i>
+              <span class="badge hidden" id="notifDot">!</span>
+            </button>
+
+            <div class="menu-panel notifications-panel" id="notifPanel">
+              <div class="menu-panel-header">
+                <strong>Notifications</strong>
+              </div>
+              <div class="menu-panel-body" id="notifList"></div>
+              <div class="menu-panel-footer">
+                <button class="menu-footer-btn" type="button" id="seeAllNotificationsBtn">See All</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="profile-menu" id="profileWrap">
+            <button class="profile-btn" id="profileToggle" type="button" aria-label="Open profile menu">
+              <img id="topbarProfileImage" src="https://ui-avatars.com/api/?name=Clinic+Staff&background=2563eb&color=fff" alt="Staff profile" />
+              <div>
+                <strong id="topbarStaffName">Front Desk Staff</strong>
+                <span>Staff Member</span>
+              </div>
+            </button>
+
+            <div class="menu-panel profile-panel" id="profilePanel">
+              <button class="menu-link" type="button" data-section-jump="settings">
+                <i class="bi bi-person-circle"></i> Account
+              </button>
+              <button class="menu-link" type="button" data-section-jump="settings">
+                <i class="bi bi-gear"></i> Settings
+              </button>
+              <button class="menu-link danger" type="button" id="logoutBtn">
+                <i class="bi bi-box-arrow-right"></i> Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- DASHBOARD -->
+      <section id="home" class="section active">
+        <div class="stats-grid">
+          <article class="stat-card blue">
+            <div class="stat-icon"><i class="bi bi-calendar-check"></i></div>
+            <div>
+              <h3 id="statToday">0</h3>
+              <p>Today’s Appointments</p>
+            </div>
+          </article>
+
+          <article class="stat-card amber">
+            <div class="stat-icon"><i class="bi bi-hourglass-split"></i></div>
+            <div>
+              <h3 id="statWaiting">0</h3>
+              <p>Waiting Patients</p>
+            </div>
+          </article>
+
+          <article class="stat-card green">
+            <div class="stat-icon"><i class="bi bi-cash-stack"></i></div>
+            <div>
+              <h3 id="statCollected">₱0</h3>
+              <p>Collected Today</p>
+            </div>
+          </article>
+        </div>
+
+        <div class="dashboard-grid">
+          <article class="panel">
+            <div class="panel-header">
+              <h2><i class="bi bi-clock-history"></i> Today &amp; Upcoming Appointments</h2>
+            </div>
+            <div class="table-wrap recent-scroll staff-recent-appointments">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Patient</th>
+                    <th>Dentist</th>
+                    <th>Service</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="dashboardRecentAppointments"></tbody>
+              </table>
+            </div>
+          </article>
+
+          <div class="stack">
+            <article class="panel">
+              <div class="panel-header panel-header-between">
+                <h2><i class="bi bi-list-check"></i> Queue Overview</h2>
+                <button class="btn secondary small-btn" type="button" id="seeMoreQueueBtn">See More</button>
+              </div>
+              <div id="queueOverview" class="list-stack limited-list"></div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-header panel-header-between">
+                <h2><i class="bi bi-megaphone"></i> Staff Alerts</h2>
+                <button class="btn secondary small-btn" type="button" id="seeMoreAlertsBtn">See More</button>
+              </div>
+              <div id="alertsBox" class="list-stack limited-list"></div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- QUEUE -->
+      <section id="queue" class="section">
+        <div class="section-actions">
+          <button class="btn primary" type="button" id="addWalkInBtn">
+            <i class="bi bi-person-plus"></i> Add Walk-In
+          </button>
+        </div>
+
+        <article class="panel">
+          <div class="panel-header">
+            <h2><i class="bi bi-people"></i> Patient Queue</h2>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Patient</th>
+                  <th>Service</th>
+                  <th>Dentist</th>
+                  <th>Time</th>
+                  <th>Queue #</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="queueTable"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <section id="dentist-calendar" class="section">
+        <article class="panel dentist-schedule-panel">
+          <div class="schedule-toolbar"><h2>Dentist Calendar</h2><button type="button" class="btn secondary" id="scheduleToday">Today</button><button type="button" class="icon-btn" id="schedulePrev" aria-label="Previous day">&lsaquo;</button><label>Date <input class="input" type="date" id="scheduleDate"></label><button type="button" class="icon-btn" id="scheduleNext" aria-label="Next day">&rsaquo;</button><label>Dentist <select class="input" id="scheduleDentist"><option value="">All dentists</option></select></label></div>
+          <p class="muted" id="scheduleSummary" aria-live="polite"></p>
+          <div class="dentist-schedule-scroll"><div id="dentistScheduleGrid"></div></div>
+          <p class="muted">Clinic time (PHT). Lunch break: 1:00 PM - 1:30 PM. Select an appointment to view or edit it.</p>
+        </article>
+      </section>
+
+      <!-- APPOINTMENTS -->
+      <section id="appointments" class="section">
+
+        <div class="section-actions">
+          <button class="btn primary" type="button" id="addAppointmentBtn">
+            <i class="bi bi-plus-lg"></i> Add Appointment
+          </button>
+        </div>
+
+        <div class="toolbar">
+          <select id="appointmentView" class="input select" aria-label="Appointment view">
+            <option value="current">Today &amp; Upcoming</option>
+            <option value="recent">Recently Added</option>
+            <option value="past">Past Appointments</option>
+          </select>
+          <input type="text" id="appointmentSearch" class="input" placeholder="Search appointment..." />
+          <select id="appointmentFilter" class="input select">
+            <option value="">All Status</option>
+            <option value="Waiting">Waiting</option>
+            <option value="Confirmed">Confirmed</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+          <select id="appointmentDateFilter" class="input select">
+            <option value="all">All Dates</option>
+            <option value="month">This Month</option>
+            <option value="week">This Week</option>
+            <option value="day">Specific Day</option>
+          </select>
+          <input type="date" id="appointmentDateSpecific" class="input hidden" />
+        </div>
+
+        <article class="panel">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Patient</th>
+                  <th>Dentist</th>
+                  <th>Service</th>
+                  <th>Date</th>
+                  <th>Time</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="appointmentsTable"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <section id="billing" class="section">
+        <article class="panel" id="paymentReceiptReviews" style="padding:20px"></article>
+        <div class="section-actions"><button class="btn primary" type="button" id="staffAdditionalFeeBillingBtn"><i class="bi bi-plus-circle"></i> Add Additional Fees</button></div>
+        <article class="panel"><div class="panel-header"><h2><i class="bi bi-receipt"></i> Billing and Additional Fees</h2></div>
+          <div class="billing-sync-row"><button type="button" id="syncStaffBillingBtn" class="btn secondary">Sync Billing</button><span id="staffBillingSyncStatus" role="status"></span></div>
+          <div class="billing-filter-grid">
+            <div class="billing-filter"><label for="staffBillingView">Show</label><select id="staffBillingView" class="input select">
+            <option value="active">Unpaid &amp; Refunds</option>
+            <option value="unpaid">Unpaid</option>
+            <option value="refund">Refunds</option>
+            <option value="paid">Paid</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="all">All billing records</option>
+          </select></div>
+            <div class="billing-filter"><label for="staffBillingSort">Sort by</label><select id="staffBillingSort" class="input select">
+            <option value="newest">Appointment date: Newest first</option>
+            <option value="oldest">Appointment date: Oldest first</option>
+            <option value="name-asc">Patient: A to Z</option>
+            <option value="name-desc">Patient: Z to A</option>
+            <option value="total-desc">Grand total: Highest first</option>
+            <option value="total-asc">Grand total: Lowest first</option>
+            <option value="unpaid-only">Unpaid only</option>
+            <option value="paid-only">Paid only</option>
+            <option value="unpaid">Payment status: Unpaid first</option>
+            <option value="paid">Payment status: Paid first</option>
+          </select></div>
+            <div class="billing-filter"><label for="staffBillingPeriod">Appointment date</label><select id="staffBillingPeriod" class="input select">
+              <option value="all">All dates</option><option value="specific">Specific date</option>
+              <option value="today">Today</option><option value="week">This week (Mon-Sun)</option>
+              <option value="month">This month</option><option value="year">This year</option>
+            </select></div>
+            <div class="billing-filter billing-specific-date"><label id="staffBillingDateLabel" for="staffBillingDate" hidden>Choose date</label><input id="staffBillingDate" class="input" type="date" hidden></div>
+          </div>
+          <div class="table-wrap"><table><thead><tr><th>Patient</th><th>Service Total</th><th>Additional Fees</th><th>Grand Total</th><th>Status</th><th>Actions</th></tr></thead><tbody id="staffBillingTable"></tbody></table></div>
+        </article>
+      </section>
+
+      <!-- PATIENTS -->
+      <section id="patients" class="section">
+        <div class="patient-record-actions">
+          <button class="btn primary" type="button" id="addPatientBtn">
+            <i class="bi bi-plus-lg"></i> Add Patient
+          </button>
+          <button class="btn secondary" type="button" id="exportPatientRecordsBtn">
+            <i class="bi bi-download"></i> Export CSV
+          </button>
+        </div>
+        <div class="patient-report-filters">
+          <select id="reportExportType" class="input select">
+            <option value="patients">Patient Records</option>
+            <option value="summary">All Reports Summary</option>
+            <option value="appointments">Appointments</option>
+            <option value="visits">Patient Visits</option>
+            <option value="treatments">Treatment Histories</option>
+            <option value="activities">Record Activities</option>
+          </select>
+          <select id="reportDateFilter" class="input select">
+            <option value="all">All Dates</option>
+            <option value="month">This Month</option>
+            <option value="week">This Week</option>
+            <option value="day">Specific Day</option>
+          </select>
+          <input type="date" id="reportDateSpecific" class="input hidden" />
+
+        </div>
+
+        <div class="toolbar">
+          <input type="text" id="patientSearch" class="input" placeholder="Search patient..." />
+          <select id="patientSort" class="input select">
+            <option value="">Sort</option>
+            <option value="name">Name (A-Z)</option>
+            <option value="age">Age</option>
+          </select>
+        </div>
+
+        <article class="panel">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Status</th>
+                  <th>Created Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="patientsTable"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <!-- SETTINGS -->
+      <section id="settings" class="section">
+        <div class="staff-settings-grid">
+          <article class="panel staff-account-panel">
+            <div class="panel-header">
+              <h2><i class="bi bi-person-badge"></i> Staff Account</h2>
+            </div>
+
+            <div class="staff-account-fields">
+              <div>
+                <label class="label" for="staffName">Full Name</label>
+                <input class="input" id="staffName" type="text" />
+              </div>
+
+              <div>
+                <label class="label" for="staffEmail">Email</label>
+                <input class="input" id="staffEmail" type="email" />
+              </div>
+
+              <div>
+                <label class="label" for="staffRole">Role / job title</label>
+                <input class="input" id="staffRole" type="text" />
+              </div>
+
+              <div>
+                <label class="label" for="staffPhone">Phone</label>
+                <input class="input" id="staffPhone" type="text" />
+              </div>
+
+              <div class="gm-password-field" hidden>
+                <label class="label" for="staffPassword">New Password</label>
+                <input class="input" id="staffPassword" type="password" placeholder="Enter new password" />
+              </div>
+
+              <div class="gm-password-field" hidden>
+                <label class="label" for="staffConfirmPassword">Confirm Password</label>
+                <input class="input" id="staffConfirmPassword" type="password" placeholder="Confirm password" />
+              </div>
+
+              <button class="btn primary" type="button" id="saveStaffBtn">Update Account</button>
+            </div>
+          </article>
+          <article class="panel">
+            <div class="panel-header">
+              <h2><i class="bi bi-person-circle"></i> Profile Picture</h2>
+            </div>
+
+            <div class="form-grid one">
+              <div class="profile-picture-preview">
+                <img id="settingsProfilePreview" alt="Current profile picture"
+                     src="https://ui-avatars.com/api/?name=Clinic+Staff&background=2563eb&color=fff" />
+                <div class="profile-picture-preview-text">
+                  <strong>Current Photo</strong>
+                  <span>This image is shown in the topbar and notifications.</span>
+                </div>
+              </div>
+
+              <div>
+                <label class="label" for="staffProfileImage">Upload New Picture</label>
+                <div class="file-upload" id="profileUploadBox">
+                  <input id="staffProfileImage" type="file" accept="image/*" hidden />
+                  <button class="file-upload-btn" type="button" id="profileUploadTrigger">
+                    <i class="bi bi-upload"></i>
+                    Choose Image
+                  </button>
+                  <div class="file-upload-meta">
+                    <strong id="profileUploadTitle">Upload staff profile photo</strong>
+                    <span id="profileUploadName">No file selected</span>
+                  </div>
+                </div>
+              </div>
+
+              <button class="btn primary" type="button" id="saveProfileImageBtn">Save Profile Picture</button>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <h2>Appearance</h2>
+            </div>
+
+            <div class="appearance-box">
+              <div>
+                <strong>Dark Mode</strong>
+                <p>Switch between light and dark theme.</p>
+              </div>
+
+              <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle theme">
+                <span class="toggle-pill">
+                  <span class="toggle-knob">
+                    <i class="bi bi-moon-stars-fill moon-icon"></i>
+                    <i class="bi bi-sun-fill sun-icon"></i>
+                  </span>
+                </span>
+              </button>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop hidden" id="modalBackdrop">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <h3 id="modalTitle">Modal</h3>
+        <button class="icon-btn danger-soft" id="closeModalBtn" type="button">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop hidden" id="viewBackdrop">
+    <div class="modal-card modal-sm" role="dialog" aria-modal="true" aria-labelledby="viewTitle">
+      <div class="modal-header">
+        <h3 id="viewTitle">Details</h3>
+        <button class="icon-btn danger-soft" id="closeViewBtn" type="button">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="modal-body" id="viewBody"></div>
+    </div>
+  </div>
+
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <script src="../Shared/default-accounts.js?v=20261005-patients"></script>
+<script src="../Shared/shared-supabase-sync.js?v=20261005-no-retry-button"></script>
+<script src="../Shared/account-security.js"></script>
+  <script src="../Shared/additional-fees.js"></script>
+  <script src="../Shared/dentist-services.js?v=20261007-imelda"></script>
+  <script src="../Shared/booking-time.js?v=20261007-lunch"></script>
+  <script src="./staff-availability.js?v=20261007-lunch"></script>
+  <script src="../Shared/clinic-hours.js?v=20261007-lunch"></script>
+  <script src="dentist-schedule.js"></script>
+  <script src="appointment-list.js?v=20261027"></script>
+<script src="staff.js?v=20261027-settings"></script>
+  <script src="../Shared/payment-receipts.js?v=20261007-auto-review"></script>
+  <script src="../Shared/receipt-review.js?v=20261007-auto-review"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+  <script src="../Patient/receipt-recipient-ocr.js"></script>
+  <script src="./receipt-recheck.js?v=20261007-auto-review"></script>
+</body>
+</html>

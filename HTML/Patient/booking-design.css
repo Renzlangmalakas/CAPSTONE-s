@@ -1,0 +1,55 @@
+﻿/* Patient booking only. IDs and all selection/validation behavior stay intact. */
+#book-apt { --booking-surface:#fff; --booking-soft:#f5f8fd; --booking-line:#dce5f0; --booking-ink:#20334d; --booking-muted:#63758b; }
+body.dark-mode #book-apt { --booking-surface:#0f1d31; --booking-soft:#132238; --booking-line:#28394e; --booking-ink:#e6eef8; --booking-muted:#a1b2c9; }
+#book-apt .booking-page-heading { margin:8px 0 24px; }
+#book-apt .booking-eyebrow { color:#568fec; font-size:11px; font-weight:800; letter-spacing:.14em; margin-bottom:8px; }
+#book-apt .booking-page-heading .section-title { font-size:clamp(26px,3vw,36px); line-height:1.25; margin:0 0 10px; }
+#book-apt .booking-page-heading > p:last-child { color:var(--booking-muted); font-size:14px; margin:0; }
+#book-apt .booking-grid { gap:24px; align-items:start; }
+#book-apt .booking-grid > .booking-card { display:flex; flex-direction:column; align-self:start; gap:20px; padding:24px !important; border:1px solid var(--booking-line); border-radius:20px; background:var(--booking-surface); box-shadow:none; color:var(--booking-ink); }
+#book-apt .booking-step-heading { display:flex; align-items:center; gap:12px; padding-bottom:18px; border-bottom:1px solid var(--booking-line); order:-2; }
+#book-apt .booking-step-heading h3 { font-size:16px; line-height:1.45; font-weight:700; margin:0; }
+#book-apt .booking-step-heading .step-badge { position:static; width:30px; min-width:30px; height:30px; display:grid; place-items:center; border-radius:10px; background:#397aee20; color:#639cff; font-size:14px; font-weight:800; transform:none; margin:0; }
+#book-apt .service-header { display:flex !important; flex-wrap:wrap; align-items:center; gap:16px; margin:0; }
+#book-apt .service-left { flex:1 1 210px; min-width:0; gap:12px; }
+#book-apt .service-text { min-width:0; }
+#book-apt .service-text h5 { font-size:16px; line-height:1.45; margin:0; }
+#book-apt .icon-box { width:42px; height:42px; flex:0 0 42px; border-radius:12px; background:#397aee18; }
+#book-apt .booking-add-services { font-size:13px; min-height:44px; padding:10px 14px; border-radius:12px; white-space:normal; box-shadow:none; }
+#book-apt :is(.included-box,.dentist-picker-box,.dependents-section) { margin:0 !important; padding:16px; border:1px solid var(--booking-line); border-radius:14px; background:var(--booking-soft); }
+#book-apt :is(.included-box,.dependents-section) h6 { font-size:14px; font-weight:700; line-height:1.4; margin:0 0 10px; }
+#book-apt .included-box ul { margin:0; padding-left:18px; font-size:13px; line-height:1.7; }
+#book-apt .selected-services-list { margin:0 !important; min-height:0; }
+#book-apt .selected-services-list:empty { display:none; }
+#book-apt :is(.dependent-help,.dentist-availability-hint) { font-size:13px; line-height:1.6; color:var(--booking-muted); margin:8px 0 0; }
+#book-apt .dependent-help { margin-bottom:14px; }
+#book-apt .step2 { container:booking-date / inline-size; }
+#book-apt .booking-card.step2 .row.g-3 { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; margin:0 !important; gap:20px !important; }
+#book-apt .booking-card.step2 .row.g-3 > .col-md-6 { width:100% !important; min-width:0; padding:0 !important; margin:0; gap:12px; }
+#book-apt .calendar-box { width:100%; padding:14px; border:1px solid var(--booking-line); border-radius:14px; background:var(--booking-soft); box-shadow:none; }
+#book-apt .calendar-header { margin:0 0 12px; }
+#book-apt .calendar-header strong { font-size:15px; }
+#book-apt .booking-month-button { width:40px; height:40px; border:0; border-radius:10px; background:transparent; color:var(--booking-ink); font-size:24px; }
+#book-apt .booking-month-button:hover { background:#397aee20; }
+#book-apt .calendar-legend { flex-wrap:wrap; justify-content:center; gap:8px 12px; margin-top:16px; font-size:11px; }
+#book-apt .time-toggle { display:flex; gap:6px; padding:4px; border:1px solid var(--booking-line); border-radius:12px; background:var(--booking-soft); margin:0 0 12px; }
+#book-apt .time-filter { flex:1; min-width:0; min-height:42px; border-radius:9px; font-size:13px; text-transform:capitalize; }
+#book-apt #timeSlots { display:grid; grid-template-columns:repeat(auto-fit,minmax(88px,1fr)); gap:8px; max-height:360px; overflow-x:hidden; overflow-y:auto; padding-right:4px; }
+#book-apt #timeSlots > :is(p,.text-muted) { grid-column:1/-1; width:100%; font-size:14px; line-height:1.65; margin:0; padding:16px; border:1px dashed var(--booking-line); border-radius:12px; white-space:normal; }
+#book-apt .time-btn { min-width:0; min-height:44px; padding:10px 6px; font-size:13px; border-radius:10px; }
+#book-apt .step-locked { opacity:.75; filter:none; }
+#book-apt .booking-card.step-locked::after { position:static; order:-1; align-self:flex-start; padding:7px 10px; font-size:11px; border-radius:8px; box-shadow:none; background:var(--booking-soft); color:var(--booking-muted); }
+#book-apt .summary-grid { gap:18px; grid-template-columns:repeat(3,minmax(0,1fr)); }
+#book-apt .summary-grid > div { min-width:0; }
+#book-apt .summary-grid p { font-size:12px; color:var(--booking-muted); margin:0 0 6px; }
+#book-apt .summary-grid strong { font-size:14px; line-height:1.5; overflow-wrap:anywhere; }
+#book-apt .step3 > button { min-height:48px; margin-top:0 !important; border-radius:12px; box-shadow:none; }
+@container booking-date (max-width:620px) { #book-apt .booking-card.step2 .row.g-3 { grid-template-columns:minmax(0,1fr) !important; } }
+@media(max-width:767px) {
+ #book-apt .booking-grid > .booking-card { padding:16px !important; gap:16px; }
+ #book-apt .summary-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ #book-apt .booking-card.step2 .row.g-3 { grid-template-columns:minmax(0,1fr) !important; }
+ #book-apt .booking-add-services { width:100%; }
+ #book-apt :is(.included-box,.dentist-picker-box,.dependents-section) { padding:14px; }
+}
+#book-apt .booking-card.step2 .row.g-3 > .col-md-6 { max-width:100% !important; flex:none !important; }

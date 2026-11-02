@@ -1,0 +1,19 @@
+node_modules/
+
+# Local secrets — set these in Vercel project settings instead
+.env
+.env.*
+!.env.example
+
+# Vercel CLI link/state
+.vercel
+
+*.log
+HTML/Landing/supabase/.temp/
+
+.env*
+
+# Local verification artifacts
+.verification/
+.responsive-check/
+**/supabase/.temp/

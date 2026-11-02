@@ -1,0 +1,23 @@
+﻿/* Reuse the Admin overview design, adapting its five metrics to Staff's three. */
+body[data-portal-role=staff] #home > .stats-grid { grid-template-columns:repeat(3,minmax(0,1fr)) !important; }
+body[data-portal-role=staff] #home > .stats-grid > .stat-card:nth-child(n) { grid-column:auto; }
+body[data-portal-role=staff] #home .stat-card.amber { --metric-accent:#d68b0c; }
+body[data-portal-role=staff] #home { --staff-overview-row:#fff; --staff-overview-head:#eaf2ff; --staff-overview-line:#dbe6f4; --staff-overview-head-ink:#285b9c; }
+body[data-portal-role=staff].dark #home { --staff-overview-row:#0e1d34; --staff-overview-head:#142b4d; --staff-overview-line:#203650; --staff-overview-head-ink:#93c5fd; }
+body[data-portal-role=staff] #home .staff-recent-appointments { border:0; border-radius:0; background:transparent; box-shadow:none; }
+body[data-portal-role=staff] #home .staff-recent-appointments table { min-width:680px; }
+body[data-portal-role=staff] #home .list-stack > * { box-shadow:none; }
+@media(min-width:768px) {
+ body[data-portal-role=staff] #home .staff-recent-appointments table { border-collapse:separate; border-spacing:0 12px; }
+ body[data-portal-role=staff] #home .staff-recent-appointments th { padding:15px 16px; border:0; background:var(--staff-overview-head); color:var(--staff-overview-head-ink); font-size:13px; text-transform:none; white-space:nowrap; }
+ body[data-portal-role=staff] #home .staff-recent-appointments th:first-child { border-radius:14px 0 0 14px; }
+ body[data-portal-role=staff] #home .staff-recent-appointments th:last-child { border-radius:0 14px 14px 0; }
+ body[data-portal-role=staff] #home .staff-recent-appointments tr { background:transparent; }
+ body[data-portal-role=staff] #home .staff-recent-appointments td { padding:18px 16px; background:var(--staff-overview-row); border-block:1px solid var(--staff-overview-line); }
+ body[data-portal-role=staff] #home .staff-recent-appointments td:first-child { border-left:1px solid var(--staff-overview-line); border-radius:16px 0 0 16px; }
+ body[data-portal-role=staff] #home .staff-recent-appointments td:last-child { border-right:1px solid var(--staff-overview-line); border-radius:0 16px 16px 0; }
+}
+@media(max-width:767px) {
+ body[data-portal-role=staff] #home > .stats-grid { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+ body[data-portal-role=staff] #home > .stats-grid > .stat-card:last-child { grid-column:1/-1; }
+}

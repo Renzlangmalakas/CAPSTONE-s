@@ -1,0 +1,5 @@
+-- Catalog creation withdrawn: use the existing Additional Fees storage only.
+-- After confirming the existing JSON catalog table, run tests/import-fee-catalog.cjs
+-- without --apply to review matching records, then --apply to update them.
+-- The importer retains existing IDs and does not modify historical bill snapshots.
+-- No schema changes or patient data updates are performed by this migration.

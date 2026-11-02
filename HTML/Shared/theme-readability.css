@@ -1,0 +1,19 @@
+/* Consistent readable text for neutral surfaces in each portal and landing theme. */
+body { --gm-readable-text:#172b4d;--gm-readable-muted:#526580;--gm-readable-surface:#fff;--gm-readable-border:#cbd5e1; }
+body.dark,body.dark-mode,html[data-theme="dark"] body { --gm-readable-text:#e6edf8;--gm-readable-muted:#afbed3;--gm-readable-surface:#101e33;--gm-readable-border:#354963; }
+body :is(.panel,.settings-card,.modern-card,.dental-record-panel,.modal-content,.service-modal-content) .text-muted { color:var(--gm-readable-muted) !important; }
+body :is(.input,.form-control,.form-select):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]) { color:var(--gm-readable-text); }
+body :is(.input,.form-control,textarea,input[type="search"])::placeholder { color:var(--gm-readable-muted) !important;opacity:1; }
+body select option { color:var(--gm-readable-text);background:var(--gm-readable-surface); }
+body :is(.panel,.settings-card,.modern-card) :is(.table-muted,.table-cell-muted,.table-secondary) { color:var(--gm-readable-muted) !important; }
+body :is(.records-toolbar,.billing-filter) > label { color:var(--gm-readable-muted); }
+body :is(.record-date-trigger,.record-calendar) { color:var(--gm-readable-text); }
+/* Overview cards changed from gradients to neutral surfaces: numbers must inherit their theme. */
+body:not(.dark):not(.dark-mode) #home .stat-card h3 { color:#172b4d !important;-webkit-text-fill-color:#172b4d; }
+body.dark #home .stat-card h3,body.dark-mode #home .stat-card h3 { color:#e6edf8 !important;-webkit-text-fill-color:#e6edf8; }
+body:not(.dark):not(.dark-mode) #home .stat-card p { color:#526580 !important; }
+body.dark #home .stat-card p,body.dark-mode #home .stat-card p { color:#afbed3 !important; }
+body:not(.dark):not(.dark-mode) #home :is(.table-identity > span,.table-muted) { color:#526580 !important; }
+body.dark #home :is(.table-identity > span,.table-muted) { color:#afbed3 !important; }
+/* Focus remains identifiable on both light and dark surfaces. */
+body :is(button,a,input,select,textarea):focus-visible { outline-color:#3b82f6; }

@@ -1,0 +1,850 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dental Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="admin.css?v=20261012-table-fit" />
+  <link rel="stylesheet" href="../Shared/receipt-review.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+  <link rel="stylesheet" href="../Shared/account-security.css" />
+<link rel="stylesheet" href="../Shared/responsive.css?v=20261026-small-icons">
+<link rel="stylesheet" href="../Shared/table-pagination.css?v=20261029-light">
+<script defer src="../Shared/table-pagination.js?v=20261012"></script>
+<link rel="stylesheet" href="cms-editor.css?v=20261026-apple-preview">
+<link rel="stylesheet" href="admin-tables.css?v=20261026-discount-table" />
+<link rel="stylesheet" href="../Shared/motion.css?v=20261027">
+<link rel="stylesheet" href="dashboard-overview.css?v=20261028">
+<link rel="stylesheet" href="../Shared/theme-readability.css?v=20261028">
+<link rel="stylesheet" href="../Shared/portal-responsive.css?v=20261028-schedule-log">
+<script defer src="../Shared/portal-responsive.js?v=20261028-1"></script>
+<link rel="stylesheet" href="../Shared/dashboard-cards.css?v=20261028-preserve-staff">
+<link rel="stylesheet" href="../Shared/metric-cards.css?v=20261028-1">
+<link rel="stylesheet" href="../Shared/sidebar-icons.css?v=20261028-1">
+<link rel="stylesheet" href="../Shared/ui-icons.css?v=20261028-1">
+</head>
+<body data-portal-role="admin">
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-icon"><i class="bi bi-hospital"></i></div>
+        <div class="brand-text">
+          <strong>Dental Admin</strong>
+          <span>Clinic Dashboard</span>
+        </div>
+      </div>
+
+      <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Toggle sidebar">
+        <i class="bi bi-list"></i>
+      </button>
+
+      <nav class="nav">
+        <button class="nav-item active" data-section="home">
+          <i class="bi bi-grid" aria-hidden="true"></i><span>Dashboard</span>
+        </button>
+        <button class="nav-item" data-section="services">
+          <i class="bi bi-tools" aria-hidden="true"></i><span>Services</span>
+        </button>
+        <button class="nav-item" data-section="appointments">
+          <i class="bi bi-calendar-event" aria-hidden="true"></i><span>Appointments</span>
+        </button>
+        <button class="nav-item" data-section="billing">
+          <i class="bi bi-receipt" aria-hidden="true"></i><span>Billing</span>
+        </button>
+        <button class="nav-item" data-section="additional-fees">
+          <i class="bi bi-plus-circle"></i><span>Additional Fees</span>
+        </button>
+        <button class="nav-item" data-section="revenue">
+          <i class="bi bi-graph-up-arrow"></i><span>Revenue</span>
+        </button>
+        <button class="nav-item" data-section="dentists">
+          <i class="bi bi-person-badge"></i><span>Dentists</span>
+        </button>
+        <button class="nav-item" data-section="staff">
+          <i class="bi bi-person-vcard"></i><span>Staff</span>
+        </button>
+        <button class="nav-item" data-section="patients">
+          <i class="bi bi-people" aria-hidden="true"></i><span>Patients</span>
+        </button>
+        <button class="nav-item" type="button" data-section="discounts">
+          <i class="bi bi-percent"></i><span>Discounted Prices</span>
+        </button>
+        <button class="nav-item" type="button" data-section="audit">
+          <i class="bi bi-journal-text"></i><span>User Audit Log</span>
+        </button>
+        <button class="nav-item" data-section="users">
+          <i class="bi bi-people"></i><span>Users</span>
+        </button>
+        <button class="nav-item" data-section="cms">
+          <i class="bi bi-pencil-square"></i><span>Content Management</span>
+        </button>
+      </nav>
+    </aside>
+    <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-title-row">
+          <button class="mobile-sidebar-toggle" id="mobileSidebarToggle" type="button" aria-label="Open navigation menu">
+            <i class="bi bi-list"></i>
+          </button>
+          <div>
+          <h1 id="pageTitle">Dashboard</h1>
+          <p id="pageSubtitle">Welcome back, Admin</p>
+          </div>
+        </div>
+
+        <div class="topbar-actions">
+          <div class="icon-menu" id="notifMenuWrap">
+            <button class="icon-btn bell-btn" id="notifToggle" type="button" aria-label="Open notifications">
+              <i class="bi bi-bell"></i>
+              <span class="notif-dot hidden" id="notifDot"></span>
+            </button>
+
+            <div class="menu-panel notifications-panel" id="notifPanel">
+              <div class="menu-panel-header">
+                <strong>Notifications</strong>
+              </div>
+              <div class="menu-panel-body" id="notifList"></div>
+              <div class="menu-panel-footer">
+                <button class="menu-footer-btn" type="button" id="seeAllNotificationsBtn">See All</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="profile-menu" id="profileWrap">
+            <button class="profile-btn" id="profileToggle" type="button" aria-label="Open profile menu">
+              <img id="topbarProfileImage" src="https://i.pravatar.cc/60?img=12" alt="Admin profile" />
+              <div>
+                <strong id="topbarAdminName">Admin</strong>
+                <span>Administrator</span>
+              </div>
+            </button>
+
+            <div class="menu-panel profile-panel" id="profilePanel">
+              <button class="menu-link" type="button" data-section-jump="users">
+                <i class="bi bi-people"></i> Users
+              </button>
+              <button class="menu-link" type="button" data-section-jump="settings">
+                <i class="bi bi-gear"></i> Settings
+              </button>
+              <button class="menu-link danger" type="button" id="logoutBtn">
+                <i class="bi bi-box-arrow-right"></i> Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- DASHBOARD -->
+      <section id="home" class="section active">
+  <div class="stats-grid">
+    <article class="stat-card blue">
+      <div class="stat-icon"><i class="bi bi-person-badge"></i></div>
+      <div><h3 id="statActiveDentists">0</h3><p>Active Dentists</p></div>
+    </article>
+    <article class="stat-card green">
+      <div class="stat-icon"><i class="bi bi-people"></i></div>
+      <div><h3 id="statTotalPatients">0</h3><p>Total Patients</p></div>
+    </article>
+
+    <article class="stat-card blue">
+      <div class="stat-icon"><i class="bi bi-calendar-check"></i></div>
+      <div>
+        <h3 id="statAppointments">0</h3>
+        <p>Total Appointments</p>
+      </div>
+    </article>
+
+    <article class="stat-card green">
+      <div class="stat-icon"><i class="bi bi-check-circle"></i></div>
+      <div>
+        <h3 id="statApproved">0</h3>
+        <p>Approved</p>
+      </div>
+    </article>
+
+    <article class="stat-card purple">
+      <div class="stat-icon"><i class="bi bi-cash-stack"></i></div>
+      <div>
+        <h3 id="statRevenue">PHP 0</h3>
+        <p>Total Revenue</p>
+      </div>
+    </article>
+  </div>
+
+  <div class="dashboard-grid">
+    <article class="panel">
+      <div class="panel-header">
+        <h2><i class="bi bi-clock-history"></i> Recent Appointments</h2>
+      </div>
+      <div class="table-wrap recent-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>Dentist</th>
+              <th>Service</th>
+              <th>Date</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="dashboardRecentAppointments"></tbody>
+        </table>
+      </div>
+    </article>
+
+    <div class="stack">
+      <article class="panel">
+        <div class="panel-header panel-header-between">
+          <h2><i class="bi bi-calendar2-week"></i> Today's Schedule</h2>
+          <button class="btn secondary small-btn" type="button" id="seeMoreScheduleBtn">See More</button>
+        </div>
+        <div id="todaySchedule" class="list-stack limited-list"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-header panel-header-between">
+          <h2><i class="bi bi-megaphone"></i> Alerts</h2>
+        </div>
+        <div id="alertsBox" class="list-stack limited-list"></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+      <section id="additional-fees" class="section">
+        <div class="section-actions"><button class="btn primary" type="button" id="addAdditionalFeeBtn"><i class="bi bi-plus-lg"></i> Add Additional Fee</button></div>
+        <article class="panel"><div class="panel-header"><h2><i class="bi bi-plus-circle"></i> Additional Fees</h2></div>
+          <div class="table-wrap"><table><thead><tr><th>Fee Name</th><th>Description</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead><tbody id="additionalFeesTable"></tbody></table></div>
+        </article>
+      </section>
+
+      <!-- SERVICES -->
+      <section id="services" class="section">
+        <div class="section-actions">
+          <button class="btn primary" type="button" id="addServiceBtn">
+            <i class="bi bi-plus-lg"></i> Add Service
+          </button>
+          <button class="btn secondary" type="button" data-restore-type="services">
+            <i class="bi bi-arrow-counterclockwise"></i> Restore
+          </button>
+        </div>
+
+        <article class="panel">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Service</th>
+                  <th>Price</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="servicesTable"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <!-- APPOINTMENTS -->
+      <section id="appointments" class="section">
+<p class="section-note">View appointment details and status. Appointment changes are handled by clinical staff.</p>
+
+        <div class="toolbar">
+          <input type="text" id="appointmentSearch" class="input" placeholder="Search appointment..." />
+          <select id="appointmentDateFilter" class="input select">
+            <option value="all">All Dates</option>
+            <option value="month">This Month</option>
+            <option value="week">This Week</option>
+            <option value="day">Specific Day</option>
+          </select>
+          <input type="date" id="appointmentDateSpecific" class="input hidden" />
+          <button type="button" class="btn primary" id="exportAppointmentsBtn"><i class="bi bi-download"></i> Export CSV</button>
+        </div>
+
+        <article class="panel">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Patient</th>
+                  <th>Dentist</th>
+                  <th>Service</th>
+                  <th>Date</th>
+                  <th>Time</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="appointmentsTable"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <!-- BILLING -->
+<section id="billing" class="section">
+  <p class="section-note">View billing records and invoices. Cash payments are reviewed and approved by Staff.</p>
+  <article class="panel billing-panel-like-staff">
+    <div class="panel-header">
+      <h2><i class="bi bi-receipt"></i> Billing Records</h2>
+      <button type="button" class="btn primary" id="exportBillingBtn"><i class="bi bi-download"></i> Export CSV</button>
+    </div>
+
+    <div class="table-wrap billing-table-wrap">
+      <table class="billing-records-table">
+        <thead>
+          <tr>
+            <th>Patient</th>
+            <th>Service</th>
+            <th>Total</th>
+            <th>Paid</th>
+            <th>Refunded</th>
+            <th>Balance</th>
+            <th>Method</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="billingTable"></tbody>
+      </table>
+    </div>
+  </article>
+</section>
+
+      <!-- REVENUE -->
+      <section id="revenue" class="section">
+        <div class="toolbar">
+          <select id="revenueDateFilter" class="input select">
+            <option value="year">This Year</option>
+            <option value="month">This Month</option>
+            <option value="week">This Week</option>
+            <option value="day">Specific Day</option>
+          </select>
+          <input type="date" id="revenueDateSpecific" class="input hidden" />
+        </div>
+
+        <div class="stats-grid">
+          <article class="stat-card purple">
+            <div class="stat-icon"><i class="bi bi-cash-stack"></i></div>
+            <div>
+              <h3 id="revenueTotal">PHP 0</h3>
+              <p>Total Revenue</p>
+            </div>
+          </article>
+          <article class="stat-card green">
+            <div class="stat-icon"><i class="bi bi-phone"></i></div>
+            <div>
+              <h3 id="revenueOnline">PHP 0</h3>
+              <p>Online Payments</p>
+            </div>
+          </article>
+          <article class="stat-card blue">
+            <div class="stat-icon"><i class="bi bi-shop"></i></div>
+            <div>
+              <h3 id="revenueClinic">PHP 0</h3>
+              <p>Clinic Payments</p>
+            </div>
+          </article>
+        </div>
+
+        <article class="panel">
+          <div class="panel-header">
+            <h2><i class="bi bi-graph-up-arrow"></i> Revenue Records</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Patient</th>
+                  <th>Dentist</th>
+                  <th>Service</th>
+                  <th>Date</th>
+                  <th>Method</th>
+                  <th>Collected</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="revenueTable"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <!-- DENTISTS -->
+      <section id="dentists" class="section">
+        <div class="section-actions">
+          <button class="btn primary" type="button" id="addDentistBtn">
+            <i class="bi bi-plus-lg"></i> Add Dentist
+          </button>
+          <button class="btn danger" type="button" id="clearDentistsBtn">
+            <i class="bi bi-trash"></i> Clear All Active
+          </button>
+          <button class="btn secondary" type="button" data-restore-type="dentists">
+            <i class="bi bi-arrow-counterclockwise"></i> Restore
+          </button>
+        </div>
+
+        <div class="toolbar">
+          <input type="text" id="dentistSearch" class="input" placeholder="Search dentist..." />
+          <select id="dentistSort" class="input select">
+            <option value="">Sort</option>
+            <option value="name">Name (A-Z)</option>
+            <option value="specialty">Specialty</option>
+          </select>
+        </div>
+
+        <article class="panel">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Specialty</th>
+                  <th>Email</th>
+                  <th>Status</th>
+                  <th>Schedule</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="dentistsTable"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <!-- STAFF -->
+      <section id="staff" class="section">
+        <div class="section-actions">
+          <button class="btn primary" type="button" id="addStaffBtn">
+            <i class="bi bi-plus-lg"></i> Add Staff
+          </button>
+          <button class="btn danger" type="button" id="clearStaffBtn">
+            <i class="bi bi-trash"></i> Clear All Active
+          </button>
+          <button class="btn secondary" type="button" data-restore-type="staff">
+            <i class="bi bi-arrow-counterclockwise"></i> Restore
+          </button>
+        </div>
+
+        <div class="toolbar">
+          <input type="text" id="staffSearch" class="input" placeholder="Search staff..." />
+          <select id="staffSort" class="input select">
+            <option value="">Sort</option>
+            <option value="name">Name (A-Z)</option>
+            <option value="position">Position</option>
+          </select>
+        </div>
+
+        <article class="panel">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Position</th>
+                  <th>Email</th>
+                  <th>Contact</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="staffTable"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <!-- PATIENTS -->
+      <section id="patients" class="section">
+        <div class="section-actions">
+          <button class="btn primary" type="button" id="addPatientBtn">
+            <i class="bi bi-plus-lg"></i> Add Patient
+          </button>
+          <button class="btn danger" type="button" id="clearPatientsBtn">
+            <i class="bi bi-trash"></i> Clear All Active
+          </button>
+          <button class="btn secondary" type="button" data-restore-type="patients">
+            <i class="bi bi-arrow-counterclockwise"></i> Restore
+          </button>
+          <select id="reportExportType" class="input select">
+            <option value="patients">Patient Records</option>
+            <option value="summary">All Reports Summary</option>
+            <option value="appointments">Appointments</option>
+            <option value="visits">Patient Visits</option>
+            <option value="treatments">Treatment Histories</option>
+            <option value="activities">Record Activities</option>
+            <option value="discounts">Discounted Prices</option>
+            <option value="audit">User Audit Log</option>
+          </select>
+          <select id="reportDateFilter" class="input select">
+            <option value="all">All Dates</option>
+            <option value="month">This Month</option>
+            <option value="week">This Week</option>
+            <option value="day">Specific Day</option>
+          </select>
+          <input type="date" id="reportDateSpecific" class="input hidden" />
+          <button class="btn secondary" type="button" id="exportPatientRecordsBtn">
+            <i class="bi bi-download"></i> Export CSV
+          </button>
+        </div>
+
+        <div id="discountReportControls" class="hidden"><p id="discountReportStatus" role="status"></p><button type="button" class="btn secondary" id="discountRefreshBtn">Refresh Discounted Prices</button></div>
+        <div id="auditReportControls" class="hidden"><p id="auditReportStatus" role="status"></p><button type="button" class="btn secondary" id="auditRefreshBtn">Refresh Audit Log</button><button type="button" class="btn secondary hidden" id="auditMoreBtn">Load More</button></div>
+        <div class="toolbar">
+          <input type="text" id="patientSearch" class="input" placeholder="Search patient..." />
+          <select id="patientSort" class="input select">
+            <option value="">Sort</option>
+            <option value="name">Name (A-Z)</option>
+            <option value="age">Age</option>
+          </select>
+        </div>
+
+        <article class="panel">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Status</th>
+                  <th>Created Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="patientsTable"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <!-- USERS -->
+      <section id="users" class="section">
+        <div class="form-grid two">
+          <article class="panel">
+            <div class="panel-header">
+              <h2><i class="bi bi-shield-lock"></i> Admin Account</h2>
+            </div>
+
+            <div class="form-grid one">
+              <div>
+                <label class="label" for="adminUsername">Full Name</label>
+                <input class="input" id="adminUsername" type="text" />
+              </div>
+              <div>
+                <label class="label" for="adminPhone">Phone</label>
+                <input class="input" id="adminPhone" type="tel" />
+              </div>
+              <div>
+                <label class="label" for="adminRole">Role / job title</label>
+                <input class="input" id="adminRole" type="text" />
+              </div>
+
+              <div>
+                <label class="label" for="adminEmail">Email</label>
+                <input class="input" id="adminEmail" type="email" />
+              </div>
+
+              <div class="gm-password-field" hidden>
+                <label class="label" for="adminPassword">New Password</label>
+                <input class="input" id="adminPassword" type="password" placeholder="Enter new password" />
+              </div>
+
+              <div class="gm-password-field" hidden>  
+                <label class="label" for="adminConfirm">Confirm Password</label>
+                <input class="input" id="adminConfirm" type="password" placeholder="Confirm password" />
+              </div>
+              <div>
+                <label class="label" for="adminProfileImage">Profile Picture</label>
+                <div class="file-upload" id="profileUploadBox">
+                  <input id="adminProfileImage" type="file" accept="image/*" hidden />
+
+                  <button class="file-upload-btn" type="button" id="profileUploadTrigger">
+                    <i class="bi bi-upload"></i>
+                    Choose Image
+                  </button>
+
+                  <div class="file-upload-meta">
+                    <strong id="profileUploadTitle">Upload admin profile photo</strong>
+                    <span id="profileUploadName">No file selected</span>
+                    </div>
+                  </div>
+               </div>
+              
+              <button class="btn primary" type="button" id="saveAdminBtn">Update Admin</button>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <h2><i class="bi bi-person-plus"></i> Create User Account</h2>
+            </div>
+
+            <div class="form-grid one">
+              <div>
+                <label class="label" for="accUserRole">Role</label>
+                <select class="input select" id="accUserRole">
+                  <option value="dentist">Dentist</option>
+                  <option value="staff">Staff</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="label" for="accDentistName">Full Name</label>
+                <input class="input" id="accDentistName" type="text" placeholder="Enter full name" />
+              </div>
+
+              <div>
+                <label class="label" for="accDentistEmail">Email</label>
+                <input class="input" id="accDentistEmail" type="email" autocomplete="off" placeholder="dentist@example.com" />
+              </div>
+
+              <div>
+                <label class="label" for="accDentistContact">Contact</label>
+                <input class="input" id="accDentistContact" type="text" placeholder="Enter contact number" />
+              </div>
+
+              <div>
+                <label class="label" for="accDentistUsername">Username</label>
+                <input class="input" id="accDentistUsername" type="text" placeholder="Create username" />
+              </div>
+
+              <div>
+                <label class="label" for="accDentistPassword">Password</label>
+                <input class="input" id="accDentistPassword" autocomplete="new-password" type="password" placeholder="Create password" />
+              </div>
+
+              <button class="btn primary" type="button" id="createAccountBtn">Create Account</button>
+              <div id="dentistCredentialsControls" class="credential-email-controls">
+                <p>Enter only the new dentist's email. They will receive a secure invitation to enter their name, contact details and password. The link expires in 24 hours.</p>
+                <button class="btn secondary" type="button" id="sendDentistCredentialsBtn"><i class="bi bi-envelope"></i> Send dentist invitation</button>
+              </div>
+              <p id="dentistCredentialsStatus" role="status" aria-live="polite"></p>
+            </div>
+          </article>
+        </div>
+
+        <article class="panel space-top">
+          <div class="panel-header panel-header-between">
+            <h2><i class="bi bi-people"></i> User Accounts</h2>
+            <button class="btn danger" type="button" id="clearAccountsBtn">
+              <i class="bi bi-trash"></i> Clear All Active
+            </button>
+          </div>
+
+          <div class="toolbar">
+            <input type="text" id="userSearch" class="input" placeholder="Search user name or email..." />
+            <select id="userRoleFilter" class="input select">
+              <option value="">All roles</option>
+              <option value="admin">Admin</option>
+              <option value="dentist">Dentist</option>
+              <option value="staff">Staff</option>
+            </select>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Role</th>
+                  <th>Email</th>
+                  <th>Contact</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="accountsTable"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="panel space-top hidden" id="archivedUsersPanel">
+          <div class="panel-header panel-header-between">
+            <h2><i class="bi bi-box-arrow-in-up-right"></i> Archived Users</h2>
+            <button class="btn danger" type="button" id="clearArchivedUsersBtn">
+              <i class="bi bi-trash"></i> Clear Archived
+            </button>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Role</th>
+                  <th>Source</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="archivedUsersTable"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <div class="section-actions">
+          <button class="btn secondary" type="button" id="toggleArchivedUsersBtn">
+            <i class="bi bi-folder-symlink"></i> Show Archived Users
+          </button>
+        </div>
+      </section>
+
+      <section id="cms" class="section">
+        <div class="form-grid three cms-clinic-settings">
+          <article class="panel" hidden>
+            <div class="panel-header">
+              <h2>Clinic Information</h2>
+            </div>
+
+            <div class="form-grid one">
+              <div>
+                <label class="label" for="clinicName">Clinic Name</label>
+                <input class="input" id="clinicName" type="text" />
+              </div>
+              <div>
+                <label class="label" for="clinicPhone">Phone Number</label>
+                <input class="input" id="clinicPhone" type="text" />
+              </div>
+              <div>
+                <label class="label" for="clinicEmail">Email</label>
+                <input class="input" id="clinicEmail" type="email" />
+              </div>
+              <div>
+                <label class="label" for="clinicAddress">Clinic Address</label>
+                <input class="input" id="clinicAddress" type="text" />
+              </div>
+              <button class="btn primary" type="button" id="saveClinicBtn">Save Changes</button>
+            </div>
+          </article>
+
+          <article class="panel" hidden>
+            <div class="panel-header">
+              <h2>Clinic Schedule</h2>
+            </div>
+
+            <div class="form-grid one">
+              <div>
+                <label class="label" for="openingTime">Opening Time</label>
+                <input class="input" id="openingTime" type="time" />
+              </div>
+              <div>
+                <label class="label" for="closingTime">Closing Time</label>
+                <input class="input" id="closingTime" type="time" />
+              </div>
+              <div>
+                <label class="label" for="workingDays">Working Days</label>
+                <select class="input select" id="workingDays">
+                  <option>Monday - Friday</option>
+                  <option>Monday - Saturday</option>
+                </select>
+              </div>
+              <button class="btn primary" type="button" id="saveScheduleBtn">Save Schedule</button>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <h2>Appearance</h2>
+            </div>
+
+            <div class="appearance-box">
+              <div>
+                <strong>Dark Mode</strong>
+                <p>Switch between light and dark theme.</p>
+              </div>
+
+              <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle theme">
+                <span class="toggle-pill">
+                  <span class="toggle-knob">
+                    <i class="bi bi-moon-stars-fill moon-icon"></i>
+                    <i class="bi bi-sun-fill sun-icon"></i>
+                  </span>
+                </span>
+              </button>
+            </div>
+          </article>
+        </div>
+
+        <article class="panel cms-panel">
+          <div class="panel-header"><h2>Website Content</h2><div class="cms-header-actions"><a class="btn secondary" href="../Landing/landing.html" target="_blank" rel="noopener">View site</a><button type="submit" form="cmsForm" class="btn primary" value="publish">Save changes</button><button type="button" class="btn secondary" id="cmsReload">Reload</button></div></div>
+          <p>Edit the public homepage and patient GCash instructions. Save a draft to keep changes private, or publish to make them visible.</p>
+          <p id="cmsPublished"></p>
+          <p id="cmsStatus" role="status" aria-live="polite"></p>
+          <form id="cmsForm">
+            <div id="cmsFields" class="cms-fields"></div>
+            <fieldset class="cms-group">
+              <legend>GCash QR image</legend>
+              <label class="label" for="cmsQrFile">Upload the original QR image (PNG, JPG or WebP, up to 2 MB)</label>
+              <input class="input" id="cmsQrFile" type="file" accept="image/png,image/jpeg,image/webp">
+              <p>The image is kept unchanged. Scan the preview with GCash and check that it points to the correct recipient before publishing.</p>
+              <img id="cmsQrPreview" class="cms-qr" alt="Current draft GCash QR" hidden>
+              <button type="button" class="btn secondary" id="cmsRemoveQr">Remove QR from draft</button>
+            </fieldset>
+            <div class="form-actions-inline cms-actions">
+              <button type="button" class="btn secondary" id="cmsPreview">Preview changes</button>
+              <button type="submit" class="btn secondary" value="draft">Save draft</button>
+              <button type="submit" class="btn primary" value="publish">Save changes</button>
+            </div>
+          </form>
+          <div id="cmsPreviewPanel" class="cms-preview" hidden></div>
+        </article>
+      </section>
+
+
+    </main>
+  </div>
+
+  <div class="modal-backdrop hidden" id="modalBackdrop">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <h3 id="modalTitle">Modal</h3>
+        <button class="icon-btn danger-soft" id="closeModalBtn" type="button">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop hidden" id="restoreBackdrop">
+    <div class="modal-card modal-sm" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <h3 id="restoreTitle">Restore Items</h3>
+        <button class="icon-btn danger-soft" id="closeRestoreBtn" type="button">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="modal-body" id="restoreBody"></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop hidden" id="viewBackdrop">
+    <div class="modal-card modal-sm" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <h3 id="viewTitle">Details</h3>
+        <button class="icon-btn danger-soft" id="closeViewBtn" type="button">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="modal-body" id="viewBody"></div>
+    </div>
+  </div>
+
+  <script src="../Shared/default-accounts.js?v=20261005-patients"></script>
+<script src="../Shared/shared-supabase-sync.js?v=20261005-no-retry-button"></script>
+<script src="../Shared/account-security.js"></script>
+  <script src="../Shared/additional-fees.js"></script>
+<script src="../Shared/service-catalog.js?v=20261027-services-az"></script>
+  <script src="csv-export.js?v=20261026"></script>
+<script src="patient-details.js?v=20261026"></script>
+<script src="admin.js?v=20261028-dentist-active"></script>
+  <script src="../Shared/site-content.js?v=20261026-typography"></script>
+  <script src="cms.js?v=20261027-services-az"></script>
+  <script src="../Shared/payment-receipts.js?v=20261001-cash-approval"></script>
+  <script src="../Shared/receipt-review.js?v=20261001-cash-approval"></script>
+</body>
+</html>

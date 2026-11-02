@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Patient Page</title>
+    <style>
+        #output {
+            font-family: monospace;
+            background: black;
+            color: lime;
+            padding: 10px;
+            margin: 10px 0;
+            min-height: 200px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>Debug Patient Functions</h1>
+    <button onclick="testShowSection()">Test showSection</button>
+    <button onclick="testToggleSidebar()">Test toggleSidebar</button>
+    <button onclick="testToast()">Test showToast</button>
+    <div id="output">Debug output will appear here...</div>
+    
+    <script>
+        // Capture console logs
+        const oldConsoleLog = console.log;
+        const oldConsoleError = console.error;
+        const output = document.getElementById('output');
+        
+        console.log = function(...args) {
+            oldConsoleLog.apply(console, args);
+            output.textContent += '[LOG] ' + args.join(' ') + '\n';
+        };
+        
+        console.error = function(...args) {
+            oldConsoleError.apply(console, args);
+            output.textContent += '[ERROR] ' + args.join(' ') + '\n';
+        };
+        
+        function testShowSection() {
+            console.log('Testing showSection function...');
+            if (typeof showSection === 'function') {
+                console.log('showSection is a function');
+                try {
+                    showSection('dashboard');
+                    console.log('showSection called successfully');
+                } catch(e) {
+                    console.error('Error calling showSection:', e.message);
+                }
+            } else {
+                console.error('showSection is not defined');
+            }
+        }
+        
+        function testToggleSidebar() {
+            console.log('Testing toggleSidebar function...');
+            if (typeof toggleSidebar === 'function') {
+                console.log('toggleSidebar is a function');
+                try {
+                    toggleSidebar();
+                    console.log('toggleSidebar called successfully');
+                } catch(e) {
+                    console.error('Error calling toggleSidebar:', e.message);
+                }
+            } else {
+                console.error('toggleSidebar is not defined');
+            }
+        }
+        
+        function testToast() {
+            console.log('Testing showToast function...');
+            if (typeof showToast === 'function') {
+                console.log('showToast is a function');
+                try {
+                    showToast('Test toast message');
+                    console.log('showToast called successfully');
+                } catch(e) {
+                    console.error('Error calling showToast:', e.message);
+                }
+            } else {
+                console.error('showToast is not defined');
+            }
+        }
+        
+        // Load patient.js
+        console.log('Loading patient.js...');
+        const script = document.createElement('script');
+        script.src = 'patient.js';
+        script.onload = function() {
+            console.log('patient.js loaded successfully');
+        };
+        script.onerror = function() {
+            console.error('Failed to load patient.js');
+        };
+        document.head.appendChild(script);
+    </script>
+</body>
+</html>
