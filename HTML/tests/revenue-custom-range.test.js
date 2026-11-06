@@ -1,5 +1,13 @@
 ﻿const test=require('node:test'),assert=require('node:assert/strict'),fs=require('fs'),vm=require('vm');
 const source=fs.readFileSync(require('node:path').join(__dirname,'../Admin/admin.js'),'utf8');
+test('dashboard yearly revenue ignores the revenue tab filter and includes archived collections',()=>{
+ const {context:c,fields:f}=setup();
+ c.getClinicDb=()=>({appointments:[{id:'current',paidAt:'2026-03-04',totalCollected:500}],archivedAppointments:[{id:'archived',paidAt:'2026-01-04',totalCollected:300},{id:'prior',paidAt:'2025-01-04',totalCollected:900}]});
+ f.revenueStartDate.value='2026-11-01';
+ assert.equal(c.getAdminYearlyRevenue(new Date('2026-11-06T00:00:00Z')),800);
+ f.revenueDateFilter.value='day';f.revenueDateSpecific.value='2025-01-04';
+ assert.equal(c.getAdminYearlyRevenue(new Date('2026-11-06T00:00:00Z')),800);
+});
 function setup(){const fields={revenueDateFilter:{value:'custom'},revenueStartDate:{value:'2026-11-01'},revenueEndDate:{value:'2026-11-02'},revenueDateSpecific:{value:''}};const context={qs:s=>fields[s.slice(1)],safeValue:e=>e?.value||'',state:{appointments:[]},getClinicDb:()=>({}),reportArray:v=>Array.isArray(v)?v:[],uniqueAdminRecords:rows=>rows,downloadCsv:(...args)=>context.csv=args,alert:()=>{},Date};vm.createContext(context);vm.runInContext(source.slice(source.indexOf('function getAdminRevenueCustomRange()'),source.indexOf('function renderRevenue()')),context);return {context,fields};}
 test('custom revenue includes both boundary dates, excludes other periods',()=>{const {context:c}=setup();for(const date of ['2026-11-01T00:00:00','2026-11-02T23:59:59'])assert.equal(c.matchesAdminRevenueFilter({paidAt:date}),true);for(const date of ['2026-10-31','2026-11-03'])assert.equal(c.matchesAdminRevenueFilter({paidAt:date}),false);});
 test('reversed, incomplete and invalid date ranges return no records; same day allowed',()=>{const {context:c,fields:f}=setup();f.revenueEndDate.value='2026-10-31';assert.match(c.getAdminRevenueCustomRange().error,/before/);assert.equal(c.matchesAdminRevenueFilter({date:'2026-11-01'}),false);f.revenueEndDate.value='';assert.ok(c.getAdminRevenueCustomRange().error);f.revenueEndDate.value='2026-11-01';assert.equal(c.getAdminRevenueCustomRange().error,'');f.revenueStartDate.value='2026-02-30';assert.match(c.getAdminRevenueCustomRange().error,/valid/);});

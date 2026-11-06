@@ -1,0 +1,264 @@
+/* Center the icon rail without changing the expanded mobile navigation. */
+@media (min-width: 1025px) {
+  body :is(.app-shell.collapsed .sidebar, .sidebar.collapsed) {
+    padding-inline: 12px !important;
+    box-sizing: border-box;
+  }
+  body :is(.app-shell.collapsed .sidebar, .sidebar.collapsed) :is(.brand,.side-nav,.nav) {
+    width: 100% !important;
+    margin-inline: 0 !important;
+    padding-inline: 0 !important;
+    box-sizing: border-box;
+  }
+  body :is(.app-shell.collapsed .sidebar, .sidebar.collapsed) .brand {
+    display: flex !important;
+    justify-content: center !important;
+    gap: 0 !important;
+  }
+  body .sidebar :is(.brand > span,.brand-text,.nav-link > span,.nav-item > span) {
+    display: block !important;
+    min-width: 0 !important;
+    max-width: 240px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    opacity: 1 !important;
+    transform: translateX(0) !important;
+    transition: max-width 240ms ease, opacity 140ms ease 100ms, transform 240ms ease !important;
+  }
+  body :is(.app-shell.collapsed .sidebar, .sidebar.collapsed) :is(.brand > span,.brand-text,.nav-link > span,.nav-item > span) {
+    max-width: 0 !important;
+    min-width: 0 !important;
+    flex: 0 1 0 !important;
+    margin-inline: 0 !important;
+    padding-inline: 0 !important;
+    opacity: 0 !important;
+    transform: translateX(-6px) !important;
+    transition: opacity 90ms ease, max-width 240ms ease, transform 240ms ease !important;
+    pointer-events: none;
+  }
+  body .sidebar .nav-label {
+    display: block !important;
+    white-space: nowrap !important;
+    overflow: hidden;
+    max-width: 240px !important;
+    opacity: 1 !important;
+    transform: none !important;
+    transition: opacity 140ms ease 100ms !important;
+  }
+  body :is(.app-shell.collapsed .sidebar, .sidebar.collapsed) .nav-label {
+    opacity: 0 !important;
+    transition-delay: 0ms !important;
+  }
+  body .sidebar { transition: width 240ms ease, min-width 240ms ease, padding 240ms ease !important; }
+  body .sidebar :is(.nav-link,.nav-item,.brand) { overflow: hidden; }
+  body :is(.app-shell.collapsed .sidebar, .sidebar.collapsed) :is(.nav-link,.nav-item,.menu-toggle,.sidebar-toggle) {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    max-width: 64px !important;
+    min-width: 0 !important;
+    min-height: 48px;
+    margin-inline: auto !important;
+    padding-inline: 0 !important;
+    gap: 0 !important;
+    box-sizing: border-box;
+  }
+  body :is(.app-shell.collapsed .sidebar, .sidebar.collapsed) :is(.brand-logo,.brand-icon) {
+    flex-shrink: 0;
+    margin-inline: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  body :is(.app-shell.collapsed .sidebar, .sidebar.collapsed) :is(.nav-link,.nav-item,.menu-toggle,.sidebar-toggle,.brand-logo,.brand-icon) > i {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    text-align: center;
+    transform: none !important;
+  }
+}
+/* Keep the same icon column throughout the transition. Switching flex alignment
+   and auto margins at the collapse boundary caused the sideways jump. */
+@media (min-width: 1025px) {
+  body .sidebar { --rail-width: 100px; padding-inline: 12px !important; }
+  body[data-portal-role="admin"] .sidebar { --rail-width: 92px; }
+  body[data-portal-role="staff"] .sidebar { --rail-width: 88px; }
+  body[data-portal-role="dentist"] .sidebar { --rail-width: 96px; }
+  body .sidebar :is(.brand,.side-nav,.nav) { width: 100% !important; margin-inline: 0 !important; padding-inline: 0 !important; box-sizing: border-box; }
+  body .sidebar :is(.brand,.nav-link,.nav-item),
+  body :is(.app-shell.collapsed .sidebar,.sidebar.collapsed) :is(.brand,.nav-link,.nav-item) {
+    display: grid !important;
+    grid-template-columns: calc(var(--rail-width) - 24px) minmax(0, 1fr) !important;
+    align-items: center !important;
+    justify-content: normal !important;
+    gap: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin-inline: 0 !important;
+    padding-inline: 0 !important;
+  }
+  body .sidebar :is(.nav-link,.nav-item) { min-height: 64px !important; }
+  body .sidebar :is(.brand,.nav-link,.nav-item) > :is(i,.brand-icon,.brand-logo) { justify-self: center; margin-inline: 0 !important; flex-shrink: 0; }
+  body .sidebar :is(.menu-toggle,.sidebar-toggle),
+  body :is(.app-shell.collapsed .sidebar,.sidebar.collapsed) :is(.menu-toggle,.sidebar-toggle) {
+    width: calc(var(--rail-width) - 24px) !important;
+    max-width: none !important;
+    margin-inline: 0 !important;
+    padding-inline: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  body .sidebar :is(.brand > span,.brand-text,.nav-link > span,.nav-item > span) {
+    position: static !important;
+    width: auto !important;
+    transition: opacity 120ms ease 100ms, transform 240ms ease !important;
+  }
+  body :is(.app-shell.collapsed .sidebar,.sidebar.collapsed) :is(.brand > span,.brand-text,.nav-link > span,.nav-item > span) {
+    transition: opacity 80ms ease, transform 240ms ease !important;
+  }
+  body .app-shell > :is(.main,.main-content) {
+    transition: margin-left 240ms ease, width 240ms ease !important;
+  }
+}
+/* Keep the Admin icon column fixed in both states. A flexible collapsed
+   column moved icons to the center of the still-expanded sidebar mid-animation. */
+@media (min-width: 1025px) {
+  body[data-portal-role="admin"] .sidebar :is(.brand,.nav-item),
+  body[data-portal-role="admin"] .sidebar.collapsed :is(.brand,.nav-item) {
+    grid-template-columns: 64px minmax(0, 1fr) !important;
+  }
+  body[data-portal-role="admin"] .sidebar .sidebar-toggle,
+  body[data-portal-role="admin"] .sidebar.collapsed .sidebar-toggle {
+    width: 64px !important;
+    box-sizing: border-box;
+  }
+  body[data-portal-role="admin"] .sidebar.collapsed :is(.brand,.nav-item,.sidebar-toggle) {
+    width: 64px !important;
+    max-width: 64px !important;
+    margin-inline: 1.5px 0 !important;
+  }
+  body[data-portal-role="admin"] .sidebar :is(.nav-item,.sidebar-toggle) > i {
+    justify-self: center !important;
+    display: grid !important;
+    place-items: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  body[data-portal-role="admin"] .sidebar .nav-item:is(:hover,:focus-visible) {
+    transform: none !important;
+  }
+}
+/* Keep long Admin menus accessible without a visible scrollbar. */
+body[data-portal-role="admin"] .sidebar,
+body[data-portal-role="admin"] .sidebar .nav {
+  scrollbar-width: none !important;
+  scrollbar-gutter: auto;
+}
+body[data-portal-role="admin"] .sidebar::-webkit-scrollbar,
+body[data-portal-role="admin"] .sidebar .nav::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+/* Dentist navigation scrolls only when needed, without a nested visible rail. */
+body[data-portal-role="dentist"] .sidebar,
+body[data-portal-role="dentist"] .sidebar .side-nav {
+  scrollbar-width: none !important;
+}
+body[data-portal-role="dentist"] .sidebar::-webkit-scrollbar,
+body[data-portal-role="dentist"] .sidebar .side-nav::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+body[data-portal-role="dentist"] .sidebar .side-nav {
+  scrollbar-gutter: auto;
+}
+@media (min-width: 1025px) {
+  body[data-portal-role="dentist"] .sidebar .nav-link {
+    min-height: 48px !important;
+    padding-block: 10px;
+  }
+  /* Keep label geometry unchanged while the outer rail animates. Otherwise
+     wrapped titles change row height and move every item below them. */
+  body[data-portal-role="dentist"] .sidebar .side-nav .nav-label {
+    margin: 16px 8px 10px !important;
+  }
+  body[data-portal-role="dentist"] .sidebar .side-nav .nav-label:first-child {
+    margin-top: 4px !important;
+  }
+  body[data-portal-role="dentist"] .sidebar .nav-link,
+  body[data-portal-role="dentist"] .app-shell.collapsed .sidebar .nav-link {
+    grid-template-columns: 72px 154px !important;
+    height: 64px !important;
+    min-height: 64px !important;
+    margin-block: 0 4px !important;
+  }
+  body[data-portal-role="dentist"] .sidebar .nav-link > span,
+  body[data-portal-role="dentist"] .app-shell.collapsed .sidebar .nav-link > span {
+    width: 154px !important;
+    max-width: 154px !important;
+    white-space: normal !important;
+    margin-inline: 0 !important;
+    padding-right: 12px !important;
+    box-sizing: border-box;
+  }
+}
+/* Keep navigation titles beside their icons with a consistent left edge. */
+body[data-portal-role] .sidebar :is(.nav-link,.nav-item) > span {
+  text-align: left !important;
+  align-self: center;
+  justify-self: stretch;
+}
+@media (max-width: 1024px) {
+  body[data-portal-role] :is(.sidebar-toggle,.menu-toggle,.mobile-sidebar-toggle) {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    text-indent: 0 !important;
+  }
+  body[data-portal-role] :is(.sidebar-toggle,.menu-toggle,.mobile-sidebar-toggle) > i {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    transform: none !important;
+  }
+  body[data-portal-role] .sidebar :is(.nav-link,.nav-item) {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding-inline: 16px !important;
+    gap: 14px !important;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  body[data-portal-role] .sidebar :is(.nav-link,.nav-item) > i {
+    flex: 0 0 24px !important;
+    width: 24px !important;
+    margin-inline: 0 !important;
+  }
+  body[data-portal-role] .sidebar :is(.nav-link,.nav-item) > span {
+    flex: 1 1 0;
+    min-width: 0;
+    margin-inline: 0 !important;
+    white-space: normal !important;
+    overflow-wrap: break-word;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  body .app-shell > :is(.main,.main-content) { transition: none !important; }
+  body .sidebar, body .sidebar :is(.brand > span,.brand-text,.nav-link > span,.nav-item > span,.nav-label) {
+    transition: none !important;
+  }
+}

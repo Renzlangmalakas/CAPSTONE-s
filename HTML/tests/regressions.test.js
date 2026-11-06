@@ -123,7 +123,7 @@ test('flush reports rejected saves without clearing unsynced changes', async () 
 test('dentist dashboard counts dated appointments, sorts the queue and excludes archives', () => {
   const source = fs.readFileSync(path.join(__dirname, '../Dentist/dentist_page.js'), 'utf8');
   const context = { Date, normalizeAppointmentStatus: value => value,
-    normalizeDateValue: item => item.date || String(item.schedule || '').split(' • ')[0],
+    normalizeDateValue: item => item.date || String(item.schedule || '').split(' â€¢ ')[0],
     normalizeTimeValue: item => item.time || '',
     getPatientClinicalKey: item => item.patientId || item.patientName };
   for (const name of ['isTodayDate', 'getDashboardSummary']) {
@@ -207,24 +207,24 @@ test('conflict notice can be dismissed without deleting saved drafts', () => {
 
 test('deleting or renaming default fees persists, including an empty catalog', () => {
   const c = browser('Shared/additional-fees.js'); const api = c.window.GMAdditionalFees;
-  const db = api.getDb(); assert.equal(db.additionalFees.length, 11);
+  const db = api.getDb(); assert.equal(db.additionalFees.length, 8);
   db.additionalFees.shift(); db.additionalFees[0].name = 'Renamed'; api.saveDb(db);
-  assert.equal(api.getDb().additionalFees.length, 10);
+  assert.equal(api.getDb().additionalFees.length, 7);
   db.additionalFees = []; api.saveDb(db); assert.equal(api.getDb().additionalFees.length, 0);
 });
 
 test('requested fee catalog supports ranges, starting prices and required variable quotes', () => {
   const api = browser('Shared/additional-fees.js').window.GMAdditionalFees;
   const fees = api.defaultCatalog();
-  assert.equal(fees.length, 11);
-  const medicine = fees.find(f => f.name === 'Medication Fee');
-  assert.equal(api.selectedPrice(medicine, '350'), 350);
+  assert.equal(fees.length, 8);
+  const medicine = fees.find(f => f.name === 'Medication / Check-up');
+  assert.equal(api.selectedPrice(medicine, '500'), 500);
   assert.throws(() => api.selectedPrice(medicine, '501'));
-  const laboratory = fees.find(f => f.name === 'Laboratory Fee');
+  const laboratory = fees.find(f => f.name === 'Impression and Denture');
   assert.equal(api.priceLabel(laboratory).slice(-1), '+');
   assert.equal(api.selectedPrice(laboratory, '5000'), 5000);
-  assert.throws(() => api.selectedPrice(laboratory, '499'));
-  const variable = fees.find(f => f.name === 'Lost/Damaged Appliance Fee');
+  assert.throws(() => api.selectedPrice(laboratory, '4999'));
+  const variable = api.normalizeFee({ name: 'Legacy variable fee', pricingType: 'variable', price: 0 });
   assert.equal(api.priceLabel(variable), 'Varies');
   assert.throws(() => api.selectedPrice(variable, ''));
   assert.throws(() => api.selectedPrice(variable, '0'));
@@ -233,12 +233,12 @@ test('requested fee catalog supports ranges, starting prices and required variab
 
 test('fee import reuses existing and renamed catalog IDs without deleting other fees', () => {
   const { plan } = require('./import-fee-catalog.cjs');
-  const existing = [{ id: 'old-anesthesia', data: { name: 'Anesthesia Fee' } }, { id: 'custom', data: { name: 'Custom Fee' } }];
+  const existing = [{ id: 'old-anesthesia', data: { name: 'Anesthesia' } }, { id: 'custom', data: { name: 'Custom Fee' } }];
   const rows = plan(existing);
-  assert.equal(rows.length, 11);
-  assert.equal(rows.find(row => row.data.name === 'Local Anesthesia Fee').id, 'old-anesthesia');
+  assert.equal(rows.length, 8);
+  assert.equal(rows.find(row => row.data.name === 'Anesthesia').id, 'old-anesthesia');
   assert.equal(existing.length, 2);
-  assert.equal(new Set(rows.map(row => row.id)).size, 11);
+  assert.equal(new Set(rows.map(row => row.id)).size, 8);
 });
 
 function patientBilling(appointment, method = 'gcash') {
@@ -460,13 +460,13 @@ test('requested billing example and staff roundtrip preserve fee snapshots', () 
   const c = browser('Shared/additional-fees.js');
   const fees = c.window.GMAdditionalFees;
   const catalog = fees.defaultCatalog();
-  const lines = ['Local Anesthesia Fee', 'Suture Fee', 'Medication Fee'].map(name => {
+  const lines = ['Anesthesia', 'Suture', 'Medication / Check-up'].map(name => {
     const fee = catalog.find(item => item.name === name);
-    return { additionalFeeId: fee.id, feeName: name, description: fee.description, quantity: 1, unitPrice: fees.selectedPrice(fee, name === 'Medication Fee' ? 150 : 200) };
+    return { additionalFeeId: fee.id, feeName: name, description: fee.description, quantity: 1, unitPrice: fees.selectedPrice(fee, fee.price) };
   });
   const bill = fees.attachToAppointment({ id: 'fixture', price: 1000 }, lines);
-  assert.equal(bill.additionalFeesTotal, 550);
-  assert.equal(bill.grandTotal, 1550);
+  assert.equal(bill.additionalFeesTotal, 1300);
+  assert.equal(bill.grandTotal, 2300);
   const source = fs.readFileSync(path.join(__dirname, '../Staff/staff.js'), 'utf8');
   const ctx = {};
   for (const name of ['clinicAppointmentToStaff', 'staffAppointmentToClinic', 'sameStaffFields']) {
@@ -477,12 +477,12 @@ test('requested billing example and staff roundtrip preserve fee snapshots', () 
   const staff = ctx.clinicAppointmentToStaff(bill);
   fees.attachToAppointment(staff, staff.additionalFees);
   const saved = ctx.staffAppointmentToClinic(staff, bill);
-  assert.equal(saved.price, 1550);
-  assert.equal(saved.additionalFees[2].unitPrice, 150);
+  assert.equal(saved.price, 2300);
+  assert.equal(saved.additionalFees[2].unitPrice, 500);
   assert.equal(saved.additionalFees[2].description, lines[2].description);
   catalog[2].price = 999;
   catalog[2].description = 'Changed catalog';
-  assert.equal(saved.additionalFees[1].unitPrice, 200);
+  assert.equal(saved.additionalFees[1].unitPrice, 500);
   assert.equal(saved.additionalFees[1].description, lines[1].description);
 });
 
@@ -494,8 +494,8 @@ test('fixed fee cannot accept a different price even with a stale maximum', () =
 
 test('fee import matches names ignoring case and extra whitespace', () => {
   const { plan } = require('./import-fee-catalog.cjs');
-  const rows = plan([{ id: 'original', data: { name: '  medication   FEE ', createdAt: '2020-01-01' } }]);
-  const row = rows.find(item => item.data.name === 'Medication Fee');
+  const rows = plan([{ id: 'original', data: { name: '  medication /   CHECK-UP ', createdAt: '2020-01-01' } }]);
+  const row = rows.find(item => item.data.name === 'Medication / Check-up');
   assert.equal(row.id, 'original');
   assert.equal(row.data.createdAt, '2020-01-01');
 });

@@ -9,7 +9,7 @@ body.dark, body.dark-mode, html[data-theme="dark"] body {
   --gm-control-border: #3b506c; --gm-control-disabled: #19283d;
   --gm-dialog-bg: #101e33; --gm-secondary-bg: #1d304d; --gm-control-scheme: dark;
 }
-body :is(input,select,textarea):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="image"]) {
+body :is(input,select,textarea):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="image"]):not(.search-box input) {
   background-color: var(--gm-control-bg) !important;
   color: var(--gm-control-text) !important;
   -webkit-text-fill-color: var(--gm-control-text);
@@ -35,3 +35,8 @@ body .gm-assist-dialog button[type="submit"] {background:#285be5;color:#fff;bord
 body .gm-assist-dialog button:disabled {opacity:.6;cursor:wait;}
 body :is(.gm-assist-dialog,.gm-patient-create) [role="alert"] {color:#c52232;}
 body:is(.dark,.dark-mode) :is(.gm-assist-dialog,.gm-patient-create) [role="alert"], html[data-theme="dark"] :is(.gm-assist-dialog,.gm-patient-create) [role="alert"] {color:#ff8c98;}
+
+/* Header search fields share the rounded wrapper surface. */
+body[data-portal-role] .search-box input { background: transparent !important; border: 0 !important; box-shadow: none; min-width: 0; }
+body[data-portal-role] .search-box:focus-within { outline: 2px solid #729eff; outline-offset: 2px; }
+body[data-portal-role] .search-box input:focus-visible { outline: none; }

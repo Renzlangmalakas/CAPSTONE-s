@@ -1,0 +1,53 @@
+/* Shared Admin/Staff notification surface: retain the Admin's 380 x 480 size. */
+body #notifPanel.notifications-panel {
+  --notification-bg: #fff;
+  --notification-text: #192d49;
+  --notification-muted: #5e7592;
+  --notification-border: #dde6f0;
+  --notification-button: #edf3fb;
+  position: fixed !important;
+  inset: auto !important;
+  top: var(--notification-top, 90px) !important;
+  left: var(--notification-left, 12px) !important;
+  width: var(--notification-width, 380px) !important;
+  max-width: calc(100vw - 24px) !important;
+  height: var(--notification-height, 480px) !important;
+  max-height: calc(100dvh - 24px) !important;
+  box-sizing: border-box !important;
+  display: none !important;
+  flex-direction: column !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  background: var(--notification-bg) !important;
+  color: var(--notification-text) !important;
+  border: 1px solid var(--notification-border) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 16px 48px #0004 !important;
+  backdrop-filter: none !important;
+  opacity: 1 !important;
+  overflow: hidden !important;
+  z-index: 1100 !important;
+}
+body:is(.dark, .dark-mode) #notifPanel.notifications-panel {
+  --notification-bg: #0b1728;
+  --notification-text: #edf3fc;
+  --notification-muted: #9bb0cd;
+  --notification-border: #26374c;
+  --notification-button: #15243a;
+}
+body #notifPanel.notifications-panel.show { display: flex !important; }
+body #notifPanel.notifications-panel :is(.menu-panel-header,.menu-panel-body,.menu-panel-footer) {
+  background: var(--notification-bg) !important;
+  color: var(--notification-text) !important;
+}
+body #notifPanel.notifications-panel .menu-panel-header { flex: 0 0 auto !important; padding: 18px !important; border-bottom: 1px solid var(--notification-border) !important; }
+body #notifPanel.notifications-panel .menu-panel-header strong { color: var(--notification-text) !important; font-size: 18px; }
+body #notifPanel.notifications-panel .menu-panel-body { flex: 1 1 auto !important; min-height: 0 !important; max-height: none !important; overflow: auto !important; padding: 0 !important; overscroll-behavior: contain; }
+body #notifPanel.notifications-panel .notification-item { margin: 0 !important; padding: 18px !important; border: 0 !important; border-bottom: 1px solid var(--notification-border) !important; border-radius: 0 !important; background: transparent !important; overflow-wrap: anywhere; }
+body #notifPanel.notifications-panel .notification-item strong { display: block; color: var(--notification-text) !important; font-size: 16px; line-height: 1.4; }
+body #notifPanel.notifications-panel .notification-item :is(p,span,small) { color: var(--notification-muted) !important; line-height: 1.5; }
+body #notifPanel.notifications-panel .notification-item p { font-size: 15px; margin: 6px 0 8px !important; }
+body #notifPanel.notifications-panel .notification-item :is(span,small) { font-size: 12px; }
+body #notifPanel.notifications-panel .menu-panel-footer { flex: 0 0 auto !important; display: flex; justify-content: center; padding: 12px !important; border-top: 1px solid var(--notification-border) !important; }
+body #notifPanel.notifications-panel .menu-footer-btn { width: auto !important; min-height: 44px !important; padding: 10px 20px !important; border-radius: 12px !important; background: var(--notification-button) !important; color: var(--notification-text) !important; font-size: 15px; }

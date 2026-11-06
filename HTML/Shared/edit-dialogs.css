@@ -24,6 +24,15 @@ body :is(#modalBackdrop,#dependentModal,#rescheduleModal,#addAppointmentModal,#p
   padding:24px; margin:0; scrollbar-width:thin; scrollbar-color:var(--gm-control-border,#889bb4) transparent;
 }
 body #modalBody > .form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; align-items:start; }
+/* Billing is a sequence of sections, not a two-column patient edit form. */
+body #modalBody > .staff-fee-editor {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 20px;
+}
+body #modalBody > .staff-fee-editor > * { width: 100%; min-width: 0; box-sizing: border-box; }
+body #modalBody > .staff-fee-editor > button { width: 100%; margin: 0; }
 body #modalBody > .form-grid > * { min-width:0; }
 body #modalBody > .form-grid > :is(button,.form-actions-inline,.form-grid),
 body #modalBody > .form-grid > div:has(textarea),

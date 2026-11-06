@@ -1,18 +1,49 @@
 (function () {
   const CLINIC_DB_KEY = "gm_dental_db_v1";
   const defaultFees = [
-    ["Local Anesthesia Fee", "Additional anesthesia used to numb the treatment area during a dental procedure.", 200],
-    ["Medication Fee", "Medicines provided by the clinic after treatment, when applicable.", 100, 500],
-    ["Suture Fee", "Charge for suturing materials used after surgical dental procedures.", 200],
-    ["Temporary Filling Fee", "Temporary filling placed to protect a tooth before the permanent treatment is completed.", 300],
-    ["Dental Impression Fee", "Impression or mold of the patient's teeth needed for certain dental appliances or restorations.", 300, 500],
-    ["Laboratory Fee", "Additional laboratory charge for dental work that needs to be fabricated or processed outside the clinic.", 500, 500, "from"],
-    ["Denture Adjustment Fee", "Adjustment of an existing denture to improve its fit and comfort.", 200, 500],
-    ["Orthodontic Bracket Replacement Fee", "Replacement of a damaged or detached orthodontic bracket.", 300, 500],
-    ["Orthodontic Wire Replacement Fee", "Replacement of a damaged or lost orthodontic archwire.", 300, 500],
-    ["Lost/Damaged Appliance Fee", "Charge for replacement or repair of a lost or damaged removable dental appliance.", 0, 0, "variable"],
-    ["Emergency/Same-Day Fee", "Additional charge for an unscheduled dental case requiring urgent attention.", 300, 500]
-  ];
+    [
+        "Anesthesia",
+        "Charged per cartridge. Set quantity to the number of cartridges used.",
+        300
+    ],
+    [
+        "Medication / Check-up",
+        "Combined medication and check-up fee.",
+        500
+    ],
+    [
+        "Suture",
+        "Suture fee.",
+        500
+    ],
+    [
+        "Temporary Filling",
+        "Temporary filling fee.",
+        500
+    ],
+    [
+        "Impression and Denture",
+        "Starts at PHP 5,000; final price depends on the teeth and work required.",
+        5000,
+        5000,
+        "from"
+    ],
+    [
+        "Orthodontic Bonding",
+        "Orthodontic bonding fee.",
+        400
+    ],
+    [
+        "Orthodontic Bracket Replacement",
+        "Orthodontic bracket replacement fee.",
+        500
+    ],
+    [
+        "Orthodontic Wire",
+        "Orthodontic wire fee.",
+        500
+    ]
+];
 
   function uid() { return `fee-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`; }
   function amount(value, fallback = 0) {

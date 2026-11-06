@@ -343,7 +343,7 @@ body.dark .sidebar {
   transition: margin-left 0.3s ease, width 0.3s ease, padding 0.3s ease;
 }
 
-.sidebar.collapsed + .main {
+.sidebar.collapsed ~ .main {
   margin-left: var(--sidebar-collapsed-width);
   width: calc(100% - var(--sidebar-collapsed-width));
 }
@@ -2486,7 +2486,7 @@ body:not(.dark) .action-menu-cell .dropdown {
   }
 
   .main,
-  .sidebar.collapsed + .main {
+  .sidebar.collapsed ~ .main {
     width: 100%;
     margin-left: 0;
   }

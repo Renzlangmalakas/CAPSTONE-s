@@ -1936,11 +1936,7 @@ function renderDashboard() {
     state.services.filter(s => !s.archived).sort(window.GMServiceCatalog.compareNames).map(s => [s.name, Number(s.price)])
   );
 
-const revenue = activeAppointments.reduce((sum, a) => {
-  const online = Number(a.amountPaidOnline || 0);
-  const clinic = Number(a.amountPaidInClinic || 0);
-  return sum + online + clinic;
-}, 0);
+const revenue = getAdminYearlyRevenue();
 
   qs("#statAppointments").textContent = String(activeAppointments.length);
   qs("#statPending").textContent = String(pending);
@@ -3566,11 +3562,7 @@ function renderDashboard() {
   const activeAppointments = (state.appointments || []).filter(a => !a.archived);
   const approved = activeAppointments.filter(a => statusClassName(a.status) === "approved").length;
 
-  const revenue = activeAppointments.reduce((sum, item) => {
-    const online = Number(item.amountPaidOnline || 0);
-    const clinic = Number(item.amountPaidInClinic || 0);
-    return sum + online + clinic;
-  }, 0);
+  const revenue = getAdminYearlyRevenue();
 
   if (qs("#statAppointments")) qs("#statAppointments").textContent = String(activeAppointments.length);
   if (qs("#statApproved")) qs("#statApproved").textContent = String(approved);
@@ -4876,9 +4868,14 @@ function reconcileAdminRevenue(item) {
     revenueCollected: collected / 100, revenueUnclassified: difference / 100 };
 }
 
-function getAdminRevenueRecords() {
+function getAdminYearlyRevenue(now = new Date()) {
+  const year = Number(new Intl.DateTimeFormat("en", { timeZone: "Asia/Manila", year: "numeric" }).format(now));
+  return getAdminRevenueRecords({ year }).reduce((sum, item) => sum + Math.round(item.revenueCollected * 100), 0) / 100;
+}
+
+function getAdminRevenueRecords({ year } = {}) {
   const db = typeof getClinicDb === "function" ? getClinicDb() : {};
-  const appointmentRecords = [...reportArray(state.appointments), ...reportArray(db.appointments)];
+  const appointmentRecords = [...reportArray(db.appointments), ...reportArray(state.appointments), ...reportArray(db.archivedAppointments)];
   const treatmentRevenueRecords = reportArray(db.treatmentPlans).map(plan => ({
     ...plan,
     id: `treatment-revenue-${plan.treatmentId || plan.id || uid()}`,
@@ -4895,7 +4892,8 @@ function getAdminRevenueRecords() {
 
   return uniqueAdminRecords([...appointmentRecords, ...treatmentRevenueRecords])
     .map(reconcileAdminRevenue)
-    .filter(item => item.revenueCollected > 0 && matchesAdminRevenueFilter(item));
+    .filter(item => item.revenueCollected > 0 && (year === undefined
+      ? matchesAdminRevenueFilter(item) : parseAdminRevenueDate(item)?.getFullYear() === year));
 }
 
 function renderRevenue() {

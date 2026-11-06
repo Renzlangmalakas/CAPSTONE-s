@@ -310,6 +310,22 @@
           nextPushAt = Date.now() + Math.min(60000, 1000 * 2 ** Math.min(pushFailures, 6));
           const error = await response.json().catch(() => ({}));
           console.warn("Clinic sync rejected:", response.status, error.message || "Request failed");
+          if (response.status === 403 && getLocalChangeStamp() === stampAtSend) {
+            // A forbidden cached snapshot must not permanently block reads.
+            // Preserve it before restoring the authorized server snapshot.
+            const drafts = JSON.parse(localStorage.getItem('gm_dental_sync_conflict_drafts') || '[]');
+            drafts.push({ savedAt: new Date().toISOString(), reason: error.message || 'Permission denied', data: db });
+            originalSetItem('gm_dental_sync_conflict_drafts', JSON.stringify(drafts));
+            const refresh = await window.GmDentalApiFetch(apiUrl('/api/clinic-db'));
+            if (refresh.ok) {
+              const fresh = await refresh.json();
+              if (fresh.db && getLocalChangeStamp() === stampAtSend) {
+                markLastPushed(stampAtSend);
+                applyRemoteClinicDb(fresh.db);
+                showSyncConflict('A cached update was denied. Server records have been restored. The rejected changes are saved as a downloadable draft; they were not saved to the server.');
+              }
+            }
+          }
           if (response.status === 409) {
             let recovered = false;
             try { recovered = await recoverAppointmentConflict(error, db); }

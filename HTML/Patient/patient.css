@@ -13602,3 +13602,59 @@ body.dark-mode #serviceModal .service-picker-footer { border-color: #293c58; }
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     }
 }
+
+/* Dashboard appointments respond to their card width, not just the viewport. */
+#dashboard .dashboard-grid > * { min-width: 0; }
+#dashboard .dashboard-appointments-card { min-width: 0; container: dashboard-appointments / inline-size; }
+#dashboard .dashboard-appointments-card table { width: 100%; min-width: 0; table-layout: fixed; }
+#dashboardTableBody td { white-space: normal; overflow-wrap: anywhere; }
+#dashboardTableBody .patient-row-actions { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+#dashboardTableBody .patient-row-actions > button { max-width: 100%; white-space: normal; min-height: 44px; }
+@container dashboard-appointments (max-width: 760px) {
+  #dashboard .dashboard-appointments-card .table-modern { padding: 0; min-width: 0; }
+  #dashboard .dashboard-appointments-card table { display: block !important; }
+  #dashboard .dashboard-appointments-card thead { display: none !important; }
+  #dashboardTableBody { display: grid !important; gap: 14px; width: 100%; }
+  #dashboardTableBody tr { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; padding: 16px; gap: 16px; border: 1px solid var(--border-light, #334155); border-radius: 16px; }
+  #dashboardTableBody td { display: block !important; width: auto !important; min-width: 0 !important; padding: 0 !important; border: 0 !important; text-align: left !important; }
+  #dashboardTableBody td::before { display: block; margin-bottom: 6px; font-size: 12px; font-weight: 700; opacity: .75; text-transform: uppercase; }
+  #dashboardTableBody td:nth-child(1)::before { content: 'Service'; }
+  #dashboardTableBody td:nth-child(2)::before { content: 'Date'; }
+  #dashboardTableBody td:nth-child(3)::before { content: 'Status'; }
+  #dashboardTableBody td:last-child { grid-column: 1 / -1; }
+  #dashboardTableBody td:last-child::before { content: none; }
+  #dashboardTableBody td[colspan] { grid-column: 1 / -1; }
+  #dashboardTableBody td[colspan]::before { content: none; }
+  #dashboardTableBody .patient-row-actions { justify-content: flex-start !important; width: 100%; }
+}
+/* Invoice layout follows the available content width, including sidebar changes. */
+#billing .billing-container { container-type: inline-size; }
+#billing :is(.billing-layout,.billing-main-card,.billing-card,.billing-summary-card,.billing-hero-copy,.billing-panel,.summary-panel,.payment-card-content) { min-width: 0; box-sizing: border-box; }
+#billing .billing-layout { grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr); gap: 24px; }
+#billing .billing-main-card { padding: 0; }
+#billing :is(.billing-card,.billing-summary-card) { padding: 24px; }
+#billing .billing-hero { display: grid; grid-template-columns: minmax(0, 1fr); align-items: stretch; padding: 24px; gap: 20px; }
+#billing .billing-hero-amount { font-size: clamp(1.5rem, 3.5cqi, 3rem); line-height: 1.15; white-space: nowrap; word-break: normal; overflow-wrap: normal; font-variant-numeric: tabular-nums; }
+#billing .billing-hero-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#billing .billing-mini-stat { min-width: 0; padding: 12px; }
+#billing .billing-panel-head { flex-direction: column; align-items: flex-start; gap: 6px; }
+#billing :is(.summary-value,.breakdown-value,.payment-card-content) { min-width: 0; overflow-wrap: anywhere; }
+#billing :is(input,select,textarea) { min-width: 0; max-width: 100%; box-sizing: border-box; }
+#billing .billing-input-group { display: flex; flex-wrap: nowrap; }
+#billing .billing-input-group input { width: 0; flex: 1 1 auto; }
+#billing :is(.billing-actions button,.payment-type-btn) { white-space: normal; min-height: 44px; }
+@container (max-width: 900px) {
+  #billing .billing-layout { grid-template-columns: minmax(0, 1fr); }
+  #billing .billing-summary-card { position: static; }
+}
+@media (max-width: 767px) {
+  #billing .billing-layout { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  #billing :is(.billing-card,.billing-summary-card) { padding: 16px; border-radius: 18px; }
+  #billing :is(.billing-hero,.billing-panel,.summary-panel) { padding: 14px; }
+  #billing .billing-hero-amount { font-size: clamp(1.5rem, 7vw, 2.5rem); }
+  #billing .billing-shell-head { padding: 18px; gap: 16px; }
+  #billing .billing-status-pill { align-self: flex-start; white-space: normal; }
+  #billing :is(.payment-options,.payment-type-toggle,.gcash-qr-container) { grid-template-columns: minmax(0, 1fr); }
+  #billing .summary-item { gap: 6px; }
+  #billing .summary-value { text-align: left; }
+}

@@ -2580,6 +2580,15 @@ function populateDentistDropdown() {
     return withBookingAvailabilitySnapshot(() => populateDentistDropdownFromSnapshot());
 }
 
+function dentistTodayScheduleLabel(dentist, now = new Date()) {
+  const today = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Manila', weekday: 'long' }).format(now).toLowerCase();
+  const schedules = Array.isArray(dentist.schedules) ? dentist.schedules : [];
+  if (!schedules.length) return 'Schedule not available';
+  const scheduled = schedules.some(slot => slot.isActive !== false && slot.is_active !== false &&
+    String(slot.day || '').trim().toLowerCase() === today);
+  return scheduled ? 'Available today (scheduled)' : 'Not available today';
+}
+
 function populateDentistDropdownFromSnapshot() {
   const select = document.getElementById("dentistSelect");
   if (!select) return;
@@ -2650,7 +2659,7 @@ function populateDentistDropdownFromSnapshot() {
   eligibleDentists.forEach((dentist) => {
     const option = document.createElement("option");
     option.value = dentist.id;
-    option.textContent = `${dentist.name} (${dentist.specialty})`;
+    option.textContent = `${dentist.name} (${dentist.specialty}) - ${dentistTodayScheduleLabel(dentist)}`;
     select.appendChild(option);
   });
 

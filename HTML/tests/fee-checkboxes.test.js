@@ -7,23 +7,23 @@ function row(fee, quantity, price, checked = true) {
 }
 test('checked fees add together, merge existing quantities, skip unchecked fees and update billing', () => {
   const catalog = fees.defaultCatalog();
-  const rows = [row(catalog[0], '2', '200'), row(catalog[1], '1', '250'), row(catalog[2], '1', '200', false)];
-  const selected = [{ additionalFeeId: catalog[0].id, quantity: 1, unitPrice: 200 }];
+  const rows = [row(catalog[0], '2', '300'), row(catalog[1], '1', '500'), row(catalog[2], '1', '300', false)];
+  const selected = [{ additionalFeeId: catalog[0].id, quantity: 1, unitPrice: 300 }];
   fees.addCheckedFees({ querySelectorAll: () => rows }, selected);
   assert.equal(selected.length, 2);
   assert.equal(selected[0].quantity, 3);
-  assert.equal(fees.calculate(selected).total, 850);
+  assert.equal(fees.calculate(selected).total, 1400);
   assert.equal(rows[0].querySelector('[data-fee-check]').checked, false);
   const bill = { serviceTotal: 1000, discount: { amount: 100 }, paid: 200 };
   fees.attachToAppointment(bill, selected);
-  assert.equal(bill.grandTotal, 1750);
-  assert.equal(bill.remainingBalance, 1550);
+  assert.equal(bill.grandTotal, 2300);
+  assert.equal(bill.remainingBalance, 2100);
 });
 test('invalid quantity or price rejects the whole batch without partial additions', () => {
   const catalog = fees.defaultCatalog();
   for (const invalid of [row(catalog[1], '0', '100'), row(catalog[1], '1', '999')]) {
     const selected = [];
-    const rows = [row(catalog[0], '1', '200'), invalid];
+    const rows = [row(catalog[0], '1', '300'), invalid];
     assert.throws(() => fees.addCheckedFees({ querySelectorAll: () => rows }, selected));
     assert.deepEqual(selected, []);
     assert.equal(rows[0].querySelector('[data-fee-check]').checked, true);

@@ -41,6 +41,28 @@ test('flushing a clean snapshot makes no write request', async () => {
   assert.equal(await context.pushClinicDb(), true);
 });
 
+test('forbidden cached snapshot is backed up and server data restored without reporting save success', async () => {
+  let dirty = true, storedDraft, restored, calls = 0;
+  const context = {
+    localStorage: { getItem: () => null }, CONFLICT_PAUSE_KEY: 'pause',
+    isApplyingRemote: false, conflictPaused: false, pushInFlight: null,
+    nextPushAt: 0, pushFailures: 0, hasUnpushedChanges: () => dirty,
+    getLocalClinicDb: () => ({ appointments: [] }), getLocalChangeStamp: () => 2,
+    markLastPushed: () => { dirty = false; }, apiUrl: x => x, schedulePush() {},
+    originalSetItem: (_key, value) => { storedDraft = JSON.parse(value); },
+    applyRemoteClinicDb: db => { restored = db; }, showSyncConflict() {},
+    console: { warn() {} },
+    window: { GmDentalApiFetch: async () => ++calls === 1
+      ? { ok: false, status: 403, json: async () => ({ message: 'Archive denied' }) }
+      : { ok: true, json: async () => ({ db: { appointments: [{ id: 'server-record' }] } }) } }
+  };
+  vm.runInNewContext(implementation('pushClinicDb'), context);
+  assert.equal(await context.pushClinicDb(), false);
+  assert.equal(storedDraft[0].reason, 'Archive denied');
+  assert.equal(restored.appointments[0].id, 'server-record');
+  assert.equal(dirty, false);
+});
+
 test('edits queued during a successful save resume promptly without overlapping writes', async () => {
   let dirty = true, reads = 0, finish, delay;
   const context = {
